@@ -829,18 +829,24 @@
                     body: JSON.stringify(payload)
                 });
         
-                // Read the body ONCE, regardless of the response status.
-                // This works because both successful responses and Vercel's error responses are typically JSON.
-                const data = await response.json();
-        
-                // Now, check if the response was not successful.
+                // First, check if the response was successful.
                 if (!response.ok) {
-                    console.error("API call via proxy failed:", response.status, data);
-                    if (response.status === 500 && data.error && data.error.includes("API key not configured")) {
+                    // If not OK, the body might be HTML or plain text. Read it as text.
+                    const errorText = await response.text(); 
+                    console.error("API call via proxy failed:", response.status, errorText);
+                    
+                    if (response.status === 404) {
+                        showMessage("The AI API endpoint was not found. Please check the deployment configuration.");
+                    } else if (response.status === 500 && errorText.includes("API key not configured")) {
                         showMessage("The game's AI features are not configured on the server. Please contact the administrator.");
+                    } else {
+                        showMessage("An unexpected server error occurred. Please try again later.");
                     }
                     return null;
                 }
+        
+                // If the response is OK, we expect JSON.
+                const data = await response.json();
         
                 // Handle safety checks from a successful response
                 if (data.candidates && data.candidates[0].finishReason === 'SAFETY') {
@@ -848,15 +854,15 @@
                     return null;
                 }
         
-                return data; // Return the successfully read and checked data.
+                return data;
         
             } catch (error) {
-                // This catch block now handles network errors or if the response body is not valid JSON.
+                // This catch block handles network errors or if the response body is not valid JSON.
                 console.error("Error calling proxy API:", error);
-                if (error instanceof TypeError && error.message.includes('Failed to parse URL')) {
-                     showMessage("The AI features require this game to be run on a web server. Local testing of this feature is not supported.");
+                if (error instanceof SyntaxError) {
+                    showMessage("Received an invalid response from the server. The AI service might be down.");
                 } else {
-                     showMessage("A network error occurred. Please check your connection and try again.");
+                    showMessage("A network error occurred. Please check your connection and try again.");
                 }
                 return null;
             }
