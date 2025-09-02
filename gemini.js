@@ -13,7 +13,7 @@ export default async function handler(request, response) {
     return response.status(500).json({ error: 'API key not configured on the server.' });
   }
 
-  const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+  const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`; // Gemini API endpoint
 
   try {
     // 3. Forward the client's request body to the Gemini API
