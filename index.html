@@ -727,7 +727,7 @@
         }
 
         async function callGeminiForJournalExpansion(text) {
-            const payload = { contents: [{ parts: [{ text: \`Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\\n\\n\${text}\` }] }], generationConfig: { responseMimeType: "text/plain" } };
+            const payload = { contents: [{ parts: [{ text: \`Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\n\n\${text}\` }] }], generationConfig: { responseMimeType: "text/plain" } };
             const result = await callProxyAPI(LLM_API_URL, payload);
             return result?.candidates?.[0]?.content?.parts?.[0]?.text;
         }
