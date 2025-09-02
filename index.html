@@ -463,6 +463,13 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ---------- Student-friendly Action Word helpers ---------- */
+        .word-bank { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .word-chip { background: #fff; border: 2px solid #d4cba6; border-radius: 9999px; padding: 4px 10px; cursor: pointer; font-size: .9rem; }
+        .word-chip:hover { background: #f0e5c6; }
+        .helper-note { font-size: .9rem; color: #004d40; margin-top: 6px; }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             h1 { font-size: 1.5rem; }
@@ -588,6 +595,10 @@
                 <h3 id="tips-heading" class="text-lg font-bold">Writing Tips</h3>
                 <p id="current-tips"></p>
             </div>
+            <!-- Student-friendly Action Word helpers -->
+            <div id="word-bank" class="word-bank" aria-label="Action word suggestions"></div>
+            <p class="helper-note">Action word = a doing word (e.g., sprint, slam, glide). Click a word to add it.</p>
+
             <textarea id="writing-input" placeholder="My Guardian is a warrior of the deep, clad in armor of coral..."></textarea>
             <div id="feedback-area" aria-live="polite"></div>
             <button id="writing-submit">Weave Your Tale</button>
@@ -641,7 +652,7 @@
                 <input type="text" id="combat-writing-input" class="flex-grow" placeholder="Describe your action...">
                 <button id="combat-submit-btn" class="p-2 text-base">Attack!</button>
             </div>
-            <button id="special-move-btn" class="mt-2 text-sm p-1 bg-purple-600 hover:bg-purple-800">Use Simile (Lvl 2)</button>
+            <button id="special-move-btn" class="mt-2 text-sm p-1 bg-purple-600 hover:bg-purple-800">Use a like/as comparison (Simile) (Lvl 2)</button>
         </div>
 
 
@@ -720,6 +731,9 @@
         let currentMonsterName = "";
         let currentMonsterDescription = "";
         let currentMonsterHealth = 100;
+
+        // Track if the student used an action word in their submission
+        let lastUsedActionWord = false;
         
         // --- World Atmosphere Transition ---
         let isTransitioningAtmosphere = false;
@@ -731,11 +745,11 @@
 
         const narrativeStages = ["Exposition", "Rising Action", "Climax", "Falling Action", "Resolution"];
         const writingTips = {
-            "Exposition": "Focus on characters and setting. Introduce your hero and their world. Show, don't tell.",
-            "Rising Action": "Build tension and excitement. Add challenges and obstacles that get progressively harder. Use a 'cause and effect' structure.",
-            "Climax": "Write the most intense moment of your story. Use short, powerful sentences to describe the biggest confrontation.",
-            "Falling Action": "Calm things down. Show the immediate consequences of the climax and tie up any loose ends.",
-            "Resolution": "Bring your story to a satisfying close. Describe the new normal and show how your character has changed."
+            "Exposition": "Show who/where. Use action words (sprinted, crept, glided) instead of weak ones (went, was).",
+            "Rising Action": "Build tension with obstacles. Use 'because/so' to chain events. Try one vivid action word.",
+            "Climax": "Write the most intense moment. Short, punchy sentences can raise the stakes.",
+            "Falling Action": "Calm things down. Show consequences of the climax and tie up loose ends.",
+            "Resolution": "End with a new normal. Show how your character has changed."
         };
         
         const achievements = {
@@ -748,7 +762,7 @@
 
         const memoryFragments = [
             { pos: new THREE.Vector3(15, 2, 15), text: "Lore: The ancient stones whisper of a time when the sky and sea were one, before the Great Separation.", collected: false },
-            { pos: new THREE.Vector3(-10, 2, -20), text: "Writing Tip: Use strong verbs to make your actions more impactful! Instead of 'walked,' try 'stomped,' 'glided,' or 'crept.'", collected: false },
+            { pos: new THREE.Vector3(-10, 2, -20), text: "Writing Tip: Use action words to make your writing active! Instead of 'went', try 'sprinted', 'glided', or 'crept.'", collected: false },
             { pos: new THREE.Vector3(20, 2, -10), text: "Lore: It is said the first Guardian was born from a tear of the ocean itself, a being of pure will.", collected: false },
             { pos: new THREE.Vector3(-25, 2, 25), text: "Writing Tip: Sensory details bring a world to life. What does the air smell like? What sounds can you hear?", collected: false },
         ];
@@ -1012,7 +1026,9 @@
                     "atmosphere": { "type": "STRING" }
                 }
             };
-            const userPrompt = `Based on this text, what is the visual atmosphere?\n\n${writing}`;
+            const userPrompt = `Based on this text, what is the visual atmosphere?
+
+${writing}`;
             return await callGeminiForText(systemPrompt, userPrompt, schema);
         }
 
@@ -1047,13 +1063,51 @@
         
         async function callGeminiForJournalExpansion(text) {
             const payload = {
-                contents: [{ parts: [{ text: `Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\n\n${text}` }] }],
+                contents: [{ parts: [{ text: `Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:
+
+${text}` }] }],
                 generationConfig: {
                     responseMimeType: "text/plain"
                 }
             };
             const result = await callProxyAPI(LLM_API_URL, payload);
             return result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        }
+
+        // --- Student-friendly Action Word helpers ---
+        const ACTION_WORDS = ["sprint", "dash", "bolt", "charge", "stagger", "trudge", "glide", "slice", "slam", "hurtle", "creep", "lurch", "flutter", "grip", "clutch", "ignite", "erupt", "hiss", "snarl", "swoop"];
+
+        function renderWordBank(containerEl, words, targetInputEl) {
+            containerEl.innerHTML = "";
+            words.forEach(w => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "word-chip";
+                chip.textContent = w;
+                chip.addEventListener("click", () => {
+                    insertAtCursor(targetInputEl, w);
+                    targetInputEl.focus();
+                });
+                containerEl.appendChild(chip);
+            });
+        }
+
+        function insertAtCursor(input, text) {
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            const before = input.value.slice(0, start);
+            const after = input.value.slice(end);
+            const needsSpaceBefore = before && !/\\s$/.test(before);
+            const needsSpaceAfter = after && !/^\\s/.test(after);
+            const insert = (needsSpaceBefore ? " " : "") + text + (needsSpaceAfter ? " " : "");
+            input.value = before + insert + after;
+            const pos = start + insert.length;
+            input.setSelectionRange(pos, pos);
+        }
+
+        function hasActionWord(text) {
+            const t = text.toLowerCase();
+            return ACTION_WORDS.some(w => new RegExp(`\\\\b${w}(ed|ing)?\\\\b`).test(t));
         }
 
         // --- SCENE SETUP ---
@@ -1243,8 +1297,8 @@
         const gameState = {
             currentQuestIndex: 0,
             quests: [
-                { id: "AWAKENING", type: "writing", title: "A Stranger's Arrival", objective: "Introduce yourself to the Village Elder.", writingPrompt: "The Village Elder looks you up and down, a hint of suspicion in their eyes. 'We don't get many visitors here,' they say. 'Who are you, and what brings you to our lands?' Describe your character's appearance, personality, and traits. Introduce yourself to the Elder.", isComplete: false, npc: "Village Elder", rewardXP: 100 },
-                { id: "RISING_ACTION", type: "writing", title: "The Spreading Sickness", objective: "The Elder, now trusting you, asks you to find the Fisherman to learn more about the growing blight.", writingPrompt: "The Fisherman points a trembling hand towards the horizon. 'It started as a small slick,' he rasps, 'but now... it breathes.' He begs you to describe the encroaching horror so the village can understand what they face. Write a vivid description of the monstrous, growing slick of pollution.", isComplete: false, npc: "Fisherman", rewardXP: 150 }
+                { id: "AWAKENING", type: "writing", title: "A Stranger's Arrival", objective: "Introduce yourself to the Village Elder.", writingPrompt: "The Village Elder looks you up and down, a hint of suspicion in their eyes. 'We don't get many visitors here,' they say. 'Who are you, and what brings you to our lands?' Describe your character's appearance, personality, and traits. Introduce yourself to the Elder. Try one action word (e.g., sprinted, crept, glided).", isComplete: false, npc: "Village Elder", rewardXP: 100 },
+                { id: "RISING_ACTION", type: "writing", title: "The Spreading Sickness", objective: "The Elder, now trusting you, asks you to find the Fisherman to learn more about the growing blight.", writingPrompt: "The Fisherman points a trembling hand towards the horizon. 'It started as a small slick,' he rasps, 'but now... it breathes.' He begs you to describe the encroaching horror so the village can understand what they face. Write a vivid description of the monstrous, growing slick of pollution. Try one action word.", isComplete: false, npc: "Fisherman", rewardXP: 150 }
             ],
             canInteractWith: null,
             isCombatActive: false
@@ -1371,6 +1425,9 @@
         const writingTipsBox = document.getElementById('writing-tips-box');
         const currentTips = document.getElementById('current-tips');
 
+        // Student-friendly: ensure special move explains simile
+        specialMoveBtn.textContent = "Use a like/as comparison (Simile) (Lvl 2)";
+
         // --- UI LOGIC ---
         function showPanel(panel, focusElement = null) {
             panel.style.display = panel.classList.contains('modal-backdrop') ? 'flex' : 'block';
@@ -1475,6 +1532,9 @@
             currentTips.textContent = writingTips[stage];
             writingTipsBox.style.display = 'block';
 
+            // Render the student-friendly action word bank
+            renderWordBank(document.getElementById('word-bank'), ACTION_WORDS, writingInput);
+
             // Reset the submit button to its initial state each time the panel is shown
             writingSubmit.disabled = false;
             writingSubmit.textContent = "Weave Your Tale";
@@ -1489,6 +1549,9 @@
                 showMessage("Your entry is too short. Please write a more detailed description.");
                 return;
             }
+
+            // Note locally if the student used one of the suggested action words
+            lastUsedActionWord = hasActionWord(submission);
 
             // SAFEGUARD FIRST
             const gate = await screenTextForClassroom(submission);
@@ -1547,12 +1610,37 @@
             }
         }
 
+        function showQuestComplete(xpGained) {
+            rewardText.textContent = `You earned ${xpGained} XP!`;
+            improvementSuggestion.innerHTML = ''; // Clear previous feedback
+            if (lastValidationResponse) {
+                improvementSuggestion.innerHTML = `
+                    <h3 class="font-bold text-teal-800">Feedback:</h3>
+                    <p><strong>Clarity:</strong> ${lastValidationResponse.clarity_feedback || 'Well done.'}</p>
+                    <p><strong>Creativity:</strong> ${lastValidationResponse.creativity_feedback || 'Nice ideas.'}</p>
+                    <p><strong>Grammar:</strong> ${lastValidationResponse.grammar_feedback || 'Looks good.'}</p>
+                    <p class="mt-2"><strong>Suggestion:</strong> ${lastValidationResponse.overall_suggestion || 'Keep it up!'}</p>
+                `;
+            }
+            // Friendly nudge if they used an action word
+            if (lastUsedActionWord) {
+                const p = document.createElement('p');
+                p.className = "mt-2";
+                p.textContent = "Nice use of an action word—your writing feels more active!";
+                improvementSuggestion.appendChild(p);
+            }
+            showPanel(questComplete);
+        }
+
         function completeQuest() {
             const currentQuest = gameState.quests[gameState.currentQuestIndex];
             currentQuest.isComplete = true;
 
             const baseXP = currentQuest.rewardXP;
-            const finalXP = Math.round(baseXP * (lastValidationResponse.reward_multiplier || 1));
+            // Include small bonus for using an action word (+5%)
+            let mult = (lastValidationResponse?.reward_multiplier || 1);
+            if (lastUsedActionWord) mult += 0.05;
+            const finalXP = Math.round(baseXP * mult);
             playerStats.xp += finalXP;
 
             playerStats.journal.push({
@@ -1672,21 +1760,6 @@
             }
         }
         
-        function showQuestComplete(xpGained) {
-            rewardText.textContent = `You earned ${xpGained} XP!`;
-            improvementSuggestion.innerHTML = ''; // Clear previous feedback
-            if (lastValidationResponse) {
-                improvementSuggestion.innerHTML = `
-                    <h3 class="font-bold text-teal-800">Feedback:</h3>
-                    <p><strong>Clarity:</strong> ${lastValidationResponse.clarity_feedback || 'Well done.'}</p>
-                    <p><strong>Creativity:</strong> ${lastValidationResponse.creativity_feedback || 'Nice ideas.'}</p>
-                    <p><strong>Grammar:</strong> ${lastValidationResponse.grammar_feedback || 'Looks good.'}</p>
-                    <p class="mt-2"><strong>Suggestion:</strong> ${lastValidationResponse.overall_suggestion || 'Keep it up!'}</p>
-                `;
-            }
-            showPanel(questComplete);
-        }
-
         function levelUpCheck() {
             while (playerStats.xp >= playerStats.xpToNextLevel) {
                 playerStats.level++;
@@ -1746,10 +1819,10 @@
                 combatWritingInput.disabled = false;
                 
                 if (combatState.useSpecialMove) {
-                     combatPrompt.textContent = "Use a simile to describe your attack!";
+                     combatPrompt.textContent = "Use a like/as comparison (Simile) to describe your attack!";
                      combatWritingInput.placeholder = "e.g., My hero strikes like lightning...";
                 } else {
-                     combatPrompt.textContent = "The creature waits. Describe your attack!";
+                     combatPrompt.textContent = "The creature waits. Describe your attack! Try one action word (sprint, slam, glide).";
                      combatWritingInput.placeholder = "e.g., I unleash a torrent of water...";
                 }
                 combatWritingInput.focus();
@@ -1786,7 +1859,7 @@
             if(combatState.useSpecialMove) {
                 systemPrompt = `The player is using a simile in combat. Analyze their sentence. If it's a valid simile, assign damage between 40-60. If not, assign 10 damage. Provide brief, encouraging feedback.`;
             } else {
-                systemPrompt = `The player is describing an attack. Analyze their sentence for strong verbs, imagery, and creativity. Assign damage between 15-35 based on quality (a simple sentence should be closer to 15, a highly descriptive one closer to 35). Provide brief, encouraging feedback.`;
+                systemPrompt = `The player is describing an attack. Analyze their sentence for strong verbs (action words), imagery, and creativity. Assign damage between 15-35 based on quality (a simple sentence should be closer to 15, a highly descriptive one closer to 35). Provide brief, encouraging feedback.`;
             }
             
             const schema = { type: "OBJECT", properties: { "damage": { "type": "NUMBER" }, "feedback": { "type": "STRING" } } };
@@ -1994,7 +2067,9 @@
         });
         
         copyJournalBtn.addEventListener('click', () => {
-            const storyText = playerStats.journal.map(e => `## ${e.title} (${e.stage})\n\n${e.text}`).join('\n\n---\n\n');
+            const storyText = playerStats.journal.map(e => `## ${e.title} (${e.stage})
+
+${e.text}`).join('\n\n---\n\n');
             navigator.clipboard.writeText(storyText)
                 .then(() => showMessage("Your story has been copied to the clipboard!"))
                 .catch(err => showMessage("Failed to copy story."));
@@ -2314,4 +2389,3 @@
     </script>
 </body>
 </html>
-
