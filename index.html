@@ -17,7 +17,7 @@
         #ui-container {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
-            color: #3a2d21;
+            pointer-events: none; color: #3a2d21;
         }
         .ui-panel {
             position: absolute;
@@ -39,7 +39,6 @@
             padding: 1.5rem; border-radius: 10px; border: 4px solid #a87e3a;
             width: 90%; max-width: 720px; text-align: center;
             display: flex; flex-direction: column; max-height: 90vh;
-            pointer-events: all;
         }
         .modal-scroll-content { overflow-y: auto; padding-right: 12px; }
         .creator-option {
@@ -728,7 +727,7 @@
         }
 
         async function callGeminiForJournalExpansion(text) {
-            const payload = { contents: [{ parts: [{ text: \`Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\\n\\n\${text}\` }] }], generationConfig: { responseMimeType: "text/plain" } };
+            const payload = { contents: [{ parts: [{ text: `Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\\n\\n${text}` }] }], generationConfig: { responseMimeType: "text/plain" } };
             const result = await callProxyAPI(LLM_API_URL, payload);
             return result?.candidates?.[0]?.content?.parts?.[0]?.text;
         }
@@ -795,7 +794,7 @@
             const ctx = canvas.getContext('2d'); ctx.fillStyle = '#966F33'; ctx.fillRect(0,0,256,256);
             for (let i = 0; i < 10000; i++) {
                 const x = Math.random()*256, y = Math.random()*256, r = Math.random()*1.5;
-                const g = Math.floor(Math.random()*100)+80; const color = \`rgb(\${g}, \${g-10}, \${g-20})\`;
+                const g = Math.floor(Math.random()*100)+80; const color = `rgb(${g}, ${g-10}, ${g-20})`;
                 ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
             }
             const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(80,5); return texture;
@@ -972,8 +971,8 @@
             const q = gameState.quests[gameState.currentQuestIndex];
             if (q) { questTitle.textContent = q.title; questObjective.textContent = q.objective; }
             else { questTitle.textContent = "All quests complete!"; questObjective.textContent = "You have brought peace to the lands."; }
-            playerLevelInfo.textContent = \`Level \${playerStats.level} Guardian\`;
-            xpBar.style.width = \`\${(playerStats.xp / playerStats.xpToNextLevel) * 100}%\`;
+            playerLevelInfo.textContent = `Level ${playerStats.level} Guardian`;
+            xpBar.style.width = `${(playerStats.xp / playerStats.xpToNextLevel) * 100}%`;
             playerAttack.textContent = playerStats.baseDamage;
             playerHealth.textContent = playerStats.baseHealth;
             playerSpeed.textContent = (moveSpeed/baseMoveSpeed).toFixed(2) + "×";
@@ -983,7 +982,7 @@
             if (!achievements[id] || playerStats.achievements[id]) return;
             playerStats.achievements[id] = true; achievements[id].unlocked = true;
             const notification = document.getElementById('achievement-notification');
-            notification.textContent = \`Achievement Unlocked: \${achievements[id].title}\`;
+            notification.textContent = `Achievement Unlocked: ${achievements[id].title}`;
             notification.style.bottom = '20px'; notification.style.opacity = 1;
             setTimeout(()=>{ notification.style.bottom = '-100px'; notification.style.opacity = 0; }, 3000);
         }
@@ -1035,10 +1034,10 @@
             }
             const gate = await screenTextForClassroom(sentence);
             if (!gate.allowed) {
-                prewriteFeedback.innerHTML = \`<div class="feedback-error">\${gate.message || "Please rewrite safely."}</div>\`;
+                prewriteFeedback.innerHTML = `<div class="feedback-error">${gate.message || "Please rewrite safely."}</div>`;
                 return;
             }
-            const usesAction = chosenActionWord && new RegExp(\\\`\\\\b\${chosenActionWord}\\\\b\\\`, 'i').test(sentence);
+            const usesAction = chosenActionWord && new RegExp(`\\\\b${chosenActionWord}\\\\b`, 'i').test(sentence);
             if (!usesAction) {
                 prewriteFeedback.innerHTML = '<div class="feedback-error">Use your chosen action word to win the mini-battle.</div>';
                 return;
@@ -1056,9 +1055,9 @@
 
             if (awarded) {
                 grantItem(awarded);
-                showLootModal(awarded, \`Mini-Battle Victory! +\${bonusXP} XP\`);
+                showLootModal(awarded, `Mini-Battle Victory! +${bonusXP} XP`);
             } else {
-                showMessage(\`Mini-Battle Victory! +\${bonusXP} XP\`);
+                showMessage(`Mini-Battle Victory! +${bonusXP} XP`);
             }
 
             // Continue to writing
@@ -1082,17 +1081,17 @@
         function showLootModal(itemId, headerText="You found gear!") {
             const it = getItem(itemId); if (!it) return;
             document.getElementById('loot-heading').textContent = headerText;
-            lootCard.innerHTML = \`
+            lootCard.innerHTML = `
                 <div class="flex items-start gap-3">
                     <div class="text-2xl">🎁</div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <div class="text-lg font-bold">\${it.name}</div>
-                            <span class="slot-badge">\${it.slot}</span>
+                            <div class="text-lg font-bold">${it.name}</div>
+                            <span class="slot-badge">${it.slot}</span>
                         </div>
-                        <div class="text-sm text-gray-800">\${it.desc}</div>
+                        <div class="text-sm text-gray-800">${it.desc}</div>
                     </div>
-                </div>\`;
+                </div>`;
             lootEquipBtn.onclick = ()=>{ equipItem(itemId); hidePanel(lootPanel); updateQuestLog(); };
             lootCloseBtn.onclick = ()=>{ hidePanel(lootPanel); };
             showPanel(lootPanel);
@@ -1140,29 +1139,29 @@
         }
 
         function renderInventory(){
-            equippedReadout.innerHTML = \`
-                <div><b>Equipped</b> — Weapon: \${slotName(playerStats.equipmentSlots.weapon)} | Armor: \${slotName(playerStats.equipmentSlots.armor)} | Trinket: \${slotName(playerStats.equipmentSlots.trinket)}</div>
-            \`;
+            equippedReadout.innerHTML = `
+                <div><b>Equipped</b> — Weapon: ${slotName(playerStats.equipmentSlots.weapon)} | Armor: ${slotName(playerStats.equipmentSlots.armor)} | Trinket: ${slotName(playerStats.equipmentSlots.trinket)}</div>
+            `;
             function makeItemRow(it){
                 const owned = !!playerStats.inventory[it.id];
                 const equipped = owned && playerStats.inventory[it.id].equipped;
                 const row = document.createElement('div');
                 row.className = 'loot-card';
-                row.innerHTML = \`
+                row.innerHTML = `
                     <div class="flex items-start gap-3">
-                        <div class="text-2xl">\${owned ? "🧰" : "❔"}</div>
+                        <div class="text-2xl">${owned ? "🧰" : "❔"}</div>
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
-                                <div class="font-bold">\${it.name}</div>
-                                <span class="slot-badge">\${it.slot}</span>
-                                \${equipped ? '<span class="slot-badge">equipped</span>' : ''}
+                                <div class="font-bold">${it.name}</div>
+                                <span class="slot-badge">${it.slot}</span>
+                                ${equipped ? '<span class="slot-badge">equipped</span>' : ''}
                             </div>
-                            <div class="text-sm text-gray-800">\${it.desc}</div>
+                            <div class="text-sm text-gray-800">${it.desc}</div>
                         </div>
                         <div>
-                            \${owned ? (equipped ? '<button class="text-sm" data-act="unequip">Unequip</button>' : '<button class="text-sm" data-act="equip">Equip</button>') : '<span class="text-sm text-gray-500">Not owned</span>'}
+                            ${owned ? (equipped ? '<button class="text-sm" data-act="unequip">Unequip</button>' : '<button class="text-sm" data-act="equip">Equip</button>') : '<span class="text-sm text-gray-500">Not owned</span>'}
                         </div>
-                    </div>\`;
+                    </div>`;
                 row.querySelector('[data-act="equip"]')?.addEventListener('click', ()=>{ equipItem(it.id); renderInventory(); });
                 row.querySelector('[data-act="unequip"]')?.addEventListener('click', ()=>{ unequipSlot(it.slot); renderInventory(); });
                 return row;
@@ -1199,7 +1198,7 @@
                         showWritingChallenge();
                     }
                 } else if (currentQuest.type === "writing_combat") {
-                    dialogueText.textContent = \`The \${createdMonster.name} threatens the land. Are you ready to face it with your words?\`;
+                    dialogueText.textContent = `The ${createdMonster.name} threatens the land. Are you ready to face it with your words?`;
                     dialogueButton.textContent = "I'm Ready";
                     dialogueButton.onclick = () => { hidePanel(dialogueBox); createdMonster.object.visible = true; startWritingCombat(); };
                     showPanel(dialogueBox);
@@ -1211,7 +1210,7 @@
             const stage = narrativeStages[Math.min(gameState.currentQuestIndex, narrativeStages.length - 1)];
             narrativeStage.textContent = stage;
             const q = gameState.quests[gameState.currentQuestIndex];
-            challengeTitle.textContent = \`Challenge: \${q.title}\`;
+            challengeTitle.textContent = `Challenge: ${q.title}`;
             challengePrompt.textContent = q.writingPrompt;
             writingInput.value = "";
             feedbackArea.innerHTML = "";
@@ -1244,13 +1243,13 @@
                 writingSubmit.disabled = false; writingSubmit.textContent = "Try Again"; return;
             }
             if (gate.nudge) {
-                feedbackArea.textContent = \`Tip: \${gate.tip}\`;
+                feedbackArea.textContent = `Tip: ${gate.tip}`;
                 feedbackArea.className = 'feedback-area feedback-success';
             } else { feedbackArea.textContent = ''; feedbackArea.className = 'feedback-area'; }
 
             writingSubmit.disabled = true; writingSubmit.textContent = "Analyzing...";
             lastSubmission = submission;
-            const systemPrompt = \`You are an English teacher evaluating a Year 7 student's story entry. Evaluate it on Clarity, Creativity, and Grammar. Provide one-sentence feedback for each, and a final "Overall Suggestion". The student is writing the "\${narrativeStages[gameState.currentQuestIndex]}" part of their story. The prompt was: "\${gameState.quests[gameState.currentQuestIndex].writingPrompt}"\`;
+            const systemPrompt = `You are an English teacher evaluating a Year 7 student's story entry. Evaluate it on Clarity, Creativity, and Grammar. Provide one-sentence feedback for each, and a final "Overall Suggestion". The student is writing the "${narrativeStages[gameState.currentQuestIndex]}" part of their story. The prompt was: "${gameState.quests[gameState.currentQuestIndex].writingPrompt}"`;
             const schema = { type:"OBJECT", properties: { validation:{type:"STRING"}, clarity_feedback:{type:"STRING"}, creativity_feedback:{type:"STRING"}, grammar_feedback:{type:"STRING"}, overall_suggestion:{type:"STRING"}, reward_multiplier:{type:"NUMBER"} } };
             const validationResponse = await callGeminiForText(systemPrompt, submission, schema);
             lastValidationResponse = validationResponse;
@@ -1328,15 +1327,15 @@
         }
 
         function showQuestComplete(xpGained) {
-            rewardText.textContent = \`You earned \${xpGained} XP!\`;
+            rewardText.textContent = `You earned ${xpGained} XP!`;
             improvementSuggestion.innerHTML = '';
             if (lastValidationResponse) {
-                improvementSuggestion.innerHTML = \`
+                improvementSuggestion.innerHTML = `
                     <h3 class="font-bold text-teal-800">Feedback:</h3>
-                    <p><strong>Clarity:</strong> \${lastValidationResponse.clarity_feedback || 'Well done.'}</p>
-                    <p><strong>Creativity:</strong> \${lastValidationResponse.creativity_feedback || 'Nice ideas.'}</p>
-                    <p><strong>Grammar:</strong> \${lastValidationResponse.grammar_feedback || 'Looks good.'}</p>
-                    <p class="mt-2"><strong>Suggestion:</strong> \${lastValidationResponse.overall_suggestion || 'Keep it up!'}</p>\`;
+                    <p><strong>Clarity:</strong> ${lastValidationResponse.clarity_feedback || 'Well done.'}</p>
+                    <p><strong>Creativity:</strong> ${lastValidationResponse.creativity_feedback || 'Nice ideas.'}</p>
+                    <p><strong>Grammar:</strong> ${lastValidationResponse.grammar_feedback || 'Looks good.'}</p>
+                    <p class="mt-2"><strong>Suggestion:</strong> ${lastValidationResponse.overall_suggestion || 'Keep it up!'}</p>`;
             }
             showPanel(questComplete);
         }
@@ -1345,7 +1344,7 @@
             while (playerStats.xp >= playerStats.xpToNextLevel) {
                 playerStats.level++; playerStats.xp -= playerStats.xpToNextLevel; playerStats.xpToNextLevel = Math.round(playerStats.xpToNextLevel * 1.5);
                 playerStats.baseHealth += 20; playerStats.baseDamage += 5;
-                showMessage(\`Congratulations! You've reached Level \${playerStats.level}!\`);
+                showMessage(`Congratulations! You've reached Level ${playerStats.level}!`);
             }
             specialMoveBtn.disabled = playerStats.level < 2;
             applyGearStats();
@@ -1364,8 +1363,8 @@
         function startWritingCombat() {
             gameState.isCombatActive = true; canMove = false;
             combatState.playerHP = playerStats.baseHealth; combatState.enemyHP = createdMonster.baseHealth; combatState.isPlayerTurn = true;
-            combatTitle.textContent = \`Battle with \${createdMonster.name}!\`;
-            combatLog.innerHTML = \`A wild \${createdMonster.name} appears! \${createdMonster.description}.<br>\`;
+            combatTitle.textContent = `Battle with ${createdMonster.name}!`;
+            combatLog.innerHTML = `A wild ${createdMonster.name} appears! ${createdMonster.description}.<br>`;
             updateCombatUI(); nextCombatTurn(); showPanel(combatPanel, combatWritingInput);
         }
         function nextCombatTurn() {
@@ -1395,26 +1394,26 @@
             if (response) {
                 const finalDamage = (response.damage || 15) + playerStats.baseDamage;
                 combatState.enemyHP -= finalDamage;
-                addToCombatLog(\`Your words strike true! (\${response.feedback}) You deal \${finalDamage} damage.\`, "green");
-                playerStats.journal.push({ stage: "Combat", title: \`Turn vs \${createdMonster.name}\`, text: action });
+                addToCombatLog(`Your words strike true! (${response.feedback}) You deal ${finalDamage} damage.`, "green");
+                playerStats.journal.push({ stage: "Combat", title: `Turn vs ${createdMonster.name}`, text: action });
                 if (combatState.useSpecialMove) unlockAchievement("WORD_WEAVER");
             } else {
                 const randomDamage = Math.floor(Math.random()*10) + playerStats.baseDamage;
-                combatState.enemyHP -= randomDamage; addToCombatLog(\`Your attack connects! You deal \${randomDamage} damage.\`, "green");
+                combatState.enemyHP -= randomDamage; addToCombatLog(`Your attack connects! You deal ${randomDamage} damage.`, "green");
             }
             combatWritingInput.value = ""; combatSubmitBtn.textContent = "Attack!"; combatState.useSpecialMove = false; updateCombatUI();
             if (combatState.enemyHP <= 0) endCombat(true); else { combatState.isPlayerTurn = false; nextCombatTurn(); }
         }
         function enemyTurn() {
             const damage = Math.floor(Math.random()*10) + (playerStats.level * 2);
-            combatState.playerHP -= damage; addToCombatLog(\`\${createdMonster.name} retaliates, dealing \${damage} damage!\`, "red");
+            combatState.playerHP -= damage; addToCombatLog(`${createdMonster.name} retaliates, dealing ${damage} damage!`, "red");
             updateCombatUI();
             if (combatState.playerHP <= 0) endCombat(false); else { combatState.isPlayerTurn = true; nextCombatTurn(); }
         }
-        function addToCombatLog(message, color="black") { combatLog.innerHTML += \`<span style="color:\${color};">\${message}</span><br>\`; combatLog.scrollTop = combatLog.scrollHeight; }
+        function addToCombatLog(message, color="black") { combatLog.innerHTML += `<span style="color:${color};">${message}</span><br>`; combatLog.scrollTop = combatLog.scrollHeight; }
         function updateCombatUI() {
-            playerHealthBar.style.width = \`\${Math.max(0, (combatState.playerHP / playerStats.baseHealth) * 100)}%\`;
-            enemyHealthBar.style.width = \`\${Math.max(0, (combatState.enemyHP / createdMonster.baseHealth) * 100)}%\`;
+            playerHealthBar.style.width = `${Math.max(0, (combatState.playerHP / playerStats.baseHealth) * 100)}%`;
+            enemyHealthBar.style.width = `${Math.max(0, (combatState.enemyHP / createdMonster.baseHealth) * 100)}%`;
         }
         function endCombat(playerWon) {
             gameState.isCombatActive = false; hidePanel(combatPanel);
@@ -1466,11 +1465,11 @@
             playerStats.journal.forEach(entry => {
                 const entryDiv = document.createElement('div');
                 entryDiv.className = 'journal-entry';
-                entryDiv.innerHTML = \`
-                    <h3>\${entry.title}</h3>
-                    <p class="journal-stage">\${entry.stage}</p>
-                    <p>\${entry.text}</p>
-                    <button class="expand-btn">Expand</button>\`;
+                entryDiv.innerHTML = `
+                    <h3>${entry.title}</h3>
+                    <p class="journal-stage">${entry.stage}</p>
+                    <p>${entry.text}</p>
+                    <button class="expand-btn">Expand</button>`;
                 journalEntries.appendChild(entryDiv);
             });
             achievementsList.innerHTML = "";
@@ -1478,7 +1477,7 @@
                 const ach = achievements[id]; const isUnlocked = playerStats.achievements[id];
                 const achDiv = document.createElement('div');
                 achDiv.className = isUnlocked ? 'achievement unlocked' : 'achievement locked';
-                achDiv.innerHTML = \`<h3>\${ach.title}</h3><p>\${isUnlocked ? ach.description : '??????????'}</p>\`;
+                achDiv.innerHTML = `<h3>${ach.title}</h3><p>${isUnlocked ? ach.description : '??????????'}</p>`;
                 achievementsList.appendChild(achDiv);
             }
             showPanel(journalPanel); canMove = false;
@@ -1487,7 +1486,7 @@
         achievementsTab.addEventListener('click', ()=>{ achievementsTab.classList.add('active'); storyTab.classList.remove('active'); achievementsList.style.display = 'block'; journalEntries.style.display = 'none'; });
         closeJournalBtn.addEventListener('click', ()=>{ hidePanel(journalPanel); canMove = true; });
         copyJournalBtn.addEventListener('click', ()=>{
-            const storyText = playerStats.journal.map(e => \`## \${e.title} (\${e.stage})\\n\\n\${e.text}\`).join('\\n\\n---\\n\\n');
+            const storyText = playerStats.journal.map(e => `## ${e.title} (${e.stage})\\n\\n${e.text}`).join('\\n\\n---\\n\\n');
             navigator.clipboard.writeText(storyText).then(()=> showMessage("Your story has been copied to the clipboard!")).catch(()=> showMessage("Failed to copy story."));
         });
         journalEntries.addEventListener('click', async (e)=>{
@@ -1614,7 +1613,7 @@
             if (!canMove) { npcs.forEach(n=> n.el.style.display='none'); return; }
             npcs.forEach(n => {
                 const pos = toScreenPosition(n.obj, camera);
-                if (pos) { n.el.style.display='block'; n.el.style.left = \`\${pos.x}px\`; n.el.style.top = \`\${pos.y - 45}px\`; }
+                if (pos) { n.el.style.display='block'; n.el.style.left = `${pos.x}px`; n.el.style.top = `${pos.y - 45}px`; }
                 else n.el.style.display='none';
             });
         }
