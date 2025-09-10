@@ -768,13 +768,26 @@
 
         // --- SCENE SETUP ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb);
-        scene.fog = new THREE.Fog(0x87ceeb, 50, 200);
+        const skybox = new THREE.CubeTextureLoader().load([
+            'https://threejs.org/examples/textures/cube/skybox/px.jpg',
+            'https://threejs.org/examples/textures/cube/skybox/nx.jpg',
+            'https://threejs.org/examples/textures/cube/skybox/py.jpg',
+            'https://threejs.org/examples/textures/cube/skybox/ny.jpg',
+            'https://threejs.org/examples/textures/cube/skybox/pz.jpg',
+            'https://threejs.org/examples/textures/cube/skybox/nz.jpg'
+        ]);
+        scene.background = skybox;
+        scene.environment = skybox;
+        const dayFog = new THREE.Color(0xcce0ff);
+        const nightFog = new THREE.Color(0x0d0d25);
+        scene.fog = new THREE.Fog(dayFog, 100, 400);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.shadowMap.enabled = true;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1;
         document.body.appendChild(renderer.domElement);
 
         // Camera (Top-down Ortho)
@@ -791,10 +804,19 @@
         // Lighting
         const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.8);
         scene.add(hemisphereLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(-30, 50, -30);
-        dirLight.castShadow = true; dirLight.shadow.mapSize.width = 1024; dirLight.shadow.mapSize.height = 1024;
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.1;
+        dirLight.shadow.camera.far = 500;
+        dirLight.shadow.camera.left = -100;
+        dirLight.shadow.camera.right = 100;
+        dirLight.shadow.camera.top = 100;
+        dirLight.shadow.camera.bottom = -100;
         scene.add(dirLight);
+        let sunCycle = 0;
 
         // Character factory
         function createCharacterModel(skinColor = 0xffddbb, clothingColor = 0x888888) {
@@ -1571,16 +1593,15 @@
 
         async function changeWorldAtmosphere(text) {
             const atmoData = await callGeminiForAtmosphere(text);
-            if (atmoData && atmoData.skyColor) {
-                startAtmo.sky = scene.background.clone();
+            if (atmoData && atmoData.fogColor) {
                 startAtmo.fog = scene.fog.color.clone();
                 startAtmo.ground = ground.material.color.clone();
                 startAtmo.particles = particleMesh.material.color.clone();
-                targetAtmo.sky = new THREE.Color(atmoData.skyColor);
                 targetAtmo.fog = new THREE.Color(atmoData.fogColor);
                 targetAtmo.ground = new THREE.Color(atmoData.groundColor);
                 targetAtmo.particles = new THREE.Color(atmoData.particleColor);
-                atmosphereTransitionStart = clock.getElapsedTime(); isTransitioningAtmosphere = true;
+                atmosphereTransitionStart = clock.getElapsedTime();
+                isTransitioningAtmosphere = true;
             }
         }
 
@@ -1813,17 +1834,26 @@
             requestAnimationFrame(animate);
             const delta = clock.getDelta(); const elapsed = clock.getElapsedTime();
 
+            sunCycle += delta * 0.05;
+            const sunAngle = sunCycle % (Math.PI * 2);
+            const lightStrength = Math.max(0, Math.cos(sunAngle));
+            dirLight.position.set(Math.sin(sunAngle) * 100, Math.cos(sunAngle) * 100, 50);
+            dirLight.intensity = lightStrength;
+            hemisphereLight.intensity = 0.2 + 0.8 * lightStrength;
+            scene.fog.color.lerpColors(nightFog, dayFog, lightStrength);
+            renderer.toneMappingExposure = 0.3 + 0.7 * lightStrength;
+
             if (isTransitioningAtmosphere) {
                 const progress = (elapsed - atmosphereTransitionStart) / (atmosphereTransitionDuration / 1000);
                 if (progress < 1) {
-                    scene.background.lerpColors(startAtmo.sky, targetAtmo.sky, progress);
                     scene.fog.color.lerpColors(startAtmo.fog, targetAtmo.fog, progress);
                     ground.material.color.lerpColors(startAtmo.ground, targetAtmo.ground, progress);
                     particleMesh.material.color.lerpColors(startAtmo.particles, targetAtmo.particles, progress);
                 } else {
                     isTransitioningAtmosphere = false;
-                    scene.background.copy(targetAtmo.sky); scene.fog.color.copy(targetAtmo.fog);
-                    ground.material.color.copy(targetAtmo.ground); particleMesh.material.color.copy(targetAtmo.particles);
+                    scene.fog.color.copy(targetAtmo.fog);
+                    ground.material.color.copy(targetAtmo.ground);
+                    particleMesh.material.color.copy(targetAtmo.particles);
                 }
             }
 
