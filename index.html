@@ -835,6 +835,74 @@
         }
         scene.add(instancedRocks);
 
+        // --- VILLAGE STRUCTURES ---
+
+        function createHouse(x, z) {
+            const house = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 6), new THREE.MeshStandardMaterial({ color: 0x9b7653 }));
+            base.position.y = 2; base.castShadow = true; base.receiveShadow = true; house.add(base);
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(5, 3, 4), new THREE.MeshStandardMaterial({ color: 0x654321 }));
+            roof.position.y = 5; roof.rotation.y = Math.PI / 4; roof.castShadow = true; house.add(roof);
+            house.position.set(x, 0, z);
+            return house;
+        }
+        const houses = [
+            createHouse(8, 6),
+            createHouse(-12, 12),
+            createHouse(14, -4),
+            createHouse(-8, -8),
+            createHouse(0, -12)
+        ];
+        houses.forEach(h => scene.add(h));
+
+        // Perimeter fencing
+        const fenceMaterial = new THREE.MeshStandardMaterial({ color: 0x8B5A2B });
+        const fenceRadius = 25;
+        const fenceStep = Math.PI / 8;
+        const railLength = 2 * fenceRadius * Math.sin(fenceStep / 2);
+        for (let angle = 0; angle < Math.PI * 2; angle += fenceStep) {
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2, 6), fenceMaterial);
+            post.position.set(Math.cos(angle) * fenceRadius, 1, Math.sin(angle) * fenceRadius);
+            post.castShadow = true; scene.add(post);
+
+            const midAngle = angle + fenceStep / 2;
+            const rail = new THREE.Mesh(new THREE.BoxGeometry(railLength, 0.2, 0.2), fenceMaterial);
+            rail.position.set(Math.cos(midAngle) * fenceRadius, 1.2, Math.sin(midAngle) * fenceRadius);
+            rail.rotation.y = midAngle + Math.PI / 2;
+            rail.castShadow = true; scene.add(rail);
+        }
+
+        // Market stalls
+        function createStall(x, z) {
+            const stall = new THREE.Group();
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(4, 1, 2), new THREE.MeshStandardMaterial({ color: 0xdeb887 }));
+            counter.position.y = 0.5; counter.castShadow = true; counter.receiveShadow = true; stall.add(counter);
+            const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.2, 2.5), new THREE.MeshStandardMaterial({ color: 0xffe4b5 }));
+            canopy.position.y = 2; canopy.castShadow = true; stall.add(canopy);
+            const poleGeom = new THREE.CylinderGeometry(0.1, 0.1, 2, 6);
+            const polePositions = [ [-2, -1], [2, -1], [-2, 1], [2, 1] ];
+            polePositions.forEach(([px, pz]) => {
+                const pole = new THREE.Mesh(poleGeom, fenceMaterial);
+                pole.position.set(px, 1, pz); pole.castShadow = true; stall.add(pole);
+            });
+            stall.position.set(x, 0, z);
+            return stall;
+        }
+        const stalls = [createStall(5, -5), createStall(-5, -8)];
+        stalls.forEach(s => scene.add(s));
+
+        // Village well
+        const well = new THREE.Group();
+        const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 2, 16), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+        wellBase.position.y = 1; wellBase.castShadow = true; wellBase.receiveShadow = true; well.add(wellBase);
+        const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(2.5, 2, 4), new THREE.MeshStandardMaterial({ color: 0x654321 }));
+        wellRoof.position.y = 3; wellRoof.rotation.y = Math.PI / 4; wellRoof.castShadow = true; well.add(wellRoof);
+        well.position.set(-15, 0, -3); scene.add(well);
+
+        // Farmland patch
+        const farm = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+        farm.rotation.x = -Math.PI / 2; farm.position.set(18, 0, -12); farm.receiveShadow = true; scene.add(farm);
+
         // Ambient particles
         const particleCount = 500;
         const particlesGeometry = new THREE.BufferGeometry();
