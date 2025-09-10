@@ -34,6 +34,35 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 100; pointer-events: all;
         }
+        #start-modal {
+            background: linear-gradient(120deg, #012534, #014f6b, #012534);
+            background-size: 200% 200%;
+            animation: oceanGradient 15s ease infinite;
+        }
+        #start-heading {
+            font-size: 3rem;
+            background: linear-gradient(90deg, #ffdd00, #ffa500, #ffdd00);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 6s linear infinite;
+        }
+        #start-modal button {
+            transition: transform 0.3s, box-shadow 0.3s;
+            padding: 0.75rem 1.5rem;
+        }
+        #start-modal button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        @keyframes oceanGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
         .modal-content {
             background-color: #fdf6e3; color: #3a2d21;
             padding: 1.5rem; border-radius: 10px; border: 4px solid #a87e3a;
@@ -222,11 +251,11 @@
     <!-- Start Modal -->
     <div id="start-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-heading">
         <div class="modal-content">
-            <h1 id="start-heading" class="text-3xl mb-4">Welcome, Storyteller</h1>
-            <p class="mb-6">Your legend awaits. Will you forge a new path or continue an existing journey?</p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <button id="new-game-btn">Forge New Legend</button>
-                <button id="continue-game-btn" disabled>Continue Journey</button>
+            <h1 id="start-heading" class="mb-4 font-bold">🌊 Welcome, Storyteller 🌊</h1>
+            <p class="mb-6">Dive into the realm of legends. Will you forge a new path or continue your tale?</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-2">
+                <button id="new-game-btn">✨ Forge New Legend</button>
+                <button id="continue-game-btn" disabled>⏳ Continue Journey</button>
             </div>
         </div>
     </div>
