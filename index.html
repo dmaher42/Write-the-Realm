@@ -806,6 +806,7 @@
         dirLight.shadow.camera.bottom = -100;
         scene.add(dirLight);
         let sunCycle = 0;
+        let torch;
 
         // Character factory
         function createCharacterModel(skinColor = 0xffddbb, clothingColor = 0x888888) {
@@ -845,6 +846,30 @@
             [leftArm, rightArm, leftLeg, rightLeg].forEach(l => { l.castShadow = true; group.add(l); });
             group.userData = { arms: [leftArm, rightArm], legs: [leftLeg, rightLeg] };
 
+            return group;
+        }
+
+        function createTorch() {
+            const group = new THREE.Group();
+            const handle = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.1, 0.1, 1, 8),
+                new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+            );
+            handle.position.y = -0.5;
+            group.add(handle);
+
+            const flame = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffa500 })
+            );
+            flame.position.y = 0.2;
+            group.add(flame);
+
+            const light = new THREE.PointLight(0xffa500, 1, 10);
+            light.position.y = 0.2;
+            group.add(light);
+
+            group.visible = false;
             return group;
         }
 
@@ -900,6 +925,9 @@
 
         // Player & NPCs
         const player = createCharacterModel(0xffeecc, 0xffff00); player.position.set(0, 0, 20); scene.add(player);
+        torch = createTorch();
+        player.userData.arms[1].add(torch);
+        torch.position.set(0, -0.6, 0);
         const villageElder = createCharacterModel(0xffddbb, 0x0000ff); villageElder.position.set(0, 0, 0); villageElder.name = "Village Elder"; scene.add(villageElder);
         const fisherman = createCharacterModel(0xffddbb, 0x808080); fisherman.position.set(-15, 0, -15); fisherman.name = "Fisherman"; scene.add(fisherman); addWanderer(fisherman, 6);
         const sageOfTheTides = createCharacterModel(0xffddbb, 0x008080); sageOfTheTides.position.set(10, 0, -25); sageOfTheTides.name = "Sage of the Tides"; scene.add(sageOfTheTides); addWanderer(sageOfTheTides, 5);
@@ -1837,6 +1865,9 @@
             hemisphereLight.intensity = 0.2 + 0.8 * lightStrength;
             scene.fog.color.lerpColors(nightFog, dayFog, lightStrength);
             renderer.toneMappingExposure = 0.3 + 0.7 * lightStrength;
+            if (torch) {
+                torch.visible = lightStrength === 0;
+            }
 
             if (isTransitioningAtmosphere) {
                 const progress = (elapsed - atmosphereTransitionStart) / (atmosphereTransitionDuration / 1000);
