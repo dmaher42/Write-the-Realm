@@ -1027,14 +1027,28 @@
             house.position.set(x, 0, z);
             return house;
         }
-        const houses = [
-            createHouse(8, 6),
-            createHouse(-12, 12),
-            createHouse(14, -4),
-            createHouse(-8, -8),
-            createHouse(0, -12)
+        // Arrange houses in two neat rows north and south of the central square
+        const housePositions = [
+            [-10, 12], [0, 12], [10, 12],
+            [-10, -12], [0, -12], [10, -12]
         ];
+        const houses = housePositions.map(([x, z]) => createHouse(x, z));
         houses.forEach(h => scene.add(h));
+
+        // Central roads
+        function createRoad(x, z, width, height) {
+            const road = new THREE.Mesh(
+                new THREE.PlaneGeometry(width, height),
+                new THREE.MeshStandardMaterial({ color: 0x555555 })
+            );
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(x, 0.01, z);
+            road.receiveShadow = true;
+            scene.add(road);
+            return road;
+        }
+        createRoad(0, 0, 40, 4);  // east-west road
+        createRoad(0, 0, 4, 40);  // north-south road
 
         // Perimeter fencing
         const fenceMaterial = new THREE.MeshStandardMaterial({ color: 0x8B5A2B });
@@ -1069,7 +1083,7 @@
             stall.position.set(x, 0, z);
             return stall;
         }
-        const stalls = [createStall(5, -5), createStall(-5, -8)];
+        const stalls = [createStall(8, 0), createStall(-8, 0)];
         stalls.forEach(s => scene.add(s));
 
         // Village well
@@ -1078,11 +1092,11 @@
         wellBase.position.y = 1; wellBase.castShadow = true; wellBase.receiveShadow = true; well.add(wellBase);
         const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(2.5, 2, 4), new THREE.MeshStandardMaterial({ color: 0x654321 }));
         wellRoof.position.y = 3; wellRoof.rotation.y = Math.PI / 4; wellRoof.castShadow = true; well.add(wellRoof);
-        well.position.set(-15, 0, -3); scene.add(well);
+        well.position.set(0, 0, 0); scene.add(well);
 
         // Farmland patch
         const farm = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
-        farm.rotation.x = -Math.PI / 2; farm.position.set(18, 0, -12); farm.receiveShadow = true; scene.add(farm);
+        farm.rotation.x = -Math.PI / 2; farm.position.set(20, 0, 0); farm.receiveShadow = true; scene.add(farm);
 
         // Ambient particles
         const particleCount = 500;
