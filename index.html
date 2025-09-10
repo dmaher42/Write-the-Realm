@@ -1060,10 +1060,10 @@
 
         // --- VILLAGE STRUCTURES ---
 
-        // Arrange houses in two neat rows north and south of the central square
+        // Arrange houses in two wider rows to enlarge the town
         const housePositions = [
-            [-10, 12], [0, 12], [10, 12],
-            [-10, -12], [0, -12], [10, -12]
+            [-20, 20], [0, 20], [20, 20],
+            [-20, -20], [0, -20], [20, -20]
         ];
         const houses = housePositions.map(([x, z]) => {
             const house = createBuilding(6, 4, 6, 0x9b7653, 0x654321);
@@ -1087,21 +1087,26 @@
         createRoad(0, 0, 40, 4);  // east-west road
         createRoad(0, 0, 4, 40);  // north-south road
 
-        // Perimeter fencing
+        // Perimeter fencing styled as a tall medieval palisade
         const fenceMaterial = new THREE.MeshStandardMaterial({ color: 0x8B5A2B });
-        const fenceRadius = 25;
-        const fenceStep = Math.PI / 8;
+        const fenceRadius = 40;
+        const fenceStep = Math.PI / 16;
         const railLength = 2 * fenceRadius * Math.sin(fenceStep / 2);
+        const logHeights = [0.5, 1, 1.5, 2, 2.5, 3];
         for (let angle = 0; angle < Math.PI * 2; angle += fenceStep) {
-            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2, 6), fenceMaterial);
-            post.position.set(Math.cos(angle) * fenceRadius, 1, Math.sin(angle) * fenceRadius);
+            const postHeight = 4;
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, postHeight, 8), fenceMaterial);
+            post.position.set(Math.cos(angle) * fenceRadius, postHeight / 2, Math.sin(angle) * fenceRadius);
             post.castShadow = true; village.add(post);
 
             const midAngle = angle + fenceStep / 2;
-            const rail = new THREE.Mesh(new THREE.BoxGeometry(railLength, 0.2, 0.2), fenceMaterial);
-            rail.position.set(Math.cos(midAngle) * fenceRadius, 1.2, Math.sin(midAngle) * fenceRadius);
-            rail.rotation.y = midAngle + Math.PI / 2;
-            rail.castShadow = true; village.add(rail);
+            logHeights.forEach(h => {
+                const log = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, railLength, 8), fenceMaterial);
+                log.position.set(Math.cos(midAngle) * fenceRadius, h, Math.sin(midAngle) * fenceRadius);
+                log.rotation.z = Math.PI / 2;
+                log.rotation.y = midAngle;
+                log.castShadow = true; village.add(log);
+            });
         }
 
         // Market stalls
