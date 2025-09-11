@@ -1,6 +1,7 @@
 const CACHE_VERSION = 'v1';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
-const ASSETS = ['/', '/index.html'];
+const BASE_PATH = self.location.pathname.replace(/service-worker\.js$/, '');
+const ASSETS = [BASE_PATH, `${BASE_PATH}index.html`];
 
 self.addEventListener('install', event => {
   event.waitUntil(
