@@ -51,6 +51,47 @@
             border-color: #00796b; background-color: #e0f2f1;
             transform: scale(1.03); box-shadow: 0 0 10px rgba(0, 121, 107, 0.5);
         }
+
+        /* Enhanced styling for the Forge Your Hero panel */
+        #character-creator .modal-content {
+            background: radial-gradient(circle at top, #fffbe6 0%, #f7e7c1 60%, #f2d694 100%);
+            border: 4px solid #e0b84e;
+            box-shadow: 0 0 25px rgba(239, 209, 120, 0.6), 0 0 60px rgba(168, 126, 58, 0.5);
+        }
+        #character-creator h1 {
+            color: #b45309;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        #character-creator .creator-option {
+            border: 2px solid transparent;
+            border-image: linear-gradient(135deg, #d4cba6, #a87e3a) 1;
+            background: linear-gradient(135deg, #ffffff, #f8f4e3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #character-creator .creator-option:hover {
+            background: linear-gradient(135deg, #fff9e6, #f0e5c6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        #character-creator .creator-option.selected {
+            border-image: linear-gradient(135deg, #00bcd4, #00796b) 1;
+            background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+            box-shadow: 0 0 12px rgba(0,121,107,0.6);
+        }
+        #character-creator #start-game-btn {
+            background: linear-gradient(90deg, #c89c4a, #f7e08b);
+            color: #3a2d21;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #a87e3a;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #character-creator #start-game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
         #custom-guardian-input {
             display: none; margin-top: 10px; padding: 10px; width: 100%;
             border: 2px solid #a87e3a; border-radius: 5px; font-family: 'Lora', serif;
