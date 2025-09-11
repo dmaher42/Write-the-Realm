@@ -1912,6 +1912,14 @@
         openGearBtn.addEventListener('click', ()=>{ renderInventory(); showPanel(gearPanel); canMove=false; });
         closeGearBtn.addEventListener('click', ()=>{ hidePanel(gearPanel); canMove=true; });
 
+        // Outfit keyboard accessibility
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-outfit]')) {
+                e.preventDefault();
+                e.target.closest('[data-outfit]').click();
+            }
+        });
+
         // Mini-battle controls
         prewriteRollBtn.addEventListener('click', shuffleFocus);
         prewriteSubmitBtn.addEventListener('click', resolvePrewriteBattle);
