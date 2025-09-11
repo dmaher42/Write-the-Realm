@@ -6,12 +6,19 @@
     <title>3D Narrative Quest — Mini-Battle & Gear Update</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
+        :root {
+            --panel-bg: rgba(232, 243, 236, 0.95);
+            --panel-border: #3a2d21;
+            --button-bg: #b7cfd9;
+            --button-hover-bg: #a2becb;
+            --button-text: #3a2d21;
+        }
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Lora', serif;
-            background-color: #000;
-            color: white;
+            background: linear-gradient(to top, #c7d4c2 0%, #9cc4e4 100%);
+            color: #3a2d21;
         }
         canvas { display: block; }
         #ui-container {
@@ -21,10 +28,11 @@
         }
         .ui-panel {
             position: absolute;
-            background-color: rgba(253, 246, 227, 0.95);
-            border: 4px solid #a87e3a; border-radius: 8px;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 8px;
             padding: 1rem; pointer-events: all;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             max-height: 90vh; overflow-y: auto;
             max-width: 90%; width: auto; min-width: 260px;
         }
@@ -35,36 +43,37 @@
             z-index: 100; pointer-events: all;
         }
         #start-modal {
-            background-color: #2d2d2d;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--panel-border);
         }
         #start-heading {
             font-size: 3rem;
-            color: #a87e3a;
+            color: #3a2d21;
         }
         #start-modal button {
             padding: 0.75rem 1.5rem;
-            background-color: #c89c4a;
-            color: white;
-            border: none;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: 2px solid var(--panel-border);
             border-radius: 4px;
             transition: background-color 0.3s;
         }
         #start-modal button:hover {
-            background-color: #a87e3a;
+            background-color: var(--button-hover-bg);
         }
         .modal-content {
-            background-color: #fdf6e3; color: #3a2d21;
-            padding: 1.5rem; border-radius: 10px; border: 4px solid #a87e3a;
+            background-color: var(--panel-bg); color: #3a2d21;
+            padding: 1.5rem; border-radius: 10px; border: 2px solid var(--panel-border);
             width: 90%; max-width: 720px; text-align: center;
             display: flex; flex-direction: column; max-height: 90vh;
         }
         .modal-scroll-content { overflow-y: auto; padding-right: 12px; }
         .creator-option {
-            border: 2px solid #d4cba6; cursor: pointer; padding: 12px; border-radius: 8px;
+            border: 2px solid var(--panel-border); cursor: pointer; padding: 12px; border-radius: 8px;
             transition: all 0.2s ease; background-color: #fff; min-height: 90px;
             display: flex; flex-direction: column; justify-content: center;
         }
-        .creator-option:hover { background-color: #f0e5c6; }
+        .creator-option:hover { background-color: #e0f2f1; }
         .creator-option.selected {
             border-color: #00796b; background-color: #e0f2f1;
             transform: scale(1.03); box-shadow: 0 0 10px rgba(0, 121, 107, 0.5);
@@ -72,47 +81,47 @@
 
         /* Enhanced styling for the Forge Your Hero panel */
         #character-creator .modal-content {
-            background: radial-gradient(circle at top, #fffbe6 0%, #f7e7c1 60%, #f2d694 100%);
-            border: 4px solid #e0b84e;
-            box-shadow: 0 0 25px rgba(239, 209, 120, 0.6), 0 0 60px rgba(168, 126, 58, 0.5);
+            background-color: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            box-shadow: 0 0 25px rgba(239, 209, 120, 0.3);
         }
         #character-creator h1 {
             color: #b45309;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         #character-creator .creator-option {
-            border: 2px solid transparent;
-            border-image: linear-gradient(135deg, #d4cba6, #a87e3a) 1;
-            background: linear-gradient(135deg, #ffffff, #f8f4e3);
+            border: 2px solid var(--panel-border);
+            background-color: #fff;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             transition: transform 0.2s, box-shadow 0.2s;
         }
         #character-creator .creator-option:hover {
-            background: linear-gradient(135deg, #fff9e6, #f0e5c6);
+            background-color: #e0f2f1;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         #character-creator .creator-option.selected {
-            border-image: linear-gradient(135deg, #00bcd4, #00796b) 1;
-            background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+            border-color: #00796b;
+            background-color: #e0f2f1;
             box-shadow: 0 0 12px rgba(0,121,107,0.6);
         }
         #character-creator #start-game-btn {
-            background: linear-gradient(90deg, #c89c4a, #f7e08b);
-            color: #3a2d21;
+            background-color: var(--button-bg);
+            color: var(--button-text);
             padding: 0.75rem 1.5rem;
-            border: 2px solid #a87e3a;
+            border: 2px solid var(--panel-border);
             border-radius: 8px;
             font-weight: bold;
             transition: transform 0.2s, box-shadow 0.2s;
         }
         #character-creator #start-game-btn:hover {
+            background-color: var(--button-hover-bg);
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         #custom-guardian-input {
             display: none; margin-top: 10px; padding: 10px; width: 100%;
-            border: 2px solid #a87e3a; border-radius: 5px; font-family: 'Lora', serif;
+            border: 2px solid var(--panel-border); border-radius: 5px; font-family: 'Lora', serif;
         }
         #quest-log { top: 1rem; left: 1rem; width: 270px; transition: all 0.3s ease; }
         #quest-log.minimized { width: auto; padding: 0.5rem 1rem; padding-right: 2rem; }
@@ -120,11 +129,11 @@
         #quest-log p { font-size: 0.9rem; margin-top: 0.5rem; }
         #quest-log.minimized #quest-log-content { display: none; }
         .xp-bar-container {
-            background-color: #d4cba6; border-radius: 9999px; overflow: hidden;
-            border: 2px solid #a87e3a; padding: 2px; margin-top: 5px;
+            background-color: #e3ede6; border-radius: 9999px; overflow: hidden;
+            border: 2px solid var(--panel-border); padding: 2px; margin-top: 5px;
         }
         .xp-bar {
-            background: linear-gradient(90deg, #c89c4a, #f7e08b);
+            background-color: #b7cfd9;
             height: 10px; border-radius: 9999px; transition: width 0.5s ease-in-out;
         }
         .minimize-btn {
@@ -142,27 +151,27 @@
             width: 90%; max-width: 760px; display: none;
         }
         #writing-tips-box {
-            background: #e0f2f1; border-left: 4px solid #00796b; padding: 10px;
+            background: #e0f2f1; border-left: 2px solid var(--panel-border); padding: 10px;
             margin: 12px 0; text-align: left; border-radius: 4px;
         }
         #combat-panel { text-align: center; }
         #combat-log {
-            background-color: #fff; border: 2px solid #d4cba6; height: 120px;
+            background-color: #fff; border: 2px solid var(--panel-border); height: 120px;
             overflow-y: scroll; padding: 10px; margin-top: 15px; text-align: left;
             font-size: 0.9rem; line-height: 1.4;
         }
         #improvement-suggestion {
-            background: #fff; border: 2px solid #d4cba6; padding: 15px;
+            background: #fff; border: 2px solid var(--panel-border); padding: 15px;
             margin-top: 15px; text-align: left; border-radius: 8px;
         }
         #journal-entries, #achievements-list {
             text-align: left; background-color: #fff; padding: 15px; border-radius: 5px;
-            border: 2px solid #d4cba6; min-height: 200px; max-height: 40vh;
+            border: 2px solid var(--panel-border); min-height: 200px; max-height: 40vh;
             overflow-y: auto; white-space: pre-wrap;
         }
         .journal-entry {
             background-color: #f8f0e0; padding: 15px; border-radius: 8px; margin-bottom: 15px;
-            border: 2px solid #d4cba6; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid var(--panel-border); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
         }
         .journal-entry:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
@@ -173,20 +182,20 @@
             padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; display: none; cursor: pointer;
         }
         .journal-entry:hover button { display: block; }
-        .achievement { padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 2px solid #d4cba6; }
+        .achievement { padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 2px solid var(--panel-border); }
         .achievement.unlocked { background-color: #e0f2f1; }
         .achievement.locked { background-color: #f1f1f1; color: #999; }
         .achievement p { font-size: 0.9em; }
         .journal-tabs { display: flex; margin-bottom: -2px; }
         .journal-tab {
-            padding: 10px 15px; cursor: pointer; background-color: #d4cba6;
-            border: 2px solid #a87e3a; border-bottom: none; border-radius: 8px 8px 0 0;
+            padding: 10px 15px; cursor: pointer; background-color: #e3ede6;
+            border: 2px solid var(--panel-border); border-bottom: none; border-radius: 8px 8px 0 0;
             margin-right: 5px;
         }
         .journal-tab.active { background-color: #fff; border-bottom: 2px solid #fff; }
         #achievement-notification {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background-color: #c89c4a; color: white; padding: 15px 25px; border-radius: 10px;
+            background-color: var(--button-bg); color: white; padding: 15px 25px; border-radius: 10px;
             font-family: 'MedievalSharp', cursive; font-size: 1.3rem; z-index: 200; opacity: 0;
             transition: opacity 0.5s, bottom 0.5s; pointer-events: none;
         }
@@ -209,16 +218,16 @@
         h1 { font-size: 1.8rem; color: #a87e3a; }
         h2 { font-size: 1.4rem; }
         textarea, input[type="text"] {
-            width: 100%; background-color: #fff; border: 2px solid #d4cba6; padding: 10px; margin-top: 10px;
+            width: 100%; background-color: #fff; border: 2px solid var(--panel-border); padding: 10px; margin-top: 10px;
             font-family: 'Lora', serif; color: #3a2d21;
         }
         textarea { height: 150px; }
         button {
-            background-color: #c89c4a; color: white; padding: 0.9rem 1.2rem; border: none; border-radius: 5px;
+            background-color: var(--button-bg); color: var(--button-text); padding: 0.9rem 1.2rem; border: 2px solid var(--panel-border); border-radius: 5px;
             font-family: 'MedievalSharp', cursive; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
             transition: background-color 0.2s;
         }
-        button:hover { background-color: #a87e3a; }
+        button:hover { background-color: var(--button-hover-bg); }
         button:disabled { background-color: #888; cursor: not-allowed; }
         #controls-info {
             position: absolute; bottom: 1rem; left: 1rem;
@@ -229,7 +238,7 @@
         .feedback-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .feedback-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .health-bar-container {
-            background-color: #d4cba6; border-radius: 9999px; overflow: hidden; border: 2px solid #a87e3a; padding: 2px;
+            background-color: #e3ede6; border-radius: 9999px; overflow: hidden; border: 2px solid var(--panel-border); padding: 2px;
             margin: 0 auto; width: 80%;
         }
         .health-bar { background: linear-gradient(90deg, #d9534f, #f7d58b); height: 10px; border-radius: 9999px; transition: width 0.5s ease-in-out; }
@@ -240,32 +249,32 @@
             white-space: nowrap; display: none;
         }
         #message-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background-color: #fdf6e3; color: #3a2d21; padding: 20px; border: 4px solid #a87e3a; border-radius: 8px;
+            background-color: var(--panel-bg); color: #3a2d21; padding: 20px; border: 2px solid var(--panel-border); border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200; display: none; text-align: center; pointer-events: all;
         }
         .tts-loading-indicator {
-            display: inline-block; width: 15px; height: 15px; border: 2px solid #c89c4a; border-top: 2px solid transparent;
+            display: inline-block; width: 15px; height: 15px; border: 2px solid var(--button-bg); border-top: 2px solid transparent;
             border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; vertical-align: middle;
         }
         @keyframes spin { 0%{transform: rotate(0deg);} 100%{transform: rotate(360deg);} }
         /* Action word chips */
         .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .chip {
-            background: #fff; border: 2px solid #d4cba6; border-radius: 9999px; padding: 6px 10px; font-size: 0.9rem;
+            background: #fff; border: 2px solid var(--panel-border); border-radius: 9999px; padding: 6px 10px; font-size: 0.9rem;
             cursor: pointer; user-select: none;
         }
         .chip:hover { background: #f0e5c6; }
         /* Prewrite mini-battle styles */
         .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .pick-card {
-            background:#fff; border:2px solid #d4cba6; border-radius:8px; padding:10px; min-height:72px; cursor:pointer;
+            background:#fff; border:2px solid var(--panel-border); border-radius:8px; padding:10px; min-height:72px; cursor:pointer;
         }
         .pick-card.selected { border-color:#00796b; background:#e0f2f1; }
         .hint { font-size: 0.85rem; color:#35524a; background:#e0f2f1; padding:8px 10px; border-left:4px solid #00796b; border-radius:4px; }
         .loot-card{
-            background:#fff; border:2px solid #a87e3a; border-radius:10px; padding:14px; text-align:left;
+            background:#fff; border:2px solid var(--panel-border); border-radius:10px; padding:14px; text-align:left;
         }
-        .slot-badge{ font-size:0.75rem; background:#e9d8a6; border:1px solid #a87e3a; padding:2px 6px; border-radius:9999px; }
+        .slot-badge{ font-size:0.75rem; background:#e9d8a6; border:1px solid var(--panel-border); padding:2px 6px; border-radius:9999px; }
         /* Responsive */
         @media (max-width: 768px) {
             h1 { font-size: 1.5rem; } h2 { font-size: 1.2rem; }
@@ -522,6 +531,7 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { generateTerrain } from './terrain.js';
+        import { createHut, createFarmRow, createLordHouse, createChurch } from './assets/models/villageStructures.js';
 
         // --- GEMINI API SETUP ---
         const LLM_API_URL = '/gemini';
@@ -807,16 +817,35 @@
 
         // --- SCENE SETUP ---
         const scene = new THREE.Scene();
-        const skybox = new THREE.CubeTextureLoader().load([
-            'https://threejs.org/examples/textures/cube/skybox/px.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/nx.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/py.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/ny.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/pz.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/nz.jpg'
-        ]);
-        scene.background = skybox;
-        scene.environment = skybox;
+        // Gradient sky background
+        const skyCanvas = document.createElement('canvas');
+        skyCanvas.width = 16;
+        skyCanvas.height = 256;
+        const skyCtx = skyCanvas.getContext('2d');
+        const skyGrad = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
+        skyGrad.addColorStop(0, '#87CEFA'); // light blue
+        skyGrad.addColorStop(1, '#FFFACD'); // pale yellow
+        skyCtx.fillStyle = skyGrad;
+        skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+        const skyTexture = new THREE.CanvasTexture(skyCanvas);
+        scene.background = skyTexture;
+        scene.environment = null;
+
+        // Simple sun sprite near the horizon
+        const sunCanvas = document.createElement('canvas');
+        sunCanvas.width = sunCanvas.height = 128;
+        const sunCtx = sunCanvas.getContext('2d');
+        const sunGrad = sunCtx.createRadialGradient(64, 64, 10, 64, 64, 64);
+        sunGrad.addColorStop(0, '#FFFACD');
+        sunGrad.addColorStop(1, '#FFD700');
+        sunCtx.fillStyle = sunGrad;
+        sunCtx.fillRect(0, 0, 128, 128);
+        const sunTexture = new THREE.CanvasTexture(sunCanvas);
+        const sunMaterial = new THREE.SpriteMaterial({ map: sunTexture, transparent: true });
+        const sun = new THREE.Sprite(sunMaterial);
+        sun.scale.set(30, 30, 1);
+        sun.position.set(0, 20, -150);
+        scene.add(sun);
         const dayFog = new THREE.Color(0xcce0ff);
         const nightFog = new THREE.Color(0x0d0d25);
         scene.fog = new THREE.Fog(dayFog, 100, 400);
@@ -1138,6 +1167,51 @@
         const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x4F7942 });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial); ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
 
+        const TILE_SIZE = 10;
+        const referenceLayout = {
+            huts: [
+                { x: 1, z: 1 },
+                { x: 3, z: 1 },
+                { x: 1, z: 3 },
+                { x: 3, z: 3 }
+            ],
+            farmRows: [
+                { x: 5, z: 0 },
+                { x: 5, z: 1 },
+                { x: 5, z: 2 },
+                { x: 5, z: 3 }
+            ],
+            lordHouse: { x: 2, z: 2 },
+            church: { x: 2, z: 4 }
+        };
+
+        function generateVillageLayout() {
+            const layoutGroup = new THREE.Group();
+            scene.add(layoutGroup);
+
+            referenceLayout.huts.forEach(pos => {
+                const hut = createHut();
+                hut.position.set(pos.x * TILE_SIZE, 0, pos.z * TILE_SIZE);
+                layoutGroup.add(hut);
+            });
+
+            referenceLayout.farmRows.forEach(pos => {
+                const row = createFarmRow();
+                row.position.set(pos.x * TILE_SIZE, 0, pos.z * TILE_SIZE);
+                layoutGroup.add(row);
+            });
+
+            const lord = createLordHouse();
+            lord.position.set(referenceLayout.lordHouse.x * TILE_SIZE, 0, referenceLayout.lordHouse.z * TILE_SIZE);
+            layoutGroup.add(lord);
+
+            const church = createChurch();
+            church.position.set(referenceLayout.church.x * TILE_SIZE, 0, referenceLayout.church.z * TILE_SIZE);
+            layoutGroup.add(church);
+        }
+
+        generateVillageLayout();
+
         function createGravelTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d'); ctx.fillStyle = '#966F33'; ctx.fillRect(0,0,256,256);
@@ -1340,6 +1414,21 @@
         // Scale up the entire village
         village.scale.set(1.5, 1.5, 1.5);
 
+        // Road leading to the fishing village
+        const fishingRoadPoints = [
+            new THREE.Vector3(-20, 0, -40),
+            new THREE.Vector3(-40, 0, -80),
+            new THREE.Vector3(-60, 0, -100),
+            new THREE.Vector3(-80, 0, -120)
+        ];
+        const fishingRoadCurve = new THREE.CatmullRomCurve3(fishingRoadPoints);
+        const fishingRoadGeometry = new THREE.TubeGeometry(fishingRoadCurve, 64, 2, 8, false);
+        const fishingRoad = new THREE.Mesh(fishingRoadGeometry, roadMaterial);
+        fishingRoad.scale.y = 0.05;
+        fishingRoad.position.y = 0.1;
+        fishingRoad.receiveShadow = true;
+        scene.add(fishingRoad);
+
         // --- FISHING VILLAGE NEAR THE SEA ---
         const fishingVillage = new THREE.Group();
         fishingVillage.position.set(-80, 0, -150);
@@ -1361,6 +1450,21 @@
             return hut;
         }
         [createHut(-12, 20), createHut(12, 20)].forEach(h => fishingVillage.add(h));
+
+        // Signpost at the village entrance
+        const sign = new THREE.Group();
+        const signPostGeom = new THREE.BoxGeometry(0.3, 3, 0.3);
+        const leftPost = new THREE.Mesh(signPostGeom, fenceMaterial);
+        const rightPost = leftPost.clone();
+        leftPost.position.set(-1, 1.5, 0);
+        rightPost.position.set(1, 1.5, 0);
+        sign.add(leftPost);
+        sign.add(rightPost);
+        const signBoard = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xdeb887 }));
+        signBoard.position.set(0, 2.3, 0);
+        sign.add(signBoard);
+        sign.position.set(0, 0, 30);
+        fishingVillage.add(sign);
 
         // Wooden dock extending into the sea
         const dock = new THREE.Mesh(new THREE.BoxGeometry(20, 0.5, 4), new THREE.MeshStandardMaterial({ color: 0x8B5A2B }));
