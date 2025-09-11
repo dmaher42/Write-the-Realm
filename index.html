@@ -2030,7 +2030,7 @@
                     player.position.add(dir);
                     animateLimbs(player, elapsed * 5);
                     encounterDistance += dir.length();
-                    if (encounterDistance > 20 && Math.random() < 0.05) { encounterDistance = 0; triggerRandomEncounter(); }
+                    if (encounterDistance > 50 && Math.random() < 0.02) { encounterDistance = 0; triggerRandomEncounter(); }
                 } else {
                     animateLimbs(player, 0);
                 }
