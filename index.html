@@ -1151,6 +1151,21 @@
         const village = new THREE.Group();
         scene.add(village);
 
+        // Sub‑groups for easier layout tweaking
+        const residentialGroup = new THREE.Group();
+        const marketGroup = new THREE.Group();
+        const utilityGroup = new THREE.Group();
+        village.add(residentialGroup);
+        village.add(marketGroup);
+        village.add(utilityGroup);
+        marketGroup.position.set(0,0,0);
+
+        // Layout constants
+        const HOUSE_COUNT = 6;
+        const HOUSE_RADIUS = 30;
+        const HOUSE_SPACING = Math.PI * 2 / HOUSE_COUNT;
+        const MARKET_RADIUS = 8;
+
         function createBuilding(w, h, d, color, roofColor) {
             const group = new THREE.Group();
             const base = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color }));
@@ -1176,7 +1191,7 @@
         buildingDefs.forEach(def => {
             const b = createBuilding(def.size[0], def.size[1], def.size[2], def.color, def.roof);
             b.position.set(def.position[0], def.position[1], def.position[2]);
-            village.add(b);
+            residentialGroup.add(b);
         });
 
         const dungeonEntrance = new THREE.Mesh(
@@ -1185,7 +1200,7 @@
         );
         dungeonEntrance.position.set(30,2,-10);
         dungeonEntrance.castShadow = true;
-        village.add(dungeonEntrance);
+        utilityGroup.add(dungeonEntrance);
         let inDungeon = false;
 
         // Instanced trees, rocks
@@ -1220,17 +1235,20 @@
 
         // --- VILLAGE STRUCTURES ---
 
-        // Arrange houses in two wider rows to enlarge the town
-        const housePositions = [
-            [-20, 20], [0, 20], [20, 20],
-            [-20, -20], [0, -20], [20, -20]
-        ];
-        const houses = housePositions.map(([x, z]) => {
+        // Houses spaced evenly along the palisade perimeter
+        const housePositions = [];
+        for (let i = 0; i < HOUSE_COUNT; i++) {
+            const angle = i * HOUSE_SPACING;
+            housePositions.push([
+                Math.cos(angle) * HOUSE_RADIUS,
+                Math.sin(angle) * HOUSE_RADIUS
+            ]);
+        }
+        housePositions.forEach(([x, z]) => {
             const house = createBuilding(6, 4, 6, 0x9b7653, 0x654321);
             house.position.set(x, 0, z);
-            return house;
+            residentialGroup.add(house);
         });
-        houses.forEach(h => village.add(h));
 
         // Central roads
         function createRoad(x, z, width, height) {
@@ -1275,7 +1293,7 @@
             });
         }
 
-        // Market stalls
+        // Market stalls surrounding a central well
         function createStall(x, z) {
             const stall = new THREE.Group();
             const counter = new THREE.Mesh(new THREE.BoxGeometry(4, 1, 2), new THREE.MeshStandardMaterial({ color: 0xdeb887 }));
@@ -1291,8 +1309,11 @@
             stall.position.set(x, 0, z);
             return stall;
         }
-        const stalls = [createStall(8, 0), createStall(-8, 0)];
-        stalls.forEach(s => village.add(s));
+        const stallAngles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+        stallAngles.forEach(a => {
+            const s = createStall(Math.cos(a) * MARKET_RADIUS, Math.sin(a) * MARKET_RADIUS);
+            marketGroup.add(s);
+        });
 
         // Village well
         const well = new THREE.Group();
@@ -1300,11 +1321,11 @@
         wellBase.position.y = 1; wellBase.castShadow = true; wellBase.receiveShadow = true; well.add(wellBase);
         const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(2.5, 2, 4), new THREE.MeshStandardMaterial({ color: 0x654321 }));
         wellRoof.position.y = 3; wellRoof.rotation.y = Math.PI / 4; wellRoof.castShadow = true; well.add(wellRoof);
-        well.position.set(0, 0, 0); village.add(well);
+        well.position.set(0, 0, 0); marketGroup.add(well);
 
-        // Farmland patch
+        // Farmland patch moved outside the palisade
         const farm = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
-        farm.rotation.x = -Math.PI / 2; farm.position.set(20, 0, 0); farm.receiveShadow = true; village.add(farm);
+        farm.rotation.x = -Math.PI / 2; farm.position.set(60, 0, 0); farm.receiveShadow = true; utilityGroup.add(farm);
 
         // Scale up the entire village
         village.scale.set(1.5, 1.5, 1.5);
