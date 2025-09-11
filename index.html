@@ -1112,6 +1112,7 @@
         }
 
         function triggerRandomEncounter(isDungeon=false) {
+            if (!randomEncountersEnabled) return;
             playerWeapon = weapons[Math.floor(Math.random()*weapons.length)];
             spawnRandomMonster(isDungeon ? dungeonMonsters : monsters);
             const prefix = isDungeon ? 'Dungeon' : 'Wild';
@@ -1120,6 +1121,7 @@
         }
 
         function checkDungeonEntrance() {
+            if (!randomEncountersEnabled) return;
             if (!inDungeon && player.position.distanceTo(dungeonEntrance.position) < 5) {
                 inDungeon = true;
                 triggerRandomEncounter(true);
@@ -1323,6 +1325,7 @@
         let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false, interactKeyPressed=false;
         const clock = new THREE.Clock();
         let canMove = true; let gameStarted = false;
+        const randomEncountersEnabled = false;
         const gameState = {
             currentQuestIndex: 0,
             quests: [
@@ -2088,7 +2091,7 @@
                     player.position.add(dir);
                     animateLimbs(player, elapsed * 5);
                     encounterDistance += dir.length();
-                    if (encounterDistance > 50 && Math.random() < 0.02) { encounterDistance = 0; triggerRandomEncounter(); }
+                    if (randomEncountersEnabled && encounterDistance > 50 && Math.random() < 0.02) { encounterDistance = 0; triggerRandomEncounter(); }
                 } else {
                     animateLimbs(player, 0);
                 }
