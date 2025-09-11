@@ -1091,20 +1091,26 @@
         const fenceMaterial = new THREE.MeshStandardMaterial({ color: 0x8B5A2B });
         const fenceRadius = 40;
         const fenceStep = Math.PI / 16;
-        const railLength = 2 * fenceRadius * Math.sin(fenceStep / 2);
         const logHeights = [0.5, 1, 1.5, 2, 2.5, 3];
         for (let angle = 0; angle < Math.PI * 2; angle += fenceStep) {
+            const nextAngle = angle + fenceStep;
             const postHeight = 4;
             const post = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, postHeight, 8), fenceMaterial);
             post.position.set(Math.cos(angle) * fenceRadius, postHeight / 2, Math.sin(angle) * fenceRadius);
             post.castShadow = true; village.add(post);
 
-            const midAngle = angle + fenceStep / 2;
+            // create horizontal logs between this post and the next
+            const startPos = new THREE.Vector3(Math.cos(angle) * fenceRadius, 0, Math.sin(angle) * fenceRadius);
+            const endPos = new THREE.Vector3(Math.cos(nextAngle) * fenceRadius, 0, Math.sin(nextAngle) * fenceRadius);
+            const dir = new THREE.Vector3().subVectors(endPos, startPos);
+            const railLength = dir.length();
+            const midPoint = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
+            const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
             logHeights.forEach(h => {
                 const log = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, railLength, 8), fenceMaterial);
-                log.position.set(Math.cos(midAngle) * fenceRadius, h, Math.sin(midAngle) * fenceRadius);
-                log.rotation.z = Math.PI / 2;
-                log.rotation.y = midAngle;
+                log.position.copy(midPoint);
+                log.position.y = h;
+                log.quaternion.copy(quat);
                 log.castShadow = true; village.add(log);
             });
         }
