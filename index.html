@@ -520,6 +520,7 @@
     </script>
     <script type="module">
         import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // --- GEMINI API SETUP ---
         const LLM_API_URL = '/gemini';
@@ -849,43 +850,91 @@
         let sunCycle = 0;
         let torch;
 
-        // Character factory
-        function createCharacterModel(skinColor = 0xffddbb, clothingColor = 0x888888) {
+        // Character factory that loads a humanoid model or falls back to primitives
+        function createCharacterModel(
+            skinColor = 0xffddbb,
+            shirtColor = 0x888888,
+            pantsColor = shirtColor,
+            hairColor = 0x333333
+        ) {
             const group = new THREE.Group();
+            const loader = new GLTFLoader();
+            const modelUrl = 'models/humanoid.glb';
 
-            const bodyMat = new THREE.MeshStandardMaterial({ color: clothingColor });
-            const skinMat = new THREE.MeshStandardMaterial({ color: skinColor });
+            const buildPrimitive = () => {
+                const pGroup = new THREE.Group();
+                const shirtMat = new THREE.MeshStandardMaterial({ color: shirtColor });
+                const skinMat = new THREE.MeshStandardMaterial({ color: skinColor });
+                const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor });
+                const hairMat = new THREE.MeshStandardMaterial({ color: hairColor });
 
-            const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.6, 4, 8), bodyMat);
-            body.castShadow = true; body.receiveShadow = true; body.position.y = 1.8; group.add(body);
+                const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.6, 4, 8), shirtMat);
+                body.castShadow = true; body.receiveShadow = true; body.position.y = 1.8; pGroup.add(body);
 
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), skinMat.clone());
-            head.position.y = 3.5; head.castShadow = true; group.add(head);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), skinMat.clone());
+                head.position.y = 3.5; head.castShadow = true; pGroup.add(head);
 
-            // simple facial features
-            const eyeGeom = new THREE.SphereGeometry(0.1, 8, 8);
-            const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-            const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
-            const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
-            leftEye.position.set(-0.2, 0.1, 0.55);
-            rightEye.position.set(0.2, 0.1, 0.55);
-            head.add(leftEye); head.add(rightEye);
-            const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x000000 }));
-            mouth.position.set(0, -0.2, 0.55); head.add(mouth);
+                const hair = new THREE.Mesh(new THREE.SphereGeometry(0.62, 16, 16), hairMat);
+                hair.position.y = 4.1; hair.castShadow = true; pGroup.add(hair);
 
-            // limbs
-            const armGeom = new THREE.BoxGeometry(0.2, 1.2, 0.2);
-            const legGeom = new THREE.BoxGeometry(0.3, 1.5, 0.3);
-            const leftArm = new THREE.Mesh(armGeom, clothingColor === skinColor ? skinMat.clone() : bodyMat.clone());
-            const rightArm = new THREE.Mesh(armGeom, clothingColor === skinColor ? skinMat.clone() : bodyMat.clone());
-            leftArm.position.set(-0.9, 1.2, 0);
-            rightArm.position.set(0.9, 1.2, 0);
-            const leftLeg = new THREE.Mesh(legGeom, bodyMat.clone());
-            const rightLeg = new THREE.Mesh(legGeom, bodyMat.clone());
-            leftLeg.position.set(-0.4, 0, 0);
-            rightLeg.position.set(0.4, 0, 0);
-            [leftArm, rightArm, leftLeg, rightLeg].forEach(l => { l.castShadow = true; group.add(l); });
-            group.userData = { arms: [leftArm, rightArm], legs: [leftLeg, rightLeg] };
+                // simple facial features
+                const eyeGeom = new THREE.SphereGeometry(0.1, 8, 8);
+                const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+                const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
+                leftEye.position.set(-0.2, 0.1, 0.55);
+                rightEye.position.set(0.2, 0.1, 0.55);
+                head.add(leftEye); head.add(rightEye);
+                const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+                mouth.position.set(0, -0.2, 0.55); head.add(mouth);
+
+                // limbs
+                const armGeom = new THREE.BoxGeometry(0.2, 1.2, 0.2);
+                const legGeom = new THREE.BoxGeometry(0.3, 1.5, 0.3);
+                const leftArm = new THREE.Mesh(armGeom, shirtColor === skinColor ? skinMat.clone() : shirtMat.clone());
+                const rightArm = new THREE.Mesh(armGeom, shirtColor === skinColor ? skinMat.clone() : shirtMat.clone());
+                leftArm.position.set(-0.9, 1.2, 0);
+                rightArm.position.set(0.9, 1.2, 0);
+                const leftLeg = new THREE.Mesh(legGeom, pantsMat.clone());
+                const rightLeg = new THREE.Mesh(legGeom, pantsMat.clone());
+                leftLeg.position.set(-0.4, 0, 0);
+                rightLeg.position.set(0.4, 0, 0);
+                [leftArm, rightArm, leftLeg, rightLeg].forEach(l => { l.castShadow = true; pGroup.add(l); });
+                pGroup.userData = { arms: [leftArm, rightArm], legs: [leftLeg, rightLeg] };
+                return pGroup;
+            };
+
+            loader.load(
+                modelUrl,
+                gltf => {
+                    const model = gltf.scene;
+                    model.traverse(obj => {
+                        if (obj.isMesh) {
+                            obj.castShadow = true;
+                            obj.receiveShadow = true;
+                            const name = obj.name.toLowerCase();
+                            const mat = obj.material.clone();
+                            if (name.includes('skin') || name.includes('body') || name.includes('head')) {
+                                mat.color.setHex(skinColor);
+                            } else if (name.includes('shirt') || name.includes('top')) {
+                                mat.color.setHex(shirtColor);
+                            } else if (name.includes('pant') || name.includes('leg')) {
+                                mat.color.setHex(pantsColor);
+                            } else if (name.includes('hair')) {
+                                mat.color.setHex(hairColor);
+                            }
+                            obj.material = mat;
+                        }
+                    });
+                    group.add(model);
+                },
+                undefined,
+                error => {
+                    console.warn('Failed to load humanoid model, using primitives instead.', error);
+                    const primitive = buildPrimitive();
+                    group.add(primitive);
+                }
+            );
 
             return group;
         }
@@ -965,19 +1014,24 @@
         let encounterDistance = 0;
 
         // Player & NPCs
-        const player = createCharacterModel(0xffeecc, 0xffff00); player.position.set(0, 0, 20); scene.add(player);
+        const player = createCharacterModel(0xffeecc, 0xffff00, 0x0000ff, 0x000000); player.position.set(0, 0, 20); scene.add(player);
         torch = createTorch();
-        player.userData.arms[1].add(torch);
-        torch.position.set(0, -0.6, 0);
-        const villageElder = createCharacterModel(0xffddbb, 0x0000ff); villageElder.position.set(0, 0, 0); villageElder.name = "Village Elder"; scene.add(villageElder);
-        const fisherman = createCharacterModel(0xffddbb, 0x808080); fisherman.position.set(-15, 0, -15); fisherman.name = "Fisherman"; scene.add(fisherman); addWanderer(fisherman, 6);
-        const sageOfTheTides = createCharacterModel(0xffddbb, 0x008080); sageOfTheTides.position.set(10, 0, -25); sageOfTheTides.name = "Sage of the Tides"; scene.add(sageOfTheTides); addWanderer(sageOfTheTides, 5);
-        const warTornElder = createCharacterModel(0xffddbb, 0x5a2e2e); warTornElder.position.set(-20, 0, 10); warTornElder.name = "War-Torn Elder"; scene.add(warTornElder); addWanderer(warTornElder, 4);
-        const blacksmith = createCharacterModel(0xffddbb, 0xff5500); blacksmith.position.set(15, 0, 5); blacksmith.name = "Blacksmith"; scene.add(blacksmith); addWanderer(blacksmith, 5);
-        const merchant = createCharacterModel(0xffddbb, 0x00aaff); merchant.position.set(-10, 0, 25); merchant.name = "Merchant"; scene.add(merchant); addWanderer(merchant, 7);
-        const guard = createCharacterModel(0xffddbb, 0x3333ff); guard.position.set(25, 0, 10); guard.name = "Guard"; scene.add(guard); addWanderer(guard, 6);
-        const innkeeper = createCharacterModel(0xffddbb, 0x964B00); innkeeper.position.set(5, 0, 25); innkeeper.name = "Innkeeper"; scene.add(innkeeper); addWanderer(innkeeper, 4);
-        const farmer = createCharacterModel(0xffddbb, 0x228B22); farmer.position.set(-25, 0, 5); farmer.name = "Farmer"; scene.add(farmer); addWanderer(farmer, 7);
+        if (player.userData && player.userData.arms) {
+            player.userData.arms[1].add(torch);
+            torch.position.set(0, -0.6, 0);
+        } else {
+            player.add(torch);
+            torch.position.set(0, 2.5, 1);
+        }
+        const villageElder = createCharacterModel(0xffddbb, 0x0000ff, 0x333333, 0x555555); villageElder.position.set(0, 0, 0); villageElder.name = "Village Elder"; scene.add(villageElder);
+        const fisherman = createCharacterModel(0xffddbb, 0x808080, 0x000080, 0x222222); fisherman.position.set(-15, 0, -15); fisherman.name = "Fisherman"; scene.add(fisherman); addWanderer(fisherman, 6);
+        const sageOfTheTides = createCharacterModel(0xffddbb, 0x008080, 0x004040, 0xaaaaaa); sageOfTheTides.position.set(10, 0, -25); sageOfTheTides.name = "Sage of the Tides"; scene.add(sageOfTheTides); addWanderer(sageOfTheTides, 5);
+        const warTornElder = createCharacterModel(0xffddbb, 0x5a2e2e, 0x3a2e2e, 0x555555); warTornElder.position.set(-20, 0, 10); warTornElder.name = "War-Torn Elder"; scene.add(warTornElder); addWanderer(warTornElder, 4);
+        const blacksmith = createCharacterModel(0xffddbb, 0xff5500, 0x333333, 0x000000); blacksmith.position.set(15, 0, 5); blacksmith.name = "Blacksmith"; scene.add(blacksmith); addWanderer(blacksmith, 5);
+        const merchant = createCharacterModel(0xffddbb, 0x00aaff, 0x0000aa, 0x000000); merchant.position.set(-10, 0, 25); merchant.name = "Merchant"; scene.add(merchant); addWanderer(merchant, 7);
+        const guard = createCharacterModel(0xffddbb, 0x3333ff, 0x0000aa, 0x000000); guard.position.set(25, 0, 10); guard.name = "Guard"; scene.add(guard); addWanderer(guard, 6);
+        const innkeeper = createCharacterModel(0xffddbb, 0x964B00, 0x333333, 0x552200); innkeeper.position.set(5, 0, 25); innkeeper.name = "Innkeeper"; scene.add(innkeeper); addWanderer(innkeeper, 4);
+        const farmer = createCharacterModel(0xffddbb, 0x228B22, 0x8B4513, 0x000000); farmer.position.set(-25, 0, 5); farmer.name = "Farmer"; scene.add(farmer); addWanderer(farmer, 7);
 
         const cow = createAnimalModel('cow'); cow.position.set(5, 0, -20); scene.add(cow); addWanderer(cow, 10);
         const chicken = createAnimalModel('chicken'); chicken.position.set(-5, 0, 15); chicken.scale.set(0.5,0.5,0.5); scene.add(chicken); addWanderer(chicken, 8);
