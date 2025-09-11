@@ -521,6 +521,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { createHut, createFarmRow, createLordHouse, createChurch } from './assets/models/villageStructures.js';
 
         // --- GEMINI API SETUP ---
         const LLM_API_URL = '/gemini';
@@ -1132,6 +1133,51 @@
         const groundGeometry = new THREE.PlaneGeometry(500, 500);
         const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x4F7942 });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial); ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+
+        const TILE_SIZE = 10;
+        const referenceLayout = {
+            huts: [
+                { x: 1, z: 1 },
+                { x: 3, z: 1 },
+                { x: 1, z: 3 },
+                { x: 3, z: 3 }
+            ],
+            farmRows: [
+                { x: 5, z: 0 },
+                { x: 5, z: 1 },
+                { x: 5, z: 2 },
+                { x: 5, z: 3 }
+            ],
+            lordHouse: { x: 2, z: 2 },
+            church: { x: 2, z: 4 }
+        };
+
+        function generateTerrain() {
+            const layoutGroup = new THREE.Group();
+            scene.add(layoutGroup);
+
+            referenceLayout.huts.forEach(pos => {
+                const hut = createHut();
+                hut.position.set(pos.x * TILE_SIZE, 0, pos.z * TILE_SIZE);
+                layoutGroup.add(hut);
+            });
+
+            referenceLayout.farmRows.forEach(pos => {
+                const row = createFarmRow();
+                row.position.set(pos.x * TILE_SIZE, 0, pos.z * TILE_SIZE);
+                layoutGroup.add(row);
+            });
+
+            const lord = createLordHouse();
+            lord.position.set(referenceLayout.lordHouse.x * TILE_SIZE, 0, referenceLayout.lordHouse.z * TILE_SIZE);
+            layoutGroup.add(lord);
+
+            const church = createChurch();
+            church.position.set(referenceLayout.church.x * TILE_SIZE, 0, referenceLayout.church.z * TILE_SIZE);
+            layoutGroup.add(church);
+        }
+
+        generateTerrain();
 
         function createGravelTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
