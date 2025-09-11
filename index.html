@@ -9,7 +9,7 @@
         body {
             margin: 0;
             overflow: hidden;
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Lora', serif;
             background-color: #000;
             color: white;
         }
@@ -39,18 +39,18 @@
         }
         #start-heading {
             font-size: 3rem;
-            color: #555555;
+            color: #a87e3a;
         }
         #start-modal button {
             padding: 0.75rem 1.5rem;
-            background-color: #555555;
+            background-color: #c89c4a;
             color: white;
             border: none;
             border-radius: 4px;
             transition: background-color 0.3s;
         }
         #start-modal button:hover {
-            background-color: #2d2d2d;
+            background-color: #a87e3a;
         }
         .modal-content {
             background-color: #fdf6e3; color: #3a2d21;
@@ -71,7 +71,7 @@
         }
         #custom-guardian-input {
             display: none; margin-top: 10px; padding: 10px; width: 100%;
-            border: 2px solid #a87e3a; border-radius: 5px; font-family: 'Roboto', sans-serif;
+            border: 2px solid #a87e3a; border-radius: 5px; font-family: 'Lora', serif;
         }
         #quest-log { top: 1rem; left: 1rem; width: 270px; transition: all 0.3s ease; }
         #quest-log.minimized { width: auto; padding: 0.5rem 1rem; padding-right: 2rem; }
@@ -125,7 +125,7 @@
             position: relative;
         }
         .journal-entry:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .journal-entry h3, .achievement h3 { font-family: 'Roboto', sans-serif; color: #a87e3a; margin-bottom: 5px; }
+        .journal-entry h3, .achievement h3 { font-family: 'MedievalSharp', cursive; color: #a87e3a; margin-bottom: 5px; }
         .journal-stage { font-size: 0.9em; color: #5d4037; font-style: italic; margin-bottom: 5px; }
         .journal-entry button {
             position: absolute; top: 10px; right: 10px; background: #00796b; color: white;
@@ -146,13 +146,13 @@
         #achievement-notification {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background-color: #c89c4a; color: white; padding: 15px 25px; border-radius: 10px;
-            font-family: 'Roboto', sans-serif; font-size: 1.3rem; z-index: 200; opacity: 0;
+            font-family: 'MedievalSharp', cursive; font-size: 1.3rem; z-index: 200; opacity: 0;
             transition: opacity 0.5s, bottom 0.5s; pointer-events: none;
         }
         #interact-prompt {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background-color: rgba(0,0,0,0.7); color: white; padding: 10px 20px;
-            border-radius: 10px; font-size: 1.5rem; font-family: 'Roboto', sans-serif; display: none;
+            border-radius: 10px; font-size: 1.5rem; font-family: 'MedievalSharp', cursive; display: none;
         }
         #loading-message {
             position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%);
@@ -164,20 +164,20 @@
             color: white; padding: 10px 20px; border-radius: 10px; font-size: 1rem;
             opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none;
         }
-        h1, h2, h3 { font-family: 'Roboto', sans-serif; }
-        h1 { font-size: 1.8rem; color: #555555; }
+        h1, h2, h3 { font-family: 'MedievalSharp', cursive; }
+        h1 { font-size: 1.8rem; color: #a87e3a; }
         h2 { font-size: 1.4rem; }
         textarea, input[type="text"] {
             width: 100%; background-color: #fff; border: 2px solid #d4cba6; padding: 10px; margin-top: 10px;
-            font-family: 'Roboto', sans-serif; color: #3a2d21;
+            font-family: 'Lora', serif; color: #3a2d21;
         }
         textarea { height: 150px; }
         button {
-            background-color: #555555; color: white; padding: 0.9rem 1.2rem; border: none; border-radius: 4px;
-            font-family: 'Roboto', sans-serif; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
+            background-color: #c89c4a; color: white; padding: 0.9rem 1.2rem; border: none; border-radius: 5px;
+            font-family: 'MedievalSharp', cursive; font-size: 1.1rem; cursor: pointer; margin-top: 10px;
             transition: background-color 0.2s;
         }
-        button:hover { background-color: #2d2d2d; }
+        button:hover { background-color: #a87e3a; }
         button:disabled { background-color: #888; cursor: not-allowed; }
         #controls-info {
             position: absolute; bottom: 1rem; left: 1rem;
@@ -233,18 +233,18 @@
             .card-grid { grid-template-columns: 1fr; }
         }
     </style>
-     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Lora:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <!-- Start Modal -->
     <div id="start-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-heading">
         <div class="modal-content">
-            <h1 id="start-heading" class="mb-4 font-bold">🌊 Welcome, Storyteller 🌊</h1>
-            <p class="mb-6">Dive into the realm of legends. Will you forge a new path or continue your tale?</p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-2">
-                <button id="new-game-btn">✨ Forge New Legend</button>
-                <button id="continue-game-btn" disabled>⏳ Continue Journey</button>
+            <h1 id="start-heading" class="text-3xl mb-4">Welcome, Storyteller</h1>
+            <p class="mb-6">Your legend awaits. Will you forge a new path or continue an existing journey?</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button id="new-game-btn">Forge New Legend</button>
+                <button id="continue-game-btn" disabled>Continue Journey</button>
             </div>
         </div>
     </div>
