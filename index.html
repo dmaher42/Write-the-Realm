@@ -1115,10 +1115,7 @@
             roof.position.y = h / 2 + h * 0.25; roof.rotation.y = Math.PI / 4; roof.castShadow = true; group.add(roof);
             return group;
         }
-        const house1 = createBuilding(6,4,6,0xb5651d,0x8b0000); house1.position.set(-12,0,8); village.add(house1);
-        const shop = createBuilding(6,4,6,0x996633,0x555555); shop.position.set(12,0,-8); village.add(shop);
-        const inn = createBuilding(8,5,8,0xcd853f,0x654321); inn.position.set(0,0,10); village.add(inn);
-        const stable = createBuilding(5,3,7,0xdeb887,0x8b4513); stable.position.set(20,0,-12); village.add(stable);
+        // Special buildings (shop, inn, stable) - will be defined later in village structures section
         const dungeonEntrance = new THREE.Mesh(new THREE.CylinderGeometry(2,2,4,8,1,true), new THREE.MeshStandardMaterial({ color: 0x333333, side: THREE.DoubleSide }));
         dungeonEntrance.position.set(30,2,-10); dungeonEntrance.castShadow = true; village.add(dungeonEntrance);
         let inDungeon = false;
@@ -1166,6 +1163,19 @@
             return house;
         });
         houses.forEach(h => village.add(h));
+
+        // Special buildings (shop, inn, stable)
+        const specialBuildings = [
+            { w: 6, h: 4, d: 6, color: 0x996633, roofColor: 0x555555, x: 12, z: -8, name: 'shop' },     // Shop
+            { w: 8, h: 5, d: 8, color: 0xcd853f, roofColor: 0x654321, x: 0, z: 10, name: 'inn' },      // Inn  
+            { w: 5, h: 3, d: 7, color: 0xdeb887, roofColor: 0x8b4513, x: 20, z: -12, name: 'stable' }  // Stable
+        ];
+        specialBuildings.forEach(({ w, h, d, color, roofColor, x, z, name }) => {
+            const building = createBuilding(w, h, d, color, roofColor);
+            building.position.set(x, 0, z);
+            building.name = name; // Add name for identification
+            village.add(building);
+        });
 
         // Central roads
         function createRoad(x, z, width, height) {
