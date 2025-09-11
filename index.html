@@ -896,7 +896,8 @@
         ) {
             const group = new THREE.Group();
             const loader = new GLTFLoader();
-            const modelUrl = 'models/humanoid.glb';
+            // Load a minimal placeholder model stored as glTF text
+            const modelUrl = 'models/humanoid.gltf';
 
             const buildPrimitive = () => {
                 const pGroup = new THREE.Group();
