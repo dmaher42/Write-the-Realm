@@ -847,7 +847,6 @@
         sun.position.set(0, 20, -150);
         scene.add(sun);
         const dayFog = new THREE.Color(0xcce0ff);
-        const nightFog = new THREE.Color(0x0d0d25);
         scene.fog = new THREE.Fog(dayFog, 100, 400);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -884,7 +883,7 @@
         dirLight.shadow.camera.top = 100;
         dirLight.shadow.camera.bottom = -100;
         scene.add(dirLight);
-        let sunCycle = 0;
+        // Day/night cycle disabled; sun remains fixed
         let torch;
 
         // Character factory that loads a humanoid model or falls back to primitives
@@ -2228,16 +2227,15 @@
             requestAnimationFrame(animate);
             const delta = clock.getDelta(); const elapsed = clock.getElapsedTime();
 
-            sunCycle += delta * 0.05;
-            const sunAngle = sunCycle % (Math.PI * 2);
-            const lightStrength = Math.max(0, Math.cos(sunAngle));
-            dirLight.position.set(Math.sin(sunAngle) * 100, Math.cos(sunAngle) * 100, 50);
+            // Static daylight environment: disable day/night cycle
+            const lightStrength = 1;
+            dirLight.position.set(0, 100, 50);
             dirLight.intensity = lightStrength;
             hemisphereLight.intensity = 0.2 + 0.8 * lightStrength;
-            scene.fog.color.lerpColors(nightFog, dayFog, lightStrength);
+            scene.fog.color.copy(dayFog);
             renderer.toneMappingExposure = 0.3 + 0.7 * lightStrength;
             if (torch) {
-                torch.visible = lightStrength === 0;
+                torch.visible = false;
             }
 
             if (isTransitioningAtmosphere) {
