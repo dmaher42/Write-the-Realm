@@ -1248,10 +1248,13 @@
         createRoad(0, 0, 4, 40);  // north-south road
 
         // Perimeter fencing styled as a tall medieval palisade
-        const fenceMaterial = new THREE.MeshStandardMaterial({ color: 0x8B5A2B });
+        const fenceTexture = new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEUlEQVR4nGPojtJeEKTLAKEAIBkEXwaID48AAAAASUVORK5CYII=');
+        fenceTexture.wrapS = fenceTexture.wrapT = THREE.RepeatWrapping;
+        fenceTexture.repeat.set(4, 1);
+        const fenceMaterial = new THREE.MeshStandardMaterial({ map: fenceTexture, color: 0x8B5A2B });
         const fenceRadius = 40;
-        const fenceStep = Math.PI / 16;
-        const logHeights = [0.5, 1, 1.5, 2, 2.5, 3];
+        const fenceStep = Math.PI / 8;
+        const logHeights = [1.5, 3];
         for (let angle = 0; angle < Math.PI * 2; angle += fenceStep) {
             const nextAngle = angle + fenceStep;
             const postHeight = 4;
