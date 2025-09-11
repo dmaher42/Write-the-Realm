@@ -2118,7 +2118,10 @@
                     <h3>${entry.title}</h3>
                     <p class="journal-stage">${entry.stage}</p>
                     <p>${entry.text}</p>
-                    <button class="expand-btn">Expand</button>`;
+                    <div class="journal-actions">
+                        <button class="expand-btn">Expand</button>
+                        <button class="tts-btn">Tell Story</button>
+                    </div>`;
                 journalEntries.appendChild(entryDiv);
             });
             achievementsList.innerHTML = "";
@@ -2146,6 +2149,18 @@
                 const expandedText = await callGeminiForJournalExpansion(originalText);
                 if (expandedText) entryDiv.querySelector('p:not(.journal-stage)').textContent = expandedText;
                 e.target.remove();
+            } else if (e.target.classList.contains('tts-btn')) {
+                const entryDiv = e.target.closest('.journal-entry');
+                const text = entryDiv.querySelector('p:not(.journal-stage)').textContent;
+                const btn = e.target;
+                btn.disabled = true;
+                const loader = document.createElement('span');
+                loader.className = 'tts-loading-indicator';
+                btn.appendChild(loader);
+                const audioUrl = await callGeminiForTTS(text);
+                btn.disabled = false; loader.remove();
+                if (audioUrl) new Audio(audioUrl).play();
+                else showMessage("Could not tell the story. Please try again.");
             }
         });
 
