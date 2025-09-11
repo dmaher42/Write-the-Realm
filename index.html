@@ -806,16 +806,35 @@
 
         // --- SCENE SETUP ---
         const scene = new THREE.Scene();
-        const skybox = new THREE.CubeTextureLoader().load([
-            'https://threejs.org/examples/textures/cube/skybox/px.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/nx.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/py.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/ny.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/pz.jpg',
-            'https://threejs.org/examples/textures/cube/skybox/nz.jpg'
-        ]);
-        scene.background = skybox;
-        scene.environment = skybox;
+        // Gradient sky background
+        const skyCanvas = document.createElement('canvas');
+        skyCanvas.width = 16;
+        skyCanvas.height = 256;
+        const skyCtx = skyCanvas.getContext('2d');
+        const skyGrad = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
+        skyGrad.addColorStop(0, '#87CEFA'); // light blue
+        skyGrad.addColorStop(1, '#FFFACD'); // pale yellow
+        skyCtx.fillStyle = skyGrad;
+        skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+        const skyTexture = new THREE.CanvasTexture(skyCanvas);
+        scene.background = skyTexture;
+        scene.environment = null;
+
+        // Simple sun sprite near the horizon
+        const sunCanvas = document.createElement('canvas');
+        sunCanvas.width = sunCanvas.height = 128;
+        const sunCtx = sunCanvas.getContext('2d');
+        const sunGrad = sunCtx.createRadialGradient(64, 64, 10, 64, 64, 64);
+        sunGrad.addColorStop(0, '#FFFACD');
+        sunGrad.addColorStop(1, '#FFD700');
+        sunCtx.fillStyle = sunGrad;
+        sunCtx.fillRect(0, 0, 128, 128);
+        const sunTexture = new THREE.CanvasTexture(sunCanvas);
+        const sunMaterial = new THREE.SpriteMaterial({ map: sunTexture, transparent: true });
+        const sun = new THREE.Sprite(sunMaterial);
+        sun.scale.set(30, 30, 1);
+        sun.position.set(0, 20, -150);
+        scene.add(sun);
         const dayFog = new THREE.Color(0xcce0ff);
         const nightFog = new THREE.Color(0x0d0d25);
         scene.fog = new THREE.Fog(dayFog, 100, 400);
