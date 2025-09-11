@@ -1440,12 +1440,12 @@
         fishingVillage.add(sea);
 
         // Simple huts for the fishing village
-        function createHut(x, z) {
+        function createFishingHut(x, z) {
             const hut = createBuilding(4, 3, 4, 0x9b7653, 0x8b4513);
             hut.position.set(x, 0, z);
             return hut;
         }
-        [createHut(-12, 20), createHut(12, 20)].forEach(h => fishingVillage.add(h));
+        [createFishingHut(-12, 20), createFishingHut(12, 20)].forEach(h => fishingVillage.add(h));
 
         // Signpost at the village entrance
         const sign = new THREE.Group();
