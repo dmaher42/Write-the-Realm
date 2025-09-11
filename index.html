@@ -1335,6 +1335,21 @@
         // Scale up the entire village
         village.scale.set(1.5, 1.5, 1.5);
 
+        // Road leading to the fishing village
+        const fishingRoadPoints = [
+            new THREE.Vector3(-20, 0, -40),
+            new THREE.Vector3(-40, 0, -80),
+            new THREE.Vector3(-60, 0, -100),
+            new THREE.Vector3(-80, 0, -120)
+        ];
+        const fishingRoadCurve = new THREE.CatmullRomCurve3(fishingRoadPoints);
+        const fishingRoadGeometry = new THREE.TubeGeometry(fishingRoadCurve, 64, 2, 8, false);
+        const fishingRoad = new THREE.Mesh(fishingRoadGeometry, roadMaterial);
+        fishingRoad.scale.y = 0.05;
+        fishingRoad.position.y = 0.1;
+        fishingRoad.receiveShadow = true;
+        scene.add(fishingRoad);
+
         // --- FISHING VILLAGE NEAR THE SEA ---
         const fishingVillage = new THREE.Group();
         fishingVillage.position.set(-80, 0, -150);
@@ -1356,6 +1371,21 @@
             return hut;
         }
         [createHut(-12, 20), createHut(12, 20)].forEach(h => fishingVillage.add(h));
+
+        // Signpost at the village entrance
+        const sign = new THREE.Group();
+        const signPostGeom = new THREE.BoxGeometry(0.3, 3, 0.3);
+        const leftPost = new THREE.Mesh(signPostGeom, fenceMaterial);
+        const rightPost = leftPost.clone();
+        leftPost.position.set(-1, 1.5, 0);
+        rightPost.position.set(1, 1.5, 0);
+        sign.add(leftPost);
+        sign.add(rightPost);
+        const signBoard = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xdeb887 }));
+        signBoard.position.set(0, 2.3, 0);
+        sign.add(signBoard);
+        sign.position.set(0, 0, 30);
+        fishingVillage.add(sign);
 
         // Wooden dock extending into the sea
         const dock = new THREE.Mesh(new THREE.BoxGeometry(20, 0.5, 4), new THREE.MeshStandardMaterial({ color: 0x8B5A2B }));
