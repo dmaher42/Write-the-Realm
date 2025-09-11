@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="32">
+  <!-- Idle frames -->
+  <rect x="0" y="0" width="32" height="32" fill="#8b4513"/>
+  <rect x="32" y="0" width="32" height="32" fill="#a0522d"/>
+  <!-- Walk frames -->
+  <rect x="64" y="0" width="32" height="32" fill="#cd853f"/>
+  <rect x="96" y="0" width="32" height="32" fill="#deb887"/>
+  <!-- Farm frames -->
+  <rect x="128" y="0" width="32" height="32" fill="#228b22"/>
+  <rect x="160" y="0" width="32" height="32" fill="#32cd32"/>
+</svg>
