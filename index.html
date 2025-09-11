@@ -980,7 +980,7 @@
                     } else {
                         const primitive = buildPrimitive();
                         group.add(primitive);
-                        group.userData = primitive.userData;
+                        Object.assign(group.userData, primitive.userData);
                     }
                 },
                 undefined,
@@ -988,7 +988,7 @@
                     console.warn('Failed to load humanoid model, using primitives instead.', error);
                     const primitive = buildPrimitive();
                     group.add(primitive);
-                    group.userData = primitive.userData;
+                    Object.assign(group.userData, primitive.userData);
                 }
             );
 
