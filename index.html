@@ -2277,15 +2277,23 @@
         }
 
         function updateNpcNameTags() {
-            if (!canMove) { npcObjects.forEach(n=> n.userData.tagEl.style.display='none'); return; }
+            if (!canMove) {
+                npcObjects.forEach(n => {
+                    const tagEl = n.userData.tagEl;
+                    if (tagEl) tagEl.style.display = 'none';
+                });
+                return;
+            }
             npcObjects.forEach(n => {
+                const tagEl = n.userData.tagEl;
+                if (!tagEl) return;
                 const pos = toScreenPosition(n, camera);
                 if (pos) {
-                    n.userData.tagEl.style.display='block';
-                    n.userData.tagEl.style.left = `${pos.x}px`;
-                    n.userData.tagEl.style.top = `${pos.y - 45}px`;
+                    tagEl.style.display = 'block';
+                    tagEl.style.left = `${pos.x}px`;
+                    tagEl.style.top = `${pos.y - 45}px`;
                 } else {
-                    n.userData.tagEl.style.display='none';
+                    tagEl.style.display = 'none';
                 }
             });
         }
