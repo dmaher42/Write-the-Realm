@@ -782,7 +782,7 @@
         async function callGeminiForAtmosphere(writing) {
             const systemPrompt = `Analyze the following text and extract its visual atmosphere. Provide your answer as a JSON object. The colors should be hex codes. Example: { "skyColor": "#333333", "fogColor": "#454545", "groundColor": "#5a6a5a", "particleColor": "#cccccc", "atmosphere": "gloomy" }`;
             const schema = { type:"OBJECT", properties:{ skyColor:{type:"STRING"}, fogColor:{type:"STRING"}, groundColor:{type:"STRING"}, particleColor:{type:"STRING"}, atmosphere:{type:"STRING"} } };
-            const userPrompt = `Based on this text, what is the visual atmosphere?\\n\\n${writing}`;
+            const userPrompt = `Based on this text, what is the visual atmosphere?\n\n${writing}`;
             return await callGeminiForText(systemPrompt, userPrompt, schema);
         }
 
@@ -800,7 +800,7 @@
             const audioData = part?.inlineData?.data;
             const mimeType = part?.inlineData?.mimeType;
             if (audioData && mimeType && mimeType.startsWith("audio/")) {
-                const sampleRate = parseInt(mimeType.match(/rate=(\\d+)/)[1], 10);
+                const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
                 const pcmData = base64ToArrayBuffer(audioData);
                 const pcm16 = new Int16Array(pcmData);
                 const wavBlob = pcmToWav(pcm16, sampleRate);
@@ -810,7 +810,7 @@
         }
 
         async function callGeminiForJournalExpansion(text) {
-            const payload = { contents: [{ parts: [{ text: `Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\\n\\n${text}` }] }], generationConfig: { responseMimeType: "text/plain" } };
+            const payload = { contents: [{ parts: [{ text: `Expand the following short story entry into a more detailed, cinematic paragraph suitable for a fantasy RPG game:\n\n${text}` }] }], generationConfig: { responseMimeType: "text/plain" } };
             const result = await callProxyAPI(LLM_API_URL, payload);
             return result?.candidates?.[0]?.content?.parts?.[0]?.text;
         }
@@ -1688,7 +1688,7 @@
                 prewriteFeedback.innerHTML = `<div class="feedback-error">${gate.message || "Please rewrite safely."}</div>`;
                 return;
             }
-            const usesAction = chosenActionWord && new RegExp(`\\\\b${chosenActionWord}\\\\b`, 'i').test(sentence);
+            const usesAction = chosenActionWord && new RegExp(`\\b${chosenActionWord}\\b`, 'i').test(sentence);
             if (!usesAction) {
                 prewriteFeedback.innerHTML = '<div class="feedback-error">Use your chosen action word to win the mini-battle.</div>';
                 return;
@@ -1879,7 +1879,7 @@
         function insertWordIntoTextarea(textarea, word){
             const start = textarea.selectionStart, end = textarea.selectionEnd;
             const value = textarea.value; const before = value.substring(0,start); const after = value.substring(end);
-            const toInsert = (start>0 && !/\\s$/.test(before)) ? " "+word : word;
+            const toInsert = (start>0 && !/\s$/.test(before)) ? " "+word : word;
             textarea.value = before + toInsert + after;
             const pos = (before + toInsert).length; textarea.setSelectionRange(pos,pos); textarea.focus();
         }
@@ -2139,7 +2139,7 @@
         achievementsTab.addEventListener('click', ()=>{ achievementsTab.classList.add('active'); storyTab.classList.remove('active'); achievementsList.style.display = 'block'; journalEntries.style.display = 'none'; });
         closeJournalBtn.addEventListener('click', ()=>{ hidePanel(journalPanel); canMove = true; });
         copyJournalBtn.addEventListener('click', ()=>{
-            const storyText = playerStats.journal.map(e => `## ${e.title} (${e.stage})\\n\\n${e.text}`).join('\\n\\n---\\n\\n');
+            const storyText = playerStats.journal.map(e => `## ${e.title} (${e.stage})\n\n${e.text}`).join('\n\n---\n\n');
             navigator.clipboard.writeText(storyText).then(()=> showMessage("Your story has been copied to the clipboard!")).catch(()=> showMessage("Failed to copy story."));
         });
         journalEntries.addEventListener('click', async (e)=>{
