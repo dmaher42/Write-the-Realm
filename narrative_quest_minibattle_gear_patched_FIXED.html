@@ -804,21 +804,78 @@
         scene.add(dirLight);
 
         // Character factory
-        function createCharacterModel(color) {
+        function createCharacterModel(
+            skinColor = 0xffddbb,
+            shirtColor = 0x888888,
+            pantsColor = 0x555555,
+            hairColor = 0x333333
+        ) {
             const group = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.6, 4, 8), new THREE.MeshStandardMaterial({ color }));
+
+            const shirtMat = new THREE.MeshStandardMaterial({ color: shirtColor });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor });
+            const skinMat = new THREE.MeshStandardMaterial({ color: skinColor });
+            const hairMat = new THREE.MeshStandardMaterial({ color: hairColor });
+
+            const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.6, 4, 8), shirtMat);
             body.castShadow = true; body.receiveShadow = true; body.position.y = 1.8; group.add(body);
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), new THREE.MeshStandardMaterial({ color }));
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), skinMat.clone());
             head.position.y = 3.5; head.castShadow = true; group.add(head);
+
+            const hairGeom = new THREE.SphereGeometry(0.65, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const hair = new THREE.Mesh(hairGeom, hairMat);
+            hair.position.y = 0.6; hair.castShadow = true; head.add(hair);
+
+            // simple facial features
+            const eyeGeom = new THREE.SphereGeometry(0.1, 8, 8);
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+            const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
+            leftEye.position.set(-0.2, 0.1, 0.55);
+            rightEye.position.set(0.2, 0.1, 0.55);
+            head.add(leftEye); head.add(rightEye);
+            const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+            mouth.position.set(0, -0.2, 0.55); head.add(mouth);
+
+            // limbs
+            const armGeom = new THREE.BoxGeometry(0.2, 1.2, 0.2);
+            const legGeom = new THREE.BoxGeometry(0.3, 1.5, 0.3);
+            const leftArm = new THREE.Mesh(armGeom, shirtMat.clone());
+            const rightArm = new THREE.Mesh(armGeom, shirtMat.clone());
+            leftArm.position.set(-0.9, 1.2, 0);
+            rightArm.position.set(0.9, 1.2, 0);
+            const leftLeg = new THREE.Mesh(legGeom, pantsMat.clone());
+            const rightLeg = new THREE.Mesh(legGeom, pantsMat.clone());
+            leftLeg.position.set(-0.4, 0, 0);
+            rightLeg.position.set(0.4, 0, 0);
+            [leftArm, rightArm, leftLeg, rightLeg].forEach(l => { l.castShadow = true; group.add(l); });
+            group.userData = { arms: [leftArm, rightArm], legs: [leftLeg, rightLeg] };
+
             return group;
         }
 
+        const shirtPalette = [0xff0000, 0x0000ff, 0x008080, 0x5a2e2e, 0xff5500, 0x00aaff, 0x3333ff, 0x964B00, 0x228B22];
+        const pantsPalette = [0x000000, 0x2F4F4F, 0x555555, 0x654321, 0x800000, 0x556B2F, 0xA0522D, 0x696969, 0xB22222];
+        const hairPalette = [0x000000, 0x8B4513, 0xD2B48C, 0xFFFFFF, 0xA52A2A, 0xFFD700, 0x808080, 0x483D8B, 0x2F4F4F];
+
+        function getRandomOutfit() {
+            const shirtColor = shirtPalette.splice(Math.floor(Math.random() * shirtPalette.length), 1)[0];
+            const pantsColor = pantsPalette.splice(Math.floor(Math.random() * pantsPalette.length), 1)[0];
+            const hairColor = hairPalette.splice(Math.floor(Math.random() * hairPalette.length), 1)[0];
+            return { shirtColor, pantsColor, hairColor };
+        }
+
         // Player & NPCs
-        const player = createCharacterModel(0xffff00); player.position.set(0, 0, 20); scene.add(player);
-        const villageElder = createCharacterModel(0x0000ff); villageElder.position.set(0, 0, 0); villageElder.name = "Village Elder"; scene.add(villageElder);
-        const fisherman = createCharacterModel(0x808080); fisherman.position.set(-15, 0, -15); fisherman.name = "Fisherman"; scene.add(fisherman);
-        const sageOfTheTides = createCharacterModel(0x008080); sageOfTheTides.position.set(10, 0, -25); sageOfTheTides.name = "Sage of the Tides"; scene.add(sageOfTheTides);
-        const warTornElder = createCharacterModel(0x5a2e2e); warTornElder.position.set(-20, 0, 10); warTornElder.name = "War-Torn Elder"; scene.add(warTornElder);
+        const player = createCharacterModel(0xffeecc, 0xffff00, 0x0000ff, 0x000000); player.position.set(0, 0, 20); scene.add(player);
+        const elderOutfit = getRandomOutfit();
+        const villageElder = createCharacterModel(0xffddbb, elderOutfit.shirtColor, elderOutfit.pantsColor, elderOutfit.hairColor); villageElder.position.set(0, 0, 0); villageElder.name = "Village Elder"; scene.add(villageElder);
+        const fisherOutfit = getRandomOutfit();
+        const fisherman = createCharacterModel(0xffddbb, fisherOutfit.shirtColor, fisherOutfit.pantsColor, fisherOutfit.hairColor); fisherman.position.set(-15, 0, -15); fisherman.name = "Fisherman"; scene.add(fisherman);
+        const sageOutfit = getRandomOutfit();
+        const sageOfTheTides = createCharacterModel(0xffddbb, sageOutfit.shirtColor, sageOutfit.pantsColor, sageOutfit.hairColor); sageOfTheTides.position.set(10, 0, -25); sageOfTheTides.name = "Sage of the Tides"; scene.add(sageOfTheTides);
+        const warOutfit = getRandomOutfit();
+        const warTornElder = createCharacterModel(0xffddbb, warOutfit.shirtColor, warOutfit.pantsColor, warOutfit.hairColor); warTornElder.position.set(-20, 0, 10); warTornElder.name = "War-Torn Elder"; scene.add(warTornElder);
 
         // Enemy (placeholder mesh)
         const pollutionElemental = new THREE.Mesh(new THREE.IcosahedronGeometry(2, 0), new THREE.MeshStandardMaterial({ color: 0x333333, flatShading: true }));
