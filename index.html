@@ -529,7 +529,6 @@
     </script>
     <script type="module">
         import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         // Billboarded sprites representing village structures
         import { createHut, createFarmRow, createLordHouse, createChurch } from './assets/sprites/villageStructures.js';
 
@@ -893,11 +892,6 @@
             pantsColor = shirtColor,
             hairColor = 0x333333
         ) {
-            const group = new THREE.Group();
-            const loader = new GLTFLoader();
-            // Load a minimal placeholder model stored as glTF text
-            const modelUrl = 'models/humanoid.gltf';
-
             const buildPrimitive = () => {
                 const pGroup = new THREE.Group();
                 const shirtMat = new THREE.MeshStandardMaterial({ color: shirtColor });
@@ -951,47 +945,10 @@
                 return pGroup;
             };
 
-            loader.load(
-                modelUrl,
-                gltf => {
-                    const model = gltf.scene;
-                    let hasMesh = false;
-                    model.traverse(obj => {
-                        if (obj.isMesh) {
-                            hasMesh = true;
-                            obj.castShadow = true;
-                            obj.receiveShadow = true;
-                            const name = obj.name.toLowerCase();
-                            const mat = obj.material.clone();
-                            if (name.includes('skin') || name.includes('body') || name.includes('head')) {
-                                mat.color.setHex(skinColor);
-                            } else if (name.includes('shirt') || name.includes('top')) {
-                                mat.color.setHex(shirtColor);
-                            } else if (name.includes('pant') || name.includes('leg')) {
-                                mat.color.setHex(pantsColor);
-                            } else if (name.includes('hair')) {
-                                mat.color.setHex(hairColor);
-                            }
-                            obj.material = mat;
-                        }
-                    });
-                    if (hasMesh) {
-                        group.add(model);
-                    } else {
-                        const primitive = buildPrimitive();
-                        group.add(primitive);
-                        group.userData = primitive.userData;
-                    }
-                },
-                undefined,
-                error => {
-                    console.warn('Failed to load humanoid model, using primitives instead.', error);
-                    const primitive = buildPrimitive();
-                    group.add(primitive);
-                    group.userData = primitive.userData;
-                }
-            );
-
+            const group = new THREE.Group();
+            const primitive = buildPrimitive();
+            group.add(primitive);
+            group.userData = primitive.userData;
             return group;
         }
 
