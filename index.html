@@ -875,7 +875,7 @@
                 const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor });
                 const hairMat = new THREE.MeshStandardMaterial({ color: hairColor });
 
-                const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.6, 4, 8), shirtMat);
+                const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 1.6, 8, 16), shirtMat);
                 body.castShadow = true; body.receiveShadow = true; body.position.y = 1.8; pGroup.add(body);
 
                 const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), skinMat.clone());
@@ -894,10 +894,20 @@
                 head.add(leftEye); head.add(rightEye);
                 const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x000000 }));
                 mouth.position.set(0, -0.2, 0.55); head.add(mouth);
+                const nose = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.2, 8), skinMat.clone());
+                nose.rotation.x = Math.PI / 2;
+                nose.position.set(0, -0.05, 0.6);
+                head.add(nose);
+                const earGeom = new THREE.SphereGeometry(0.12, 8, 8);
+                const leftEar = new THREE.Mesh(earGeom, skinMat.clone());
+                const rightEar = new THREE.Mesh(earGeom, skinMat.clone());
+                leftEar.position.set(-0.6, 0, 0);
+                rightEar.position.set(0.6, 0, 0);
+                head.add(leftEar); head.add(rightEar);
 
                 // limbs
-                const armGeom = new THREE.BoxGeometry(0.2, 1.2, 0.2);
-                const legGeom = new THREE.BoxGeometry(0.3, 1.5, 0.3);
+                const armGeom = new THREE.CapsuleGeometry(0.15, 1.0, 4, 8);
+                const legGeom = new THREE.CapsuleGeometry(0.2, 1.2, 4, 8);
                 const leftArm = new THREE.Mesh(armGeom, shirtColor === skinColor ? skinMat.clone() : shirtMat.clone());
                 const rightArm = new THREE.Mesh(armGeom, shirtColor === skinColor ? skinMat.clone() : shirtMat.clone());
                 leftArm.position.set(-0.9, 1.2, 0);
