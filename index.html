@@ -1041,7 +1041,7 @@
             torch.position.set(0, 2.5, 1);
         }
 
-        // Diverse NPC outfits and definitions
+        // Diverse NPC outfits and explicit assignments
         const npcOutfits = [
             { shirt:0x0000ff, pants:0x333333, boots:0x555555 },
             { shirt:0x808080, pants:0x000080, boots:0x222222 },
@@ -1055,19 +1055,19 @@
         ];
 
         const npcDefs = [
-            { name:"Village Elder", pos:[0,0,0], wander:0, tag:'elder-name' },
-            { name:"Fisherman", pos:[-15,0,-15], wander:6, tag:'fisherman-name' },
-            { name:"Sage of the Tides", pos:[10,0,-25], wander:5, tag:'sage-name' },
-            { name:"War-Torn Elder", pos:[-20,0,10], wander:4, tag:'war-torn-elder-name' },
-            { name:"Blacksmith", pos:[15,0,5], wander:5, tag:'blacksmith-name' },
-            { name:"Merchant", pos:[-10,0,25], wander:7, tag:'merchant-name' },
-            { name:"Guard", pos:[25,0,10], wander:6, tag:'guard-name' },
-            { name:"Innkeeper", pos:[5,0,25], wander:4, tag:'innkeeper-name' },
-            { name:"Farmer", pos:[-25,0,5], wander:7, tag:'farmer-name' }
+            { name:"Village Elder",  pos:[0,0,0],   wander:0, tag:'elder-name',       outfit:npcOutfits[0] },
+            { name:"Fisherman",     pos:[-15,0,-15],wander:6, tag:'fisherman-name',  outfit:npcOutfits[1] },
+            { name:"Sage of the Tides", pos:[10,0,-25], wander:5, tag:'sage-name',   outfit:npcOutfits[2] },
+            { name:"War-Torn Elder", pos:[-20,0,10], wander:4, tag:'war-torn-elder-name', outfit:npcOutfits[3] },
+            { name:"Blacksmith",    pos:[15,0,5],  wander:5, tag:'blacksmith-name', outfit:npcOutfits[4] },
+            { name:"Merchant",      pos:[-10,0,25],wander:7, tag:'merchant-name',    outfit:npcOutfits[5] },
+            { name:"Guard",         pos:[25,0,10], wander:6, tag:'guard-name',      outfit:npcOutfits[6] },
+            { name:"Innkeeper",     pos:[5,0,25],  wander:4, tag:'innkeeper-name',  outfit:npcOutfits[7] },
+            { name:"Farmer",        pos:[-25,0,5], wander:7, tag:'farmer-name',     outfit:npcOutfits[8] }
         ];
 
-        const npcObjects = npcDefs.map((def, idx) => {
-            const outfit = npcOutfits[idx % npcOutfits.length];
+        const npcObjects = npcDefs.map(def => {
+            const outfit = def.outfit || npcOutfits[Math.floor(Math.random() * npcOutfits.length)];
             const npc = createCharacterModel(0xffddbb, outfit.shirt, outfit.pants, outfit.boots);
             npc.position.set(def.pos[0], def.pos[1], def.pos[2]);
             npc.name = def.name;
