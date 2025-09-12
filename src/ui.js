@@ -16,11 +16,46 @@ export function initUI() {
   const startModal = document.getElementById('start-modal');
   const characterCreator = document.getElementById('character-creator');
   const newGameBtn = document.getElementById('new-game-btn');
+  const startGameBtn = document.getElementById('start-game-btn');
+  const uiContainer = document.getElementById('ui-container');
+  const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
+  const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
+  const customGuardianInput = document.getElementById('custom-guardian-input');
+
+  let selectedGuardianType = '';
+  let selectedDomain = '';
 
   if (newGameBtn) {
     newGameBtn.addEventListener('click', () => {
       hidePanel(startModal);
       showPanel(characterCreator);
+    });
+  }
+
+  guardianTypeOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      guardianTypeOptions.forEach((o) => o.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedGuardianType = option.dataset.type;
+    });
+  });
+
+  guardianDomainOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      guardianDomainOptions.forEach((o) => o.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedDomain = option.dataset.domain;
+    });
+  });
+
+  if (startGameBtn) {
+    startGameBtn.addEventListener('click', () => {
+      if (selectedGuardianType === 'custom' && customGuardianInput) {
+        const customValue = customGuardianInput.value.trim();
+        if (customValue) selectedGuardianType = customValue;
+      }
+      hidePanel(characterCreator);
+      if (uiContainer) uiContainer.style.visibility = 'visible';
     });
   }
 }
