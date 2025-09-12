@@ -38,7 +38,14 @@ export function loadGame() {
 
 /**
  * Convenience helper to check whether a saved game is present in storage.
+ * Returns false if accessing storage fails (e.g., in environments without
+ * localStorage support).
  */
 export function checkForSavedGame() {
-  return !!localStorage.getItem('gameState');
+  try {
+    return !!localStorage.getItem('gameState');
+  } catch (err) {
+    console.error('Failed to access saved game', err);
+    return false;
+  }
 }

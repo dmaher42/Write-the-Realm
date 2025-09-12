@@ -55,5 +55,10 @@ test('state persistence', async (t) => {
     assert.strictEqual(stateModule.checkForSavedGame(), true);
   });
 
+  await t.test('checkForSavedGame returns false when storage is inaccessible', () => {
+    delete global.localStorage;
+    assert.strictEqual(stateModule.checkForSavedGame(), false);
+  });
+
   delete global.localStorage;
 });
