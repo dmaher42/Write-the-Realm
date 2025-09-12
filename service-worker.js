@@ -5,6 +5,7 @@ const ASSETS = [
   BASE_PATH,
   `${BASE_PATH}index.html`,
   `${BASE_PATH}offline.html`,
+  `${BASE_PATH}assets/styles/main.css`,
   `${BASE_PATH}assets/sprites/villageStructures.js`
 ];
 

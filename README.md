@@ -9,7 +9,7 @@ npm install
 npm run build
 ```
 
-The build script bundles `src/main.js` and outputs the results to the `dist/` directory.
+The build script bundles `src/main.js` and copies HTML, CSS, the service worker, and the `assets/` folder to the `dist/` directory.
 
 ## Tests
 
