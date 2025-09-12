@@ -20,6 +20,16 @@ export function initRenderer(container = document.body) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
   camera.position.z = 5;
+
+  // Add simple lighting so that meshes using standard materials are visible
+  // when the scene initializes. Without at least an ambient light the imported
+  // models render completely black, which made characters appear to be missing.
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambient);
+
+  const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+  directional.position.set(5, 10, 7.5);
+  scene.add(directional);
 }
 
 /**
