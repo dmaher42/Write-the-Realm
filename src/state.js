@@ -10,15 +10,29 @@ export const gameState = {
   isCombatActive: false,
 };
 
+// Key used for localStorage persistence
+const STORAGE_KEY = 'gameState';
+
+// Detect whether localStorage is available (e.g., in a browser environment)
+function hasStorage() {
+  return typeof localStorage !== 'undefined';
+}
+
 /**
  * Persist the provided state object (defaults to the module's gameState) to
  * localStorage.
  */
 export function saveGame(state = gameState) {
+  if (!hasStorage()) {
+    console.error('localStorage is unavailable; cannot save game');
+    return false;
+  }
   try {
-    localStorage.setItem('gameState', JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch (err) {
     console.error('Failed to save game', err);
+    return false;
   }
 }
 
@@ -27,8 +41,12 @@ export function saveGame(state = gameState) {
  * state exists.
  */
 export function loadGame() {
+  if (!hasStorage()) {
+    console.error('localStorage is unavailable; cannot load game');
+    return null;
+  }
   try {
-    const data = localStorage.getItem('gameState');
+    const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : null;
   } catch (err) {
     console.error('Failed to load game', err);
@@ -40,5 +58,8 @@ export function loadGame() {
  * Convenience helper to check whether a saved game is present in storage.
  */
 export function checkForSavedGame() {
-  return !!localStorage.getItem('gameState');
+  if (!hasStorage()) {
+    return false;
+  }
+  return !!localStorage.getItem(STORAGE_KEY);
 }
