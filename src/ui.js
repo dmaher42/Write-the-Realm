@@ -58,4 +58,6 @@ export function initUI() {
       if (uiContainer) uiContainer.style.visibility = 'visible';
     });
   }
+
+  if (uiContainer) uiContainer.style.visibility = 'visible';
 }

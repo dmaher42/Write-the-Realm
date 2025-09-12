@@ -3,7 +3,6 @@ import * as THREE from 'three';
 let scene;
 let camera;
 let renderer;
-let cube;
 
 function handleResize() {
   const width = window.innerWidth;
@@ -33,14 +32,6 @@ export function initRenderer(container = document.body) {
   container.appendChild(renderer.domElement);
   camera.position.z = 5;
 
-  // Display a simple cube so the player doesn't see a blank screen when the
-  // game boots. This placeholder geometry can be replaced with actual game
-  // assets later.
-  const geometry = new THREE.BoxGeometry();
-  const material = new THREE.MeshStandardMaterial({ color: 0x00796b });
-  cube = new THREE.Mesh(geometry, material);
-  scene.add(cube);
-
   // Add simple lighting so that meshes using standard materials are visible
   // when the scene initializes. Without at least an ambient light the imported
   // models render completely black, which made characters appear to be missing.
@@ -59,9 +50,5 @@ export function initRenderer(container = document.body) {
  */
 export function animate() {
   requestAnimationFrame(animate);
-  if (cube) {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-  }
   renderer.render(scene, camera);
 }
