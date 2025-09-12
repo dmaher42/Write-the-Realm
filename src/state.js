@@ -1,0 +1,44 @@
+/**
+ * Global game state container. In the real game this would be populated with
+ * quest data, player information, and other runtime flags. The simplified
+ * version here demonstrates how state is encapsulated in its own module.
+ */
+export const gameState = {
+  currentQuestIndex: 0,
+  quests: [],
+  canInteractWith: null,
+  isCombatActive: false,
+};
+
+/**
+ * Persist the provided state object (defaults to the module's gameState) to
+ * localStorage.
+ */
+export function saveGame(state = gameState) {
+  try {
+    localStorage.setItem('gameState', JSON.stringify(state));
+  } catch (err) {
+    console.error('Failed to save game', err);
+  }
+}
+
+/**
+ * Load previously stored state from localStorage. Returns null if no saved
+ * state exists.
+ */
+export function loadGame() {
+  try {
+    const data = localStorage.getItem('gameState');
+    return data ? JSON.parse(data) : null;
+  } catch (err) {
+    console.error('Failed to load game', err);
+    return null;
+  }
+}
+
+/**
+ * Convenience helper to check whether a saved game is present in storage.
+ */
+export function checkForSavedGame() {
+  return !!localStorage.getItem('gameState');
+}

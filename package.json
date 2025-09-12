@@ -2,7 +2,13 @@
   "name": "write-the-realm",
   "version": "1.0.0",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "build": "esbuild src/main.js --bundle --outdir=dist"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "esbuild": "^0.19.2"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  }
 }
