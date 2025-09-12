@@ -4,6 +4,8 @@
  * allows the rendering logic to remain focused on Three.js operations.
  */
 
+import { setupGameScene } from './render.js';
+
 export function showPanel(panel) {
   if (panel) panel.style.display = 'block';
 }
@@ -56,6 +58,9 @@ export function initUI() {
       }
       hidePanel(characterCreator);
       if (uiContainer) uiContainer.style.visibility = 'visible';
+      
+      // Set up the game scene with basic assets after character creation
+      setupGameScene();
     });
   }
 }
