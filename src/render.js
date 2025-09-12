@@ -3,6 +3,7 @@ import * as THREE from 'three';
 let scene;
 let camera;
 let renderer;
+let cube;
 
 function handleResize() {
   const width = window.innerWidth;
@@ -26,8 +27,19 @@ export function initRenderer(container = document.body) {
   );
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  // Use a lighter background so a completely empty scene doesn't look like a
+  // loading error.
+  renderer.setClearColor(0x9cc4e4);
   container.appendChild(renderer.domElement);
   camera.position.z = 5;
+
+  // Display a simple cube so the player doesn't see a blank screen when the
+  // game boots. This placeholder geometry can be replaced with actual game
+  // assets later.
+  const geometry = new THREE.BoxGeometry();
+  const material = new THREE.MeshStandardMaterial({ color: 0x00796b });
+  cube = new THREE.Mesh(geometry, material);
+  scene.add(cube);
 
   // Add simple lighting so that meshes using standard materials are visible
   // when the scene initializes. Without at least an ambient light the imported
@@ -47,5 +59,9 @@ export function initRenderer(container = document.body) {
  */
 export function animate() {
   requestAnimationFrame(animate);
+  if (cube) {
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+  }
   renderer.render(scene, camera);
 }
