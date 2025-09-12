@@ -530,27 +530,16 @@
     <script type="module">
         import * as THREE from 'three';
         // Billboarded sprites representing village structures
-        import { createHut, createFarmRow, createLordHouse, createChurch } from './assets/sprites/villageStructures.js';
+                import { getCharacterData, setCharacterData, getPlayerStats, setPlayerStats, getGameState, setGameState } from './state.js';
 
         // --- GEMINI API SETUP ---
         const LLM_API_URL = '/gemini';
         const TTS_API_URL = '/gemini-tts';
 
         // --- GAME STATE & CHARACTER DATA ---
-        let characterData = { type: null, domain: null, customName: "" };
-
-        let playerStats = {
-            level: 1,
-            xp: 0,
-            xpToNextLevel: 100,
-            baseHealth: 100,
-            baseDamage: 10,
-            journal: [],
-            achievements: {},
-            collectedFragments: 0,
-            inventory: {}, // map id -> { owned, equipped }
-            equipmentSlots: { weapon: null, armor: null, trinket: null }
-        };
+        let characterData = getCharacterData();
+        let playerStats = getPlayerStats();
+        let gameState = getGameState();
 
         // Movement
         let baseMoveSpeed = 8.0;
@@ -1462,15 +1451,6 @@
         const clock = new THREE.Clock();
         let canMove = true; let gameStarted = false;
         const randomEncountersEnabled = false;
-        const gameState = {
-            currentQuestIndex: 0,
-            quests: [
-                { id: "AWAKENING", type: "writing", title: "A Stranger's Arrival", objective: "Introduce yourself to the Village Elder.", writingPrompt: "The Village Elder studies you. 'Who are you, and why have you come?' Describe your hero (appearance, personality, and a clear goal).", isComplete: false, npc: "Village Elder", rewardXP: 100, prewriteCleared:false },
-                { id: "RISING_ACTION", type: "writing", title: "The Spreading Sickness", objective: "Find the Fisherman to learn about the growing blight.", writingPrompt: "The Fisherman points to the horizon. 'It started small,' he says, 'but now... it breathes.' Describe the monstrous slick of pollution using strong doing words and sensory detail.", isComplete: false, npc: "Fisherman", rewardXP: 150, prewriteCleared:false }
-            ],
-            canInteractWith: null,
-            isCombatActive: false
-        };
 
         // --- COMBAT STATE ---
         let combatState = { playerHP: 100, enemyHP: 100, playerDamage: 10, enemyDamage: 5, isPlayerTurn: true, useSpecialMove: false };
@@ -2326,10 +2306,12 @@
                 const savedJSON = localStorage.getItem('narrativeQuestSaveData');
                 if (savedJSON) {
                     const saved = JSON.parse(savedJSON);
-                    characterData = saved.characterData;
-                    playerStats = saved.playerStats;
-                    gameState.quests = saved.gameState.quests;
-                    gameState.currentQuestIndex = saved.gameState.currentQuestIndex;
+                    setCharacterData(saved.characterData);
+                    characterData = getCharacterData();
+                    setPlayerStats(saved.playerStats);
+                    playerStats = getPlayerStats();
+                    setGameState(saved.gameState);
+                    gameState = getGameState();
                     if (saved.collectedFragments) saved.collectedFragments.forEach((c,i)=>{ if (memoryFragments[i]) { memoryFragments[i].collected = c; if (c) memoryFragmentMeshes[i].visible = false; } });
                     // Re-apply gear stats
                     applyGearStats();
