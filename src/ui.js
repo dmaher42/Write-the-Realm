@@ -13,5 +13,14 @@ export function hidePanel(panel) {
 }
 
 export function initUI() {
-  // Placeholder for hooking up event listeners to UI elements.
+  const startModal = document.getElementById('start-modal');
+  const characterCreator = document.getElementById('character-creator');
+  const newGameBtn = document.getElementById('new-game-btn');
+
+  if (newGameBtn) {
+    newGameBtn.addEventListener('click', () => {
+      hidePanel(startModal);
+      showPanel(characterCreator);
+    });
+  }
 }
