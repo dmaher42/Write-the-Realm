@@ -13,28 +13,42 @@ export default async function handler(request, response) {
     return response.status(500).json({ error: 'API key not configured on the server.' });
   }
 
-  const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`; // Gemini API endpoint
+  const geminiApiUrl =
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`; // Gemini API endpoint
 
   try {
-    // 3. Forward the client's request body to the Gemini API
-    const geminiResponse = await fetch(geminiApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request.body),
-    });
+    let body;
+    try {
+      body = await request.json();
+    } catch (err) {
+      return response.status(400).json({ error: 'Invalid JSON in request body.' });
+    }
 
-    // 4. Parse the response from Gemini
+    if (!body || !body.contents) {
+      return response.status(400).json({ error: 'Missing required field: contents' });
+    }
+
+    let geminiResponse;
+    try {
+      geminiResponse = await fetch(geminiApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      console.error('Network error contacting Gemini API:', err);
+      return response.status(502).json({ error: 'Failed to reach Gemini API.' });
+    }
+
     const geminiData = await geminiResponse.json();
 
-    // 5. Check for errors from the Gemini API and forward them
     if (!geminiResponse.ok) {
         console.error("Error from Gemini API:", geminiData);
         return response.status(geminiResponse.status).json(geminiData);
     }
-    
-    // 6. Send the successful response back to the client
+
     return response.status(200).json(geminiData);
 
   } catch (error) {
