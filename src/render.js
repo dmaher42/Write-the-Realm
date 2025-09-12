@@ -4,6 +4,14 @@ let scene;
 let camera;
 let renderer;
 
+function handleResize() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
 /**
  * Initialize basic Three.js renderer and camera.
  * Appends the canvas to the provided container (defaults to document.body).
@@ -30,6 +38,8 @@ export function initRenderer(container = document.body) {
   const directional = new THREE.DirectionalLight(0xffffff, 0.8);
   directional.position.set(5, 10, 7.5);
   scene.add(directional);
+
+  window.addEventListener('resize', handleResize);
 }
 
 /**
