@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "test": "node --test",
-    "build": "esbuild src/main.js --bundle --outdir=dist"
+    "build": "esbuild src/main.js --bundle --outdir=dist && cp index.html offline.html service-worker.js dist/ && cp -r assets dist/"
   },
   "devDependencies": {
     "esbuild": "^0.19.2"
