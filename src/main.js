@@ -12,8 +12,14 @@ export function startGame() {
   animate();
 }
 
-// Automatically start the game when this module is loaded.
-startGame();
+// Wait for the DOM to be fully loaded before starting the game.
+// This ensures UI elements like the "Forge New Legend" button exist
+// when event listeners are registered.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startGame);
+} else {
+  startGame();
+}
 
 // Re-export state helpers so they can be accessed from other modules if needed.
 export { gameState, saveGame, loadGame, checkForSavedGame };
