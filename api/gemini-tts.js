@@ -10,19 +10,37 @@ export default async function handler(request, response) {
     return response.status(500).json({ error: 'API key not configured on the server.' });
   }
 
-  const ttsApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`; // Gemini TTS API endpoint
+  const ttsApiUrl =
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`; // Gemini TTS API endpoint
 
   try {
-    const geminiResponse = await fetch(ttsApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request.body),
-    });
+    let body;
+    try {
+      body = await request.json();
+    } catch (err) {
+      return response.status(400).json({ error: 'Invalid JSON in request body.' });
+    }
+
+    if (!body || !body.contents) {
+      return response.status(400).json({ error: 'Missing required field: contents' });
+    }
+
+    let geminiResponse;
+    try {
+      geminiResponse = await fetch(ttsApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      console.error('Network error contacting Gemini TTS API:', err);
+      return response.status(502).json({ error: 'Failed to reach Gemini TTS API.' });
+    }
 
     const geminiData = await geminiResponse.json();
-    
+
     if (!geminiResponse.ok) {
         console.error("Error from Gemini TTS API:", geminiData);
         return response.status(geminiResponse.status).json(geminiData);
