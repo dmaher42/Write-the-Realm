@@ -4,7 +4,15 @@
  * allows the rendering logic to remain focused on Three.js operations.
  */
 
-import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
+import {
+  gameState,
+  saveGame,
+  loadGame,
+  checkForSavedGame,
+  updateQuestProgress,
+  updateCombatStatus,
+  updateInteractableTarget,
+} from './state.js';
 
 export function showPanel(panel) {
   if (panel) panel.style.display = 'block';
@@ -25,6 +33,10 @@ export function initUI() {
   const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
   const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
   const customGuardianInput = document.getElementById('custom-guardian-input');
+  const questTitle = document.getElementById('quest-title');
+  const questObjective = document.getElementById('quest-objective');
+  const dialogueText = document.getElementById('dialogue-text');
+  const dialogueButton = document.getElementById('dialogue-button');
   const openJournalBtn = document.getElementById('open-journal-btn');
   const closeJournalBtn = document.getElementById('close-journal-btn');
   const journalPanel = document.getElementById('journal-panel');
@@ -37,6 +49,17 @@ export function initUI() {
   let selectedGuardianType = '';
   let selectedDomain = '';
   let activeTrigger = null;
+
+  function refreshQuestUI() {
+    const quest = gameState.quests[gameState.currentQuestIndex];
+    if (questTitle) questTitle.textContent = quest ? quest.title : '';
+    if (questObjective) questObjective.textContent = quest ? quest.objective : '';
+    if (dialogueButton) dialogueButton.disabled = !gameState.canInteractWith;
+    if (dialogueText && !gameState.canInteractWith && quest) {
+      dialogueText.textContent =
+        'Thank you, hero! Return once the river runs clear.';
+    }
+  }
 
   if (newGameBtn) {
     newGameBtn.addEventListener('click', () => {
@@ -51,6 +74,7 @@ export function initUI() {
       const loaded = loadGame();
       if (loaded) Object.assign(gameState, loaded);
       hidePanel(startModal);
+      refreshQuestUI();
       if (uiContainer) uiContainer.style.visibility = 'visible';
     });
   }
@@ -137,6 +161,26 @@ export function initUI() {
 
   if (saveGameBtn) {
     saveGameBtn.addEventListener('click', () => saveGame());
+  }
+
+  if (dialogueButton) {
+    // Player can initially interact with the Village Elder.
+    updateInteractableTarget('Village Elder');
+    refreshQuestUI();
+    dialogueButton.addEventListener('click', () => {
+      const quest = {
+        title: 'Cleanse the River',
+        objective: 'Drive out the corruption poisoning the waters.',
+      };
+      updateQuestProgress(quest);
+      updateInteractableTarget(null);
+      updateCombatStatus(false);
+      if (dialogueText) {
+        dialogueText.textContent =
+          'Thank you, hero! Return once the river runs clear.';
+      }
+      refreshQuestUI();
+    });
   }
 
   if (uiContainer) uiContainer.style.visibility = 'visible';

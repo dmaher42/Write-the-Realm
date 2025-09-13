@@ -1,5 +1,5 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
+import test from 'node:test';
+import assert from 'node:assert/strict';
 
 function createMockLocalStorage(initial = {}) {
   const store = { ...initial };
@@ -27,13 +27,22 @@ test('state persistence', async (t) => {
   await t.test('saveGame stores state to localStorage', () => {
     const mock = createMockLocalStorage();
     global.localStorage = mock;
-    const snapshot = { currentQuestIndex: 2 };
+    const snapshot = {
+      currentQuestIndex: 2,
+      quests: [{ title: 'a' }],
+      isCombatActive: true,
+      canInteractWith: 'npc',
+    };
     stateModule.saveGame(snapshot);
     assert.equal(mock.getItem('gameState'), JSON.stringify(snapshot));
   });
 
   await t.test('loadGame retrieves stored state', () => {
-    const snapshot = { quests: ['a', 'b'] };
+    const snapshot = {
+      quests: ['a', 'b'],
+      isCombatActive: true,
+      canInteractWith: 'npc',
+    };
     const mock = createMockLocalStorage({ gameState: JSON.stringify(snapshot) });
     global.localStorage = mock;
     const loaded = stateModule.loadGame();
@@ -58,6 +67,44 @@ test('state persistence', async (t) => {
   await t.test('checkForSavedGame returns false when storage is inaccessible', () => {
     delete global.localStorage;
     assert.strictEqual(stateModule.checkForSavedGame(), false);
+  });
+
+  await t.test('state helpers update and persist quest and combat information', () => {
+    const {
+      gameState,
+      updateQuestProgress,
+      updateCombatStatus,
+      updateInteractableTarget,
+    } = stateModule;
+    const mock = createMockLocalStorage();
+    global.localStorage = mock;
+
+    // reset state
+    gameState.currentQuestIndex = 0;
+    gameState.quests = [];
+    gameState.isCombatActive = false;
+    gameState.canInteractWith = null;
+
+    updateQuestProgress({ title: 'quest1', objective: 'do things' });
+    assert.deepEqual(gameState.quests[0], { title: 'quest1', objective: 'do things' });
+    assert.strictEqual(gameState.currentQuestIndex, 0);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
+
+    updateQuestProgress({ title: 'quest2' });
+    assert.strictEqual(gameState.currentQuestIndex, 1);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
+
+    updateQuestProgress(0);
+    assert.strictEqual(gameState.currentQuestIndex, 0);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
+
+    updateCombatStatus(true);
+    assert.strictEqual(gameState.isCombatActive, true);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
+
+    updateInteractableTarget('merchant');
+    assert.strictEqual(gameState.canInteractWith, 'merchant');
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
   });
 
   delete global.localStorage;
