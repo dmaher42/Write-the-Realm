@@ -47,6 +47,20 @@ export function showDialogue(npc) {
   };
 }
 
+export function openDialoguePanel(name) {
+  const box = document.getElementById('dialogue-box');
+  const title = document.getElementById('dialogue-title');
+  const text = document.getElementById('dialogue-text');
+  const button = document.getElementById('dialogue-button');
+  if (!box || !title || !text || !button) return;
+  const prompt = document.getElementById('interact-prompt');
+  if (prompt) prompt.style.display = 'none';
+  title.textContent = name;
+  text.textContent = `Greetings, I am ${name}.`;
+  showPanel(box);
+  button.onclick = () => hidePanel(box);
+}
+
 export function initUI() {
   const startModal = document.getElementById('start-modal');
   const characterCreator = document.getElementById('character-creator');

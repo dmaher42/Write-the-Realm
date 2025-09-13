@@ -1,6 +1,7 @@
 {
   "name": "write-the-realm",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "test": "node --test",
     "build": "esbuild src/main.js --bundle --outdir=dist && cp index.html offline.html service-worker.js dist/ && cp -r assets dist/"
