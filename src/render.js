@@ -36,7 +36,11 @@ export function initRenderer(container = document.body) {
   // loading error.
   renderer.setClearColor(0x9cc4e4);
   container.appendChild(renderer.domElement);
-  camera.position.z = 5;
+  // Start the camera farther back and slightly above the scene so that the
+  // entire village is visible on load. Looking at the origin keeps the
+  // village centred in view.
+  camera.position.set(0, 5, 20);
+  camera.lookAt(0, 0, 0);
 
   // Add simple lighting so that meshes using standard materials are visible
   // when the scene initializes. Without at least an ambient light the imported
@@ -77,12 +81,12 @@ export function populateVillage(targetScene = scene) {
   targetScene.add(farm);
 
   const house = createLordHouse();
-  house.position.set(5, 1.5, 5);
+  house.position.set(5, 1.5, -2);
   house.rotation.y = Math.PI / 4;
   targetScene.add(house);
 
   const church = createChurch();
-  church.position.set(-10, 3, 5);
+  church.position.set(-8, 3, -2);
   church.rotation.y = -Math.PI / 2;
   targetScene.add(church);
 }

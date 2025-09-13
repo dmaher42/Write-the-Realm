@@ -4,7 +4,8 @@
  */
 const keys = {};
 let camera;
-const SPEED = 0.1;
+// Increased speed for more responsive keyboard navigation around the scene.
+const SPEED = 0.5;
 
 function onKeyDown(event) {
   keys[event.key.toLowerCase()] = true;
