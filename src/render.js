@@ -12,6 +12,7 @@ import { createPath, createFence, createTree, createRock } from './environment.j
 export let scene;
 export let camera;
 export let renderer;
+export let composer = null;
 
 function handleResize() {
   const width = window.innerWidth;
@@ -19,6 +20,7 @@ function handleResize() {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
+  if (composer) composer.setSize(width, height);
 }
 
 /**
@@ -27,6 +29,9 @@ function handleResize() {
  */
 export function initRenderer(container = document.body) {
   scene = new THREE.Scene();
+  const FOG_COLOR = 0x9cc4e4;
+  scene.fog = new THREE.Fog(FOG_COLOR, 35, 140);
+  scene.background = new THREE.Color(FOG_COLOR);
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -60,6 +65,11 @@ export function initRenderer(container = document.body) {
 
   populateVillage(scene);
   return { scene, camera, renderer };
+}
+
+export function setComposer(instance) {
+  composer = instance;
+  handleResize();
 }
 
 /**

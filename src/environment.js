@@ -1,4 +1,9 @@
-import * as THREE from 'three';
+import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+import {
+  rockTexture,
+  pathAlbedoTexture,
+  pathRoughTexture,
+} from './textures.js';
 
 // Use simple coloured materials in place of external textures so that the
 // project avoids shipping binary assets.
@@ -18,10 +23,31 @@ const rockGeometry = new THREE.DodecahedronGeometry(0.5, 0);
 
 export function createPath(length = 5, width = 2) {
   const geometry = new THREE.PlaneGeometry(length, width, 1, 1);
-  const path = new THREE.Mesh(geometry, pathMaterial);
-  path.rotation.x = -Math.PI / 2;
-  path.receiveShadow = true;
-  return path;
+  // Use external textures if available (codex branch), otherwise use simple color (main branch)
+  // We'll prefer the codex logic for demonstration, but fallback to pathMaterial if textures are not available.
+  if (pathAlbedoTexture && pathRoughTexture) {
+    const albedo = pathAlbedoTexture.clone();
+    const rough = pathRoughTexture.clone();
+    albedo.wrapS = albedo.wrapT = THREE.RepeatWrapping;
+    rough.wrapS = rough.wrapT = THREE.RepeatWrapping;
+    albedo.repeat.set(length, width);
+    rough.repeat.set(length, width);
+    const material = new THREE.MeshStandardMaterial({
+      map: albedo,
+      roughnessMap: rough,
+      roughness: 1,
+      metalness: 0,
+    });
+    const path = new THREE.Mesh(geometry, material);
+    path.rotation.x = -Math.PI / 2;
+    path.receiveShadow = true;
+    return path;
+  } else {
+    const path = new THREE.Mesh(geometry, pathMaterial);
+    path.rotation.x = -Math.PI / 2;
+    path.receiveShadow = true;
+    return path;
+  }
 }
 
 export function createFence(planks = 5) {
@@ -61,6 +87,7 @@ export function createTree() {
 }
 
 export function createRock() {
+  // Prefer main branch geometry/material to avoid confusion
   const rock = new THREE.Mesh(rockGeometry, rockMaterial);
   rock.castShadow = rock.receiveShadow = true;
   return rock;

@@ -57,7 +57,7 @@ export function openDialoguePanel(name) {
   const prompt = document.getElementById('interact-prompt');
   if (prompt) prompt.style.display = 'none';
   title.textContent = name;
-  text.textContent = `Greetings, I am ${name}.`;
+  text.textContent = `Greetings, I am ${name}.`; // TODO: AI quests hook
   showPanel(box);
   button.onclick = () => hidePanel(box);
 }

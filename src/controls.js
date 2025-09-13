@@ -3,9 +3,9 @@
  * OrbitControls-based camera follow.
  */
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gameState } from './state.js';
-import { setPointer, pick } from './picking.js';
+import { updatePointer, pick } from './picking.js';
 import { openDialoguePanel } from './ui.js';
 
 const keys = {};
@@ -29,11 +29,11 @@ function onKeyUp(event) {
 
 function onPointerMove(event) {
   if (!domElement) return;
-  setPointer(event, domElement);
+  updatePointer(event, domElement);
 }
 
 function onClick() {
-  if (hovered) openDialoguePanel(hovered.userData.name);
+  if (hovered) openDialoguePanel(hovered.userData.name); // TODO: AI quests hook
 }
 
 export function initControls(targetCamera, targetPlayer, element) {
@@ -66,7 +66,8 @@ export function updateControls() {
   if (!camera || !player) return;
 
   // Hover picking
-  const hit = pick(npcs, camera);
+  const hits = pick(camera, npcs);
+  const hit = hits.length > 0 ? hits[0] : null;
   let obj = hit ? hit.object : null;
   while (obj && !npcs.includes(obj)) obj = obj.parent;
   if (hovered && hovered !== obj) {

@@ -1,17 +1,29 @@
-import { initRenderer, scene, camera, renderer } from './render.js';
+import * as THREE from 'three';
+import { initRenderer, scene, camera, renderer, setComposer } from './render.js';
 import { initUI } from './ui.js';
 import { initControls, updateControls } from './controls.js';
 import { createPlayer } from './player.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
+import { createComposer } from './postfx.js';
 
 /**
  * Entry point for the application. Initialises renderer, UI bindings, and
  * kicks off the animation loop.
  */
+const params = new URLSearchParams(window.location.search);
+const fxEnabled = params.get('fx') === '1';
+let composer = null;
+const clock = new THREE.Clock();
+
 function animate() {
   requestAnimationFrame(animate);
   updateControls();
-  renderer.render(scene, camera);
+  const delta = clock.getDelta();
+  if (fxEnabled && composer) {
+    composer.render(delta);
+  } else {
+    renderer.render(scene, camera);
+  }
 }
 
 export function startGame() {
@@ -20,6 +32,11 @@ export function startGame() {
   scene.add(player);
   initUI();
   initControls(camera, player, renderer.domElement);
+  if (fxEnabled) {
+    const result = createComposer(renderer, scene, camera);
+    composer = result.composer;
+    setComposer(composer);
+  }
   animate();
 }
 
