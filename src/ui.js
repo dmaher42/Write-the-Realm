@@ -4,7 +4,15 @@
  * allows the rendering logic to remain focused on Three.js operations.
  */
 
-import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
+import {
+  gameState,
+  saveGame,
+  loadGame,
+  checkForSavedGame,
+  updateQuestProgress,
+  updateCombatStatus,
+  updateInteractableTarget,
+} from './state.js';
 
 export function showPanel(panel) {
   if (panel) panel.style.display = 'block';
@@ -25,6 +33,10 @@ export function initUI() {
   const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
   const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
   const customGuardianInput = document.getElementById('custom-guardian-input');
+  const questTitle = document.getElementById('quest-title');
+  const questObjective = document.getElementById('quest-objective');
+  const dialogueText = document.getElementById('dialogue-text');
+  const dialogueButton = document.getElementById('dialogue-button');
 
   let selectedGuardianType = '';
   let selectedDomain = '';
@@ -78,6 +90,25 @@ export function initUI() {
 
   if (saveGameBtn) {
     saveGameBtn.addEventListener('click', () => saveGame());
+  }
+
+  if (dialogueButton) {
+    // Player can initially interact with the Village Elder.
+    updateInteractableTarget('Village Elder');
+    dialogueButton.addEventListener('click', () => {
+      const quest = {
+        title: 'Cleanse the River',
+        objective: 'Drive out the corruption poisoning the waters.',
+      };
+      updateQuestProgress(quest);
+      updateInteractableTarget(null);
+      updateCombatStatus(false);
+      if (questTitle) questTitle.textContent = quest.title;
+      if (questObjective) questObjective.textContent = quest.objective;
+      if (dialogueText) dialogueText.textContent =
+        'Thank you, hero! Return once the river runs clear.';
+      dialogueButton.disabled = true;
+    });
   }
 
   if (uiContainer) uiContainer.style.visibility = 'visible';

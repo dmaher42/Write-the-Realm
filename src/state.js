@@ -13,6 +13,37 @@ export const gameState = {
 };
 
 /**
+ * Update the active quest. Accepts either a quest object to append to the
+ * quest list or a numeric index to switch to an existing quest. The updated
+ * state is immediately persisted.
+ */
+export function updateQuestProgress(quest) {
+  if (typeof quest === 'object' && quest !== null) {
+    gameState.quests.push(quest);
+    gameState.currentQuestIndex = gameState.quests.length - 1;
+  } else if (typeof quest === 'number') {
+    gameState.currentQuestIndex = quest;
+  }
+  saveGame();
+}
+
+/**
+ * Toggle combat status and persist the change.
+ */
+export function updateCombatStatus(active) {
+  gameState.isCombatActive = !!active;
+  saveGame();
+}
+
+/**
+ * Register which target the player can interact with and persist the change.
+ */
+export function updateInteractableTarget(target) {
+  gameState.canInteractWith = target;
+  saveGame();
+}
+
+/**
  * Persist the provided state object (defaults to the module's gameState) to
  * localStorage.
  */
