@@ -22,7 +22,8 @@ export function updateQuestLog() {
 }
 
 export function showPanel(panel) {
-  if (panel) panel.style.display = 'block';
+  if (!panel) return;
+  panel.style.display = panel.classList.contains('modal-backdrop') ? 'flex' : 'block';
 }
 
 export function hidePanel(panel) {
