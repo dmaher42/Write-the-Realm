@@ -6,7 +6,8 @@ const ASSETS = [
   `${BASE_PATH}index.html`,
   `${BASE_PATH}offline.html`,
   `${BASE_PATH}assets/styles/main.css`,
-  `${BASE_PATH}assets/sprites/villageStructures.js`
+  `${BASE_PATH}assets/sprites/villageStructures.js`,
+  `${BASE_PATH}src/npcs.js`
 ];
 
 self.addEventListener('install', event => {

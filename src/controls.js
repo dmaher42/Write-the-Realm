@@ -1,9 +1,13 @@
 /**
- * Keyboard helpers to move the active camera with basic WASD/E controls.
- * W/A/S/D move along the X/Z axes while E raises the camera on the Y axis.
+ * Keyboard helpers to move the active camera with basic WASD controls and
+ * handle simple NPC interactions.
  */
+import { gameState } from './state.js';
+
 const keys = {};
 let camera;
+let npcs = [];
+const interactPrompt = document.getElementById('interact-prompt');
 // Increased speed for more responsive keyboard navigation around the scene.
 const SPEED = 0.5;
 
@@ -24,6 +28,10 @@ export function initControls(targetCamera) {
   window.addEventListener('keyup', onKeyUp);
 }
 
+export function registerNPCs(list) {
+  npcs = list;
+}
+
 /**
  * Update the camera's position based on currently pressed keys.
  */
@@ -34,5 +42,32 @@ export function updateControls() {
   if (keys['s']) camera.position.z += SPEED;
   if (keys['a']) camera.position.x -= SPEED;
   if (keys['d']) camera.position.x += SPEED;
-  if (keys['e']) camera.position.y += SPEED;
+
+  const dialogueBox = document.getElementById('dialogue-box');
+  const dialogueVisible = dialogueBox && dialogueBox.style.display === 'block';
+  if (dialogueVisible) {
+    if (interactPrompt) interactPrompt.style.display = 'none';
+    return;
+  }
+
+  let target = null;
+  for (const npc of npcs) {
+    const dist = camera.position.distanceTo(npc.mesh.position);
+    if (dist < 2) {
+      target = npc;
+      break;
+    }
+  }
+
+  if (target) {
+    gameState.canInteractWith = target;
+    if (interactPrompt) interactPrompt.style.display = 'block';
+    if (keys['e']) {
+      target.triggerDialogue();
+      keys['e'] = false;
+    }
+  } else {
+    gameState.canInteractWith = null;
+    if (interactPrompt) interactPrompt.style.display = 'none';
+  }
 }

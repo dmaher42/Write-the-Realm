@@ -14,6 +14,28 @@ export function hidePanel(panel) {
   if (panel) panel.style.display = 'none';
 }
 
+export function showDialogue(npc) {
+  const box = document.getElementById('dialogue-box');
+  const title = document.getElementById('dialogue-title');
+  const text = document.getElementById('dialogue-text');
+  const button = document.getElementById('dialogue-button');
+  if (!npc || !box || !title || !text || !button) return;
+  const prompt = document.getElementById('interact-prompt');
+  if (prompt) prompt.style.display = 'none';
+  title.textContent = npc.name;
+  text.textContent = npc.dialogue;
+  showPanel(box);
+  button.onclick = () => {
+    gameState.activeQuest = npc.quest;
+    const questTitle = document.getElementById('quest-title');
+    const questObjective = document.getElementById('quest-objective');
+    if (questTitle && npc.quest) questTitle.textContent = npc.quest.title;
+    if (questObjective && npc.quest)
+      questObjective.textContent = npc.quest.objective;
+    hidePanel(box);
+  };
+}
+
 export function initUI() {
   const startModal = document.getElementById('start-modal');
   const characterCreator = document.getElementById('character-creator');
