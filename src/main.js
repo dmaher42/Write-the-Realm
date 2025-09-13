@@ -30,6 +30,19 @@ export function startGame() {
   initRenderer();
   const player = createPlayer();
   scene.add(player);
+  
+  // Add test cube and light for debugging visibility and rendering issues
+  const test = new THREE.Mesh(
+    new THREE.BoxGeometry(),
+    new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  );
+  test.position.set(0, 1, 0); // Position above ground for visibility
+  scene.add(test);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(10, 10, 10);
+  scene.add(light);
+  
   initUI();
   initControls(camera, player, renderer.domElement);
   if (fxEnabled) {
