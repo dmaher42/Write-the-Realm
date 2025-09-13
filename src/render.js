@@ -1,4 +1,10 @@
 import * as THREE from 'three';
+import {
+  createHut,
+  createFarmRow,
+  createLordHouse,
+  createChurch,
+} from '../assets/sprites/villageStructures.js';
 
 let scene;
 let camera;
@@ -43,6 +49,8 @@ export function initRenderer(container = document.body) {
   scene.add(directional);
 
   window.addEventListener('resize', handleResize);
+
+  populateVillage(scene);
 }
 
 /**
@@ -51,4 +59,37 @@ export function initRenderer(container = document.body) {
 export function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+}
+
+/**
+ * Add basic terrain and a handful of structures to the scene.
+ */
+export function populateVillage(targetScene = scene) {
+  if (!targetScene) return;
+
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(50, 50),
+    new THREE.MeshStandardMaterial({ color: 0x228b22 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  targetScene.add(ground);
+
+  const hut = createHut();
+  hut.position.set(-5, 1, -2);
+  targetScene.add(hut);
+
+  const farm = createFarmRow();
+  farm.position.set(0, 0, -5);
+  targetScene.add(farm);
+
+  const house = createLordHouse();
+  house.position.set(5, 1.5, 5);
+  house.rotation.y = Math.PI / 4;
+  targetScene.add(house);
+
+  const church = createChurch();
+  church.position.set(-10, 3, 5);
+  church.rotation.y = -Math.PI / 2;
+  targetScene.add(church);
 }
