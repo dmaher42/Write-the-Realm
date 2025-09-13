@@ -1,11 +1,4 @@
 import * as THREE from 'three';
-import { roofTexture } from '../../src/textures.js';
-
-const roofMaterial = new THREE.MeshStandardMaterial({
-  map: roofTexture,
-  roughness: 1,
-  metalness: 0,
-});
 
 // Simple coloured material for roofs – avoids the need for external texture
 // files which are not supported in this environment.
