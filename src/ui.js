@@ -4,6 +4,8 @@
  * allows the rendering logic to remain focused on Three.js operations.
  */
 
+import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
+
 export function showPanel(panel) {
   if (panel) panel.style.display = 'block';
 }
@@ -16,7 +18,9 @@ export function initUI() {
   const startModal = document.getElementById('start-modal');
   const characterCreator = document.getElementById('character-creator');
   const newGameBtn = document.getElementById('new-game-btn');
+  const continueGameBtn = document.getElementById('continue-game-btn');
   const startGameBtn = document.getElementById('start-game-btn');
+  const saveGameBtn = document.getElementById('save-game-btn');
   const uiContainer = document.getElementById('ui-container');
   const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
   const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
@@ -29,6 +33,16 @@ export function initUI() {
     newGameBtn.addEventListener('click', () => {
       hidePanel(startModal);
       showPanel(characterCreator);
+    });
+  }
+
+  if (continueGameBtn) {
+    if (checkForSavedGame()) continueGameBtn.disabled = false;
+    continueGameBtn.addEventListener('click', () => {
+      const loaded = loadGame();
+      if (loaded) Object.assign(gameState, loaded);
+      hidePanel(startModal);
+      if (uiContainer) uiContainer.style.visibility = 'visible';
     });
   }
 
@@ -54,10 +68,19 @@ export function initUI() {
         const customValue = customGuardianInput.value.trim();
         if (customValue) selectedGuardianType = customValue;
       }
+      gameState.selectedGuardian = selectedGuardianType;
+      gameState.selectedDomain = selectedDomain;
+      saveGame();
       hidePanel(characterCreator);
       if (uiContainer) uiContainer.style.visibility = 'visible';
     });
   }
 
+  if (saveGameBtn) {
+    saveGameBtn.addEventListener('click', () => saveGame());
+  }
+
   if (uiContainer) uiContainer.style.visibility = 'visible';
+
+  window.addEventListener('beforeunload', () => saveGame());
 }

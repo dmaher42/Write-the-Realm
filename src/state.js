@@ -8,6 +8,8 @@ export const gameState = {
   quests: [],
   canInteractWith: null,
   isCombatActive: false,
+  selectedGuardian: '',
+  selectedDomain: '',
 };
 
 /**
