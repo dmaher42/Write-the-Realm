@@ -69,9 +69,15 @@ test('state persistence', async (t) => {
     assert.strictEqual(stateModule.checkForSavedGame(), false);
   });
 
-  await t.test('state helpers update quest and combat information', () => {
-    const { gameState, updateQuestProgress, updateCombatStatus, updateInteractableTarget } = stateModule;
-    global.localStorage = createMockLocalStorage();
+  await t.test('state helpers update and persist quest and combat information', () => {
+    const {
+      gameState,
+      updateQuestProgress,
+      updateCombatStatus,
+      updateInteractableTarget,
+    } = stateModule;
+    const mock = createMockLocalStorage();
+    global.localStorage = mock;
 
     // reset state
     gameState.currentQuestIndex = 0;
@@ -79,15 +85,26 @@ test('state persistence', async (t) => {
     gameState.isCombatActive = false;
     gameState.canInteractWith = null;
 
-    updateQuestProgress({ title: 'test quest', objective: 'do things' });
-    assert.deepEqual(gameState.quests[0], { title: 'test quest', objective: 'do things' });
+    updateQuestProgress({ title: 'quest1', objective: 'do things' });
+    assert.deepEqual(gameState.quests[0], { title: 'quest1', objective: 'do things' });
     assert.strictEqual(gameState.currentQuestIndex, 0);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
+
+    updateQuestProgress({ title: 'quest2' });
+    assert.strictEqual(gameState.currentQuestIndex, 1);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
+
+    updateQuestProgress(0);
+    assert.strictEqual(gameState.currentQuestIndex, 0);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
 
     updateCombatStatus(true);
     assert.strictEqual(gameState.isCombatActive, true);
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
 
     updateInteractableTarget('merchant');
     assert.strictEqual(gameState.canInteractWith, 'merchant');
+    assert.equal(mock.getItem('gameState'), JSON.stringify(gameState));
   });
 
   delete global.localStorage;

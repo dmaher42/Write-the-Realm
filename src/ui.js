@@ -41,6 +41,17 @@ export function initUI() {
   let selectedGuardianType = '';
   let selectedDomain = '';
 
+  function refreshQuestUI() {
+    const quest = gameState.quests[gameState.currentQuestIndex];
+    if (questTitle) questTitle.textContent = quest ? quest.title : '';
+    if (questObjective) questObjective.textContent = quest ? quest.objective : '';
+    if (dialogueButton) dialogueButton.disabled = !gameState.canInteractWith;
+    if (dialogueText && !gameState.canInteractWith && quest) {
+      dialogueText.textContent =
+        'Thank you, hero! Return once the river runs clear.';
+    }
+  }
+
   if (newGameBtn) {
     newGameBtn.addEventListener('click', () => {
       hidePanel(startModal);
@@ -54,6 +65,7 @@ export function initUI() {
       const loaded = loadGame();
       if (loaded) Object.assign(gameState, loaded);
       hidePanel(startModal);
+      refreshQuestUI();
       if (uiContainer) uiContainer.style.visibility = 'visible';
     });
   }
@@ -95,6 +107,7 @@ export function initUI() {
   if (dialogueButton) {
     // Player can initially interact with the Village Elder.
     updateInteractableTarget('Village Elder');
+    refreshQuestUI();
     dialogueButton.addEventListener('click', () => {
       const quest = {
         title: 'Cleanse the River',
@@ -103,11 +116,11 @@ export function initUI() {
       updateQuestProgress(quest);
       updateInteractableTarget(null);
       updateCombatStatus(false);
-      if (questTitle) questTitle.textContent = quest.title;
-      if (questObjective) questObjective.textContent = quest.objective;
-      if (dialogueText) dialogueText.textContent =
-        'Thank you, hero! Return once the river runs clear.';
-      dialogueButton.disabled = true;
+      if (dialogueText) {
+        dialogueText.textContent =
+          'Thank you, hero! Return once the river runs clear.';
+      }
+      refreshQuestUI();
     });
   }
 

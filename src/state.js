@@ -21,8 +21,14 @@ export function updateQuestProgress(quest) {
   if (typeof quest === 'object' && quest !== null) {
     gameState.quests.push(quest);
     gameState.currentQuestIndex = gameState.quests.length - 1;
-  } else if (typeof quest === 'number') {
+  } else if (
+    typeof quest === 'number' &&
+    quest >= 0 &&
+    quest < gameState.quests.length
+  ) {
     gameState.currentQuestIndex = quest;
+  } else {
+    return; // ignore invalid input
   }
   saveGame();
 }
@@ -31,16 +37,21 @@ export function updateQuestProgress(quest) {
  * Toggle combat status and persist the change.
  */
 export function updateCombatStatus(active) {
-  gameState.isCombatActive = !!active;
-  saveGame();
+  const normalized = !!active;
+  if (gameState.isCombatActive !== normalized) {
+    gameState.isCombatActive = normalized;
+    saveGame();
+  }
 }
 
 /**
  * Register which target the player can interact with and persist the change.
  */
 export function updateInteractableTarget(target) {
-  gameState.canInteractWith = target;
-  saveGame();
+  if (gameState.canInteractWith !== target) {
+    gameState.canInteractWith = target;
+    saveGame();
+  }
 }
 
 /**
