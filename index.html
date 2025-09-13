@@ -63,11 +63,17 @@
                 <p class="mt-2 text-sm">Attack: <span id="player-attack"></span></p>
                 <p class="text-sm">Health: <span id="player-health"></span></p>
                 <p class="text-sm">Speed: <span id="player-speed"></span></p>
-                <p id="quest-title" class="mt-3">No active quest.</p>
-                <p id="quest-objective">The Village Elder seems troubled. Perhaps they have a story to tell.</p>
+                <ul id="equipment-slots" class="text-sm mt-2">
+                    <li>Head: <span id="slot-head">Empty</span></li>
+                    <li>Chest: <span id="slot-chest">Empty</span></li>
+                    <li>Weapon: <span id="slot-weapon">Empty</span></li>
+                </ul>
+                <div id="active-quests" class="mt-3 text-sm">
+                    <p id="quest-title">No active quest.</p>
+                    <p id="quest-objective">The Village Elder seems troubled. Perhaps they have a story to tell.</p>
+                </div>
                 <div class="flex flex-col gap-2 mt-3">
-                    <button id="open-journal-btn" class="text-sm p-1">Open Journal</button>
-                    <button id="open-gear-btn" class="text-sm p-1">Gear & Equipment</button>
+                    <button id="open-journal-inventory-btn" class="text-sm p-1">Journal & Inventory</button>
                     <button id="save-game-btn" class="text-sm p-1">Save Game</button>
                 </div>
             </div>
@@ -193,18 +199,12 @@
             </div>
             <div id="journal-entries"></div>
             <div id="achievements-list" style="display: none;"></div>
+            <h2 class="text-xl mt-4">Inventory</h2>
+            <div id="inventory-list" class="space-y-2"></div>
             <div class="flex justify-center gap-4 mt-4">
                 <button id="copy-journal-btn">Copy Story</button>
                 <button id="close-journal-btn">Close</button>
             </div>
-        </div>
-
-        <!-- Gear Panel -->
-        <div id="gear-panel" class="ui-panel" role="dialog" aria-modal="true" aria-labelledby="gear-heading">
-            <h1 id="gear-heading" class="text-2xl">Gear & Equipment</h1>
-            <div id="equipped-readout" class="mb-3 text-sm"></div>
-            <div id="inventory-list" class="space-y-2"></div>
-            <div class="flex justify-center gap-3 mt-3"><button id="close-gear-btn">Close</button></div>
         </div>
 
         <!-- Loot Modal -->

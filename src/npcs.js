@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { showDialogue } from './ui.js';
 
-function createNPC(name, color, dialogue, quest) {
+function createNPC(name, color, dialogue, quest, radius = 2) {
   const group = new THREE.Group();
 
   const body = new THREE.Mesh(
@@ -25,6 +25,7 @@ function createNPC(name, color, dialogue, quest) {
     mesh: group,
     dialogue,
     quest,
+    radius,
     triggerDialogue() {
       showDialogue({ name, dialogue, quest });
     },

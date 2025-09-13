@@ -11,6 +11,7 @@ import {
   createFisherman,
   createSageOfTheTides,
 } from './npcs.js';
+import { createPath, createFence, createTree, createRock } from './environment.js';
 
 export let scene;
 export let camera;
@@ -51,11 +52,11 @@ export function initRenderer(container = document.body) {
   // Add simple lighting so that meshes using standard materials are visible
   // when the scene initializes. Without at least an ambient light the imported
   // models render completely black, which made characters appear to be missing.
-  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambient);
 
-  const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-  directional.position.set(5, 10, 7.5);
+  const directional = new THREE.DirectionalLight(0xfff0e0, 1.0);
+  directional.position.set(10, 15, 10);
   scene.add(directional);
 
   window.addEventListener('resize', handleResize);
@@ -78,53 +79,90 @@ export function populateVillage(targetScene = scene) {
   ground.receiveShadow = true;
   targetScene.add(ground);
 
-  // Structures
+  // Winding path
+  const path1 = createPath(12, 3);
+  path1.position.set(-8, 0.01, -2);
+  targetScene.add(path1);
+  const path2 = createPath(8, 3);
+  path2.rotation.y = Math.PI / 4;
+  path2.position.set(0, 0.01, 0);
+  targetScene.add(path2);
+  const path3 = createPath(6, 3);
+  path3.rotation.y = -Math.PI / 6;
+  path3.position.set(6, 0.01, 3);
+  targetScene.add(path3);
+
+  // Structures along the path
   const hut1 = createHut();
-  hut1.position.set(-5, 1, -2);
+  hut1.position.set(-6, 1, -4);
   targetScene.add(hut1);
 
   const hut2 = createHut();
-  hut2.position.set(8, 1, 4);
+  hut2.position.set(7, 1, 5);
+  hut2.rotation.y = Math.PI / 8;
   targetScene.add(hut2);
 
   const hut3 = createHut();
-  hut3.position.set(-10, 1, 3);
+  hut3.position.set(-2, 1, 2);
+  hut3.rotation.y = -Math.PI / 5;
   targetScene.add(hut3);
 
   const farm1 = createFarmRow();
-  farm1.position.set(-2, 0, -8);
+  farm1.position.set(-4, 0, -9);
   targetScene.add(farm1);
 
   const farm2 = createFarmRow();
-  farm2.position.set(5, 0, -9);
+  farm2.position.set(6, 0, -7);
   targetScene.add(farm2);
 
   const house1 = createLordHouse();
-  house1.position.set(5, 1.5, -2);
+  house1.position.set(3, 1.5, -3);
   house1.rotation.y = Math.PI / 4;
   targetScene.add(house1);
 
-  const house2 = createLordHouse();
-  house2.position.set(-6, 1.5, 6);
-  house2.rotation.y = -Math.PI / 6;
-  targetScene.add(house2);
-
   const church = createChurch();
-  church.position.set(-8, 3, -2);
-  church.rotation.y = -Math.PI / 2;
+  church.position.set(-9, 3, 1);
+  church.rotation.y = Math.PI / 2;
   targetScene.add(church);
+
+  // Fences
+  const fence1 = createFence(8);
+  fence1.position.set(-10, 0, -2);
+  fence1.rotation.y = Math.PI / 2;
+  targetScene.add(fence1);
+  const fence2 = createFence(10);
+  fence2.position.set(2, 0, -10);
+  targetScene.add(fence2);
+
+  // Trees and rocks
+  const tree1 = createTree();
+  tree1.position.set(-3, 0, -5);
+  targetScene.add(tree1);
+  const tree2 = createTree();
+  tree2.position.set(5, 0, 2);
+  targetScene.add(tree2);
+  const tree3 = createTree();
+  tree3.position.set(-7, 0, 4);
+  targetScene.add(tree3);
+
+  const rock1 = createRock();
+  rock1.position.set(1, 0, 3);
+  targetScene.add(rock1);
+  const rock2 = createRock();
+  rock2.position.set(-5, 0, 0);
+  targetScene.add(rock2);
 
   // NPCs
   const elder = createVillageElder();
-  elder.mesh.position.set(-8, 1, -4);
+  elder.mesh.position.set(-8, 1, -1);
   targetScene.add(elder.mesh);
 
   const fisherman = createFisherman();
-  fisherman.mesh.position.set(2, 1, -6);
+  fisherman.mesh.position.set(4, 1, -6);
   targetScene.add(fisherman.mesh);
 
   const sage = createSageOfTheTides();
-  sage.mesh.position.set(0, 1, 4);
+  sage.mesh.position.set(1, 1, 4);
   targetScene.add(sage.mesh);
 
   registerNPCs([elder, fisherman, sage]);

@@ -1,6 +1,7 @@
 import { initRenderer, scene, camera, renderer } from './render.js';
 import { initUI } from './ui.js';
 import { initControls, updateControls } from './controls.js';
+import { createPlayer } from './player.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
 
 /**
@@ -15,8 +16,10 @@ function animate() {
 
 export function startGame() {
   initRenderer();
+  const player = createPlayer();
+  scene.add(player);
   initUI();
-  initControls(camera);
+  initControls(camera, player);
   animate();
 }
 

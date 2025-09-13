@@ -6,6 +6,21 @@
 
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
 
+export function updateQuestLog() {
+  const head = document.getElementById('slot-head');
+  const chest = document.getElementById('slot-chest');
+  const weapon = document.getElementById('slot-weapon');
+  if (head) head.textContent = gameState.equipment.head || 'Empty';
+  if (chest) chest.textContent = gameState.equipment.chest || 'Empty';
+  if (weapon) weapon.textContent = gameState.equipment.weapon || 'Empty';
+
+  const title = document.getElementById('quest-title');
+  const objective = document.getElementById('quest-objective');
+  if (title && gameState.activeQuest) title.textContent = gameState.activeQuest.title;
+  if (objective && gameState.activeQuest)
+    objective.textContent = gameState.activeQuest.objective;
+}
+
 export function showPanel(panel) {
   if (panel) panel.style.display = 'block';
 }
@@ -27,11 +42,7 @@ export function showDialogue(npc) {
   showPanel(box);
   button.onclick = () => {
     gameState.activeQuest = npc.quest;
-    const questTitle = document.getElementById('quest-title');
-    const questObjective = document.getElementById('quest-objective');
-    if (questTitle && npc.quest) questTitle.textContent = npc.quest.title;
-    if (questObjective && npc.quest)
-      questObjective.textContent = npc.quest.objective;
+    updateQuestLog();
     hidePanel(box);
   };
 }
@@ -47,14 +58,13 @@ export function initUI() {
   const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
   const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
   const customGuardianInput = document.getElementById('custom-guardian-input');
-  const openJournalBtn = document.getElementById('open-journal-btn');
+  const openJournalInventoryBtn = document.getElementById('open-journal-inventory-btn');
   const closeJournalBtn = document.getElementById('close-journal-btn');
   const journalPanel = document.getElementById('journal-panel');
   const journalEntries = document.getElementById('journal-entries');
-  const openGearBtn = document.getElementById('open-gear-btn');
-  const closeGearBtn = document.getElementById('close-gear-btn');
-  const gearPanel = document.getElementById('gear-panel');
   const inventoryList = document.getElementById('inventory-list');
+  const minimizeQuestLogBtn = document.getElementById('minimize-quest-log');
+  const questLogContent = document.getElementById('quest-log-content');
 
   let selectedGuardianType = '';
   let selectedDomain = '';
@@ -107,9 +117,9 @@ export function initUI() {
     });
   }
 
-  if (openJournalBtn && journalPanel) {
-    openJournalBtn.addEventListener('click', () => {
-      activeTrigger = openJournalBtn;
+  if (openJournalInventoryBtn && journalPanel) {
+    openJournalInventoryBtn.addEventListener('click', () => {
+      activeTrigger = openJournalInventoryBtn;
       if (journalEntries) {
         const entries =
           gameState.journalEntries && gameState.journalEntries.length
@@ -118,6 +128,15 @@ export function initUI() {
                 .join('')
             : '<p class="text-sm">Your journal is empty.</p>';
         journalEntries.innerHTML = entries;
+      }
+      if (inventoryList) {
+        const items =
+          gameState.inventory && gameState.inventory.length
+            ? gameState.inventory
+                .map((i) => `<div class="gear-item">${i}</div>`)
+                .join('')
+            : '<p class="text-sm">You have no gear.</p>';
+        inventoryList.innerHTML = items;
       }
       showPanel(journalPanel);
       closeJournalBtn && closeJournalBtn.focus();
@@ -132,34 +151,19 @@ export function initUI() {
     });
   }
 
-  if (openGearBtn && gearPanel) {
-    openGearBtn.addEventListener('click', () => {
-      activeTrigger = openGearBtn;
-      if (inventoryList) {
-        const items =
-          gameState.inventory && gameState.inventory.length
-            ? gameState.inventory
-                .map((i) => `<div class="gear-item">${i}</div>`)
-                .join('')
-            : '<p class="text-sm">You have no gear.</p>';
-        inventoryList.innerHTML = items;
-      }
-      showPanel(gearPanel);
-      closeGearBtn && closeGearBtn.focus();
-    });
-  }
-
-  if (closeGearBtn && gearPanel) {
-    closeGearBtn.addEventListener('click', () => {
-      hidePanel(gearPanel);
-      activeTrigger && activeTrigger.focus();
-      activeTrigger = null;
-    });
-  }
-
   if (saveGameBtn) {
     saveGameBtn.addEventListener('click', () => saveGame());
   }
+
+  if (minimizeQuestLogBtn && questLogContent) {
+    minimizeQuestLogBtn.addEventListener('click', () => {
+      const hidden = questLogContent.style.display === 'none';
+      questLogContent.style.display = hidden ? 'block' : 'none';
+      minimizeQuestLogBtn.textContent = hidden ? '-' : '+';
+    });
+  }
+
+  updateQuestLog();
 
   if (uiContainer) uiContainer.style.visibility = 'visible';
 
