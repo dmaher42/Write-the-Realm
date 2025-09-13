@@ -4,11 +4,14 @@
  */
 import * as THREE from 'three';
 import { gameState } from './state.js';
+import { setPointer, pick } from './picking.js';
 
 const keys = {};
 let camera;
 let player;
+let domElement;
 let npcs = [];
+let hovered = null;
 const interactPrompt = document.getElementById('interact-prompt');
 
 const SPEED = 0.2;
@@ -24,11 +27,44 @@ function onKeyUp(event) {
   keys[event.key.toLowerCase()] = false;
 }
 
-export function initControls(targetCamera, targetPlayer) {
+function onMouseMove(event) {
+  if (!domElement) return;
+  setPointer(event, domElement);
+  const hit = pick(
+    npcs.map((n) => n.mesh),
+    camera
+  );
+  let obj = hit ? hit.object : null;
+  while (obj && !npcs.some((n) => n.mesh === obj)) {
+    obj = obj.parent;
+  }
+  const npc = npcs.find((n) => n.mesh === obj) || null;
+  if (hovered && hovered !== npc) {
+    hovered.mesh.traverse((child) => {
+      if (child.isMesh) child.material.emissive.set(0x000000);
+    });
+    hovered = null;
+  }
+  if (npc && hovered !== npc) {
+    npc.mesh.traverse((child) => {
+      if (child.isMesh) child.material.emissive.set(0x333333);
+    });
+    hovered = npc;
+  }
+}
+
+function onClick() {
+  if (hovered) hovered.triggerDialogue();
+}
+
+export function initControls(targetCamera, targetPlayer, element) {
   camera = targetCamera;
   player = targetPlayer;
+  domElement = element || window;
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
+  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('click', onClick);
 }
 
 export function registerNPCs(list) {

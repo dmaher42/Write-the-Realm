@@ -19,7 +19,7 @@ export function startGame() {
   const player = createPlayer();
   scene.add(player);
   initUI();
-  initControls(camera, player);
+  initControls(camera, player, renderer.domElement);
   animate();
 }
 
