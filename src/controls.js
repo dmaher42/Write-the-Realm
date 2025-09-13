@@ -60,6 +60,8 @@ export function registerNPCs(list) {
   npcs = list;
 }
 
+// No need for updateCamera() from the conflicted branch, as camera follow logic is handled in updateControls
+
 export function updateControls() {
   if (!camera || !player) return;
 

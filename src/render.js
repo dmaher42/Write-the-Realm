@@ -42,6 +42,8 @@ export function initRenderer(container = document.body) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   container.appendChild(renderer.domElement);
+  scene.fog = new THREE.Fog(0x9cc4e4, 30, 120);
+  scene.background = new THREE.Color(0x9cc4e4);
   // Start the camera farther back and slightly above the scene so that the
   // entire village is visible on load. Looking at the origin keeps the
   // village centred in view.
@@ -140,22 +142,16 @@ export function populateVillage(targetScene = scene) {
   targetScene.add(fence2);
 
   // Trees and rocks
-  const tree1 = createTree();
-  tree1.position.set(-3, 0, -5);
-  targetScene.add(tree1);
-  const tree2 = createTree();
-  tree2.position.set(5, 0, 2);
-  targetScene.add(tree2);
-  const tree3 = createTree();
-  tree3.position.set(-7, 0, 4);
-  targetScene.add(tree3);
-
-  const rock1 = createRock();
-  rock1.position.set(1, 0, 3);
-  targetScene.add(rock1);
-  const rock2 = createRock();
-  rock2.position.set(-5, 0, 0);
-  targetScene.add(rock2);
+  const propCount = 8 + Math.floor(Math.random() * 5);
+  for (let i = 0; i < propCount; i++) {
+    const isTree = Math.random() > 0.3;
+    const prop = isTree ? createTree() : createRock();
+    prop.position.set(Math.random() * 30 - 15, 0, Math.random() * 30 - 15);
+    prop.rotation.y = Math.random() * Math.PI * 2;
+    const s = 0.8 + Math.random() * 0.4;
+    prop.scale.set(s, s, s);
+    targetScene.add(prop);
+  }
 
   const npcs = spawnNPCs(targetScene);
   registerNPCs(npcs);

@@ -7,6 +7,14 @@ const roofMaterial = new THREE.MeshStandardMaterial({
   metalness: 0,
 });
 
+// Simple coloured material for roofs – avoids the need for external texture
+// files which are not supported in this environment.
+const roofMaterial = new THREE.MeshStandardMaterial({
+  color: 0x8b0000,
+  roughness: 1,
+  metalness: 0,
+});
+
 // Simple geometry-based representations of village structures.
 export function createHut() {
   const hut = new THREE.Group();
