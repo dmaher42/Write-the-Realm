@@ -25,9 +25,18 @@ export function initUI() {
   const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
   const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
   const customGuardianInput = document.getElementById('custom-guardian-input');
+  const openJournalBtn = document.getElementById('open-journal-btn');
+  const closeJournalBtn = document.getElementById('close-journal-btn');
+  const journalPanel = document.getElementById('journal-panel');
+  const journalEntries = document.getElementById('journal-entries');
+  const openGearBtn = document.getElementById('open-gear-btn');
+  const closeGearBtn = document.getElementById('close-gear-btn');
+  const gearPanel = document.getElementById('gear-panel');
+  const inventoryList = document.getElementById('inventory-list');
 
   let selectedGuardianType = '';
   let selectedDomain = '';
+  let activeTrigger = null;
 
   if (newGameBtn) {
     newGameBtn.addEventListener('click', () => {
@@ -73,6 +82,56 @@ export function initUI() {
       saveGame();
       hidePanel(characterCreator);
       if (uiContainer) uiContainer.style.visibility = 'visible';
+    });
+  }
+
+  if (openJournalBtn && journalPanel) {
+    openJournalBtn.addEventListener('click', () => {
+      activeTrigger = openJournalBtn;
+      if (journalEntries) {
+        const entries =
+          gameState.journalEntries && gameState.journalEntries.length
+            ? gameState.journalEntries
+                .map((e) => `<div class="journal-entry">${e}</div>`)
+                .join('')
+            : '<p class="text-sm">Your journal is empty.</p>';
+        journalEntries.innerHTML = entries;
+      }
+      showPanel(journalPanel);
+      closeJournalBtn && closeJournalBtn.focus();
+    });
+  }
+
+  if (closeJournalBtn && journalPanel) {
+    closeJournalBtn.addEventListener('click', () => {
+      hidePanel(journalPanel);
+      activeTrigger && activeTrigger.focus();
+      activeTrigger = null;
+    });
+  }
+
+  if (openGearBtn && gearPanel) {
+    openGearBtn.addEventListener('click', () => {
+      activeTrigger = openGearBtn;
+      if (inventoryList) {
+        const items =
+          gameState.inventory && gameState.inventory.length
+            ? gameState.inventory
+                .map((i) => `<div class="gear-item">${i}</div>`)
+                .join('')
+            : '<p class="text-sm">You have no gear.</p>';
+        inventoryList.innerHTML = items;
+      }
+      showPanel(gearPanel);
+      closeGearBtn && closeGearBtn.focus();
+    });
+  }
+
+  if (closeGearBtn && gearPanel) {
+    closeGearBtn.addEventListener('click', () => {
+      hidePanel(gearPanel);
+      activeTrigger && activeTrigger.focus();
+      activeTrigger = null;
     });
   }
 

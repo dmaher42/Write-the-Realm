@@ -10,6 +10,8 @@ export const gameState = {
   isCombatActive: false,
   selectedGuardian: '',
   selectedDomain: '',
+  journalEntries: [],
+  inventory: [],
 };
 
 /**
