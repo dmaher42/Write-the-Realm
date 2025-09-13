@@ -1,23 +1,23 @@
 /**
- * Keyboard helpers to move the active camera with basic WASD controls and
- * handle simple NPC interactions.
+ * Camera and interaction controls. Handles player movement, NPC picking, and
+ * OrbitControls-based camera follow.
  */
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { gameState } from './state.js';
 import { setPointer, pick } from './picking.js';
+import { openDialoguePanel } from './ui.js';
 
 const keys = {};
 let camera;
 let player;
 let domElement;
+let orbit;
 let npcs = [];
 let hovered = null;
 const interactPrompt = document.getElementById('interact-prompt');
-
 const SPEED = 0.2;
-let yaw = 0;
-let pitch = 0.6;
-const offset = new THREE.Vector3(0, 3, 6);
+const prevPlayer = new THREE.Vector3();
 
 function onKeyDown(event) {
   keys[event.key.toLowerCase()] = true;
@@ -27,43 +27,32 @@ function onKeyUp(event) {
   keys[event.key.toLowerCase()] = false;
 }
 
-function onMouseMove(event) {
+function onPointerMove(event) {
   if (!domElement) return;
   setPointer(event, domElement);
-  const hit = pick(
-    npcs.map((n) => n.mesh),
-    camera
-  );
-  let obj = hit ? hit.object : null;
-  while (obj && !npcs.some((n) => n.mesh === obj)) {
-    obj = obj.parent;
-  }
-  const npc = npcs.find((n) => n.mesh === obj) || null;
-  if (hovered && hovered !== npc) {
-    hovered.mesh.traverse((child) => {
-      if (child.isMesh) child.material.emissive.set(0x000000);
-    });
-    hovered = null;
-  }
-  if (npc && hovered !== npc) {
-    npc.mesh.traverse((child) => {
-      if (child.isMesh) child.material.emissive.set(0x333333);
-    });
-    hovered = npc;
-  }
 }
 
 function onClick() {
-  if (hovered) hovered.triggerDialogue();
+  if (hovered) openDialoguePanel(hovered.userData.name);
 }
 
 export function initControls(targetCamera, targetPlayer, element) {
   camera = targetCamera;
   player = targetPlayer;
   domElement = element || window;
+
+  orbit = new OrbitControls(camera, domElement);
+  orbit.enablePan = false;
+  orbit.minPolarAngle = Math.PI * 0.25;
+  orbit.maxPolarAngle = Math.PI * 0.75;
+  orbit.enableDamping = true;
+  orbit.dampingFactor = 0.05;
+  orbit.target.copy(player.position);
+  prevPlayer.copy(player.position);
+
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-  domElement.addEventListener('mousemove', onMouseMove);
+  domElement.addEventListener('pointermove', onPointerMove);
   domElement.addEventListener('click', onClick);
 }
 
@@ -71,34 +60,56 @@ export function registerNPCs(list) {
   npcs = list;
 }
 
-function updateCamera() {
-  const rotated = offset.clone();
-  rotated.applyAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
-  rotated.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  camera.position.copy(player.position).add(rotated);
-  camera.lookAt(player.position);
-}
-
 export function updateControls() {
   if (!camera || !player) return;
 
-  const move = new THREE.Vector3();
-  if (keys['w']) move.z -= 1;
-  if (keys['s']) move.z += 1;
-  if (keys['a']) move.x -= 1;
-  if (keys['d']) move.x += 1;
-  if (move.lengthSq() > 0) {
-    move.normalize();
-    move.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-    player.position.add(move.multiplyScalar(SPEED));
+  // Hover picking
+  const hit = pick(npcs, camera);
+  let obj = hit ? hit.object : null;
+  while (obj && !npcs.includes(obj)) obj = obj.parent;
+  if (hovered && hovered !== obj) {
+    hovered.traverse((child) => {
+      if (child.isMesh && child.material.emissive) child.material.emissive.set(0x000000);
+    });
+    hovered = null;
+  }
+  if (obj && hovered !== obj) {
+    obj.traverse((child) => {
+      if (child.isMesh && child.material.emissive) child.material.emissive.set(0x333333);
+    });
+    hovered = obj;
   }
 
-  if (keys['arrowleft']) yaw += 0.03;
-  if (keys['arrowright']) yaw -= 0.03;
-  if (keys['arrowup']) pitch = Math.max(0.2, pitch - 0.03);
-  if (keys['arrowdown']) pitch = Math.min(1.2, pitch + 0.03);
+  // Player movement relative to camera
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+  forward.normalize();
+  const left = new THREE.Vector3();
+  left.crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
+  const move = new THREE.Vector3();
+  if (keys['w']) move.add(forward);
+  if (keys['s']) move.sub(forward);
+  if (keys['a']) move.add(left);
+  if (keys['d']) move.sub(left);
+  if (move.lengthSq() > 0) {
+    move.normalize().multiplyScalar(SPEED);
+    player.position.add(move);
+  }
 
-  updateCamera();
+  // Camera rotation via arrow keys
+  if (keys['arrowleft']) orbit.rotateLeft(0.03);
+  if (keys['arrowright']) orbit.rotateLeft(-0.03);
+  if (keys['arrowup']) orbit.rotateUp(0.03);
+  if (keys['arrowdown']) orbit.rotateUp(-0.03);
+
+  // Camera follow
+  const delta = new THREE.Vector3().subVectors(player.position, prevPlayer);
+  camera.position.add(delta);
+  orbit.target.copy(player.position);
+  prevPlayer.copy(player.position);
+
+  orbit.update();
 
   const dialogueBox = document.getElementById('dialogue-box');
   const dialogueVisible = dialogueBox && dialogueBox.style.display === 'block';
@@ -109,8 +120,8 @@ export function updateControls() {
 
   let target = null;
   for (const npc of npcs) {
-    const dist = player.position.distanceTo(npc.mesh.position);
-    if (dist < npc.radius) {
+    const radius = npc.userData?.interactRadius || 2;
+    if (player.position.distanceTo(npc.position) < radius) {
       target = npc;
       break;
     }
@@ -120,7 +131,7 @@ export function updateControls() {
     gameState.canInteractWith = target;
     if (interactPrompt) interactPrompt.style.display = 'block';
     if (keys['e']) {
-      target.triggerDialogue();
+      openDialoguePanel(target.userData.name);
       keys['e'] = false;
     }
   } else {

@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import { showDialogue } from './ui.js';
 
-function createNPC(name, color, dialogue, quest, radius = 2) {
+export function createNPC(name, position, color = 0x8b4513, interactRadius = 2) {
   const group = new THREE.Group();
 
   const body = new THREE.Mesh(
@@ -20,50 +19,25 @@ function createNPC(name, color, dialogue, quest, radius = 2) {
   head.castShadow = true;
   group.add(head);
 
-  return {
-    name,
-    mesh: group,
-    dialogue,
-    quest,
-    radius,
-    triggerDialogue() {
-      showDialogue({ name, dialogue, quest });
-    },
-  };
+  group.position.copy(position);
+  group.userData = { name, interactRadius };
+  return group;
 }
 
-export function createVillageElder() {
-  return createNPC(
-    'Village Elder',
-    0x8b4513,
-    'Our village needs your help. Seek the ancient relic in the forest.',
-    {
-      title: 'The Elder\'s Request',
-      objective: 'Retrieve the relic from the forest',
-    }
-  );
-}
+export function spawnNPCs(scene) {
+  const list = [];
 
-export function createFisherman() {
-  return createNPC(
-    'Fisherman',
-    0x1e90ff,
-    'The tides behave strangely. Investigate the shoreline for me.',
-    {
-      title: 'Strange Tides',
-      objective: 'Investigate the shoreline for anomalies',
-    }
-  );
-}
+  const elder = createNPC('Village Elder', new THREE.Vector3(-8, 1, -1), 0x8b4513);
+  scene.add(elder);
+  list.push(elder);
 
-export function createSageOfTheTides() {
-  return createNPC(
-    'Sage of the Tides',
-    0x228b22,
-    'Bring me a pearl so I may divine the future.',
-    {
-      title: 'Wisdom of the Tides',
-      objective: 'Bring a pearl to the Sage',
-    }
-  );
+  const fisherman = createNPC('Fisherman', new THREE.Vector3(4, 1, -6), 0x1e90ff);
+  scene.add(fisherman);
+  list.push(fisherman);
+
+  const sage = createNPC('Sage of the Tides', new THREE.Vector3(1, 1, 4), 0x228b22);
+  scene.add(sage);
+  list.push(sage);
+
+  return list;
 }

@@ -6,11 +6,7 @@ import {
   createChurch,
 } from '../assets/sprites/villageStructures.js';
 import { registerNPCs } from './controls.js';
-import {
-  createVillageElder,
-  createFisherman,
-  createSageOfTheTides,
-} from './npcs.js';
+import { spawnNPCs } from './npcs.js';
 import { createPath, createFence, createTree, createRock } from './environment.js';
 
 export let scene;
@@ -152,18 +148,6 @@ export function populateVillage(targetScene = scene) {
   rock2.position.set(-5, 0, 0);
   targetScene.add(rock2);
 
-  // NPCs
-  const elder = createVillageElder();
-  elder.mesh.position.set(-8, 1, -1);
-  targetScene.add(elder.mesh);
-
-  const fisherman = createFisherman();
-  fisherman.mesh.position.set(4, 1, -6);
-  targetScene.add(fisherman.mesh);
-
-  const sage = createSageOfTheTides();
-  sage.mesh.position.set(1, 1, 4);
-  targetScene.add(sage.mesh);
-
-  registerNPCs([elder, fisherman, sage]);
+  const npcs = spawnNPCs(targetScene);
+  registerNPCs(npcs);
 }
