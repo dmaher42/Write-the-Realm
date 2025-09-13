@@ -3,7 +3,7 @@
  * OrbitControls-based camera follow.
  */
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gameState } from './state.js';
 import { setPointer, pick } from './picking.js';
 import { openDialoguePanel } from './ui.js';
