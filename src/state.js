@@ -12,6 +12,7 @@ export const gameState = {
   selectedDomain: '',
   journalEntries: [],
   inventory: [],
+  equipment: { head: '', chest: '', weapon: '' },
   activeQuest: null,
 };
 
