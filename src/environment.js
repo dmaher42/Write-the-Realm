@@ -1,8 +1,30 @@
 import * as THREE from 'three';
+import {
+  rockTexture,
+  pathAlbedoTexture,
+  pathRoughTexture,
+} from './textures.js';
+
+const rockMaterial = new THREE.MeshStandardMaterial({
+  map: rockTexture,
+  roughness: 1,
+  metalness: 0,
+});
 
 export function createPath(length = 5, width = 2) {
   const geometry = new THREE.PlaneGeometry(length, width, 1, 1);
-  const material = new THREE.MeshStandardMaterial({ color: 0xc2b280 });
+  const albedo = pathAlbedoTexture.clone();
+  const rough = pathRoughTexture.clone();
+  albedo.wrapS = albedo.wrapT = THREE.RepeatWrapping;
+  rough.wrapS = rough.wrapT = THREE.RepeatWrapping;
+  albedo.repeat.set(length, width);
+  rough.repeat.set(length, width);
+  const material = new THREE.MeshStandardMaterial({
+    map: albedo,
+    roughnessMap: rough,
+    roughness: 1,
+    metalness: 0,
+  });
   const path = new THREE.Mesh(geometry, material);
   path.rotation.x = -Math.PI / 2;
   path.receiveShadow = true;
@@ -47,8 +69,7 @@ export function createTree() {
 
 export function createRock() {
   const geometry = new THREE.DodecahedronGeometry(0.5, 0);
-  const material = new THREE.MeshStandardMaterial({ color: 0x808080 });
-  const rock = new THREE.Mesh(geometry, material);
+  const rock = new THREE.Mesh(geometry, rockMaterial);
   rock.castShadow = rock.receiveShadow = true;
   return rock;
 }
