@@ -43,6 +43,7 @@ export function initRenderer(container = document.body) {
   scene.add(directional);
 
   window.addEventListener('resize', handleResize);
+  return { scene, camera, renderer };
 }
 
 /**

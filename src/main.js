@@ -1,15 +1,28 @@
 import { initRenderer, animate } from './render.js';
+import { initControls, updateControls } from './controls.js';
 import { initUI } from './ui.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
+
+let lastFrame = 0;
+
+function gameLoop(time) {
+  const delta = (time - lastFrame) / 1000;
+  lastFrame = time;
+  updateControls(delta);
+  requestAnimationFrame(gameLoop);
+}
 
 /**
  * Entry point for the application. Initialises renderer, UI bindings, and
  * kicks off the animation loop.
  */
 export function startGame() {
-  initRenderer();
+  const { camera } = initRenderer();
+  initControls(camera);
   initUI();
   animate();
+  lastFrame = performance.now();
+  requestAnimationFrame(gameLoop);
 }
 
 // Wait for the DOM to be fully loaded before starting the game.
