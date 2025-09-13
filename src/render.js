@@ -5,6 +5,12 @@ import {
   createLordHouse,
   createChurch,
 } from '../assets/sprites/villageStructures.js';
+import { registerNPCs } from './controls.js';
+import {
+  createVillageElder,
+  createFisherman,
+  createSageOfTheTides,
+} from './npcs.js';
 
 export let scene;
 export let camera;
@@ -72,21 +78,54 @@ export function populateVillage(targetScene = scene) {
   ground.receiveShadow = true;
   targetScene.add(ground);
 
-  const hut = createHut();
-  hut.position.set(-5, 1, -2);
-  targetScene.add(hut);
+  // Structures
+  const hut1 = createHut();
+  hut1.position.set(-5, 1, -2);
+  targetScene.add(hut1);
 
-  const farm = createFarmRow();
-  farm.position.set(0, 0, -5);
-  targetScene.add(farm);
+  const hut2 = createHut();
+  hut2.position.set(8, 1, 4);
+  targetScene.add(hut2);
 
-  const house = createLordHouse();
-  house.position.set(5, 1.5, -2);
-  house.rotation.y = Math.PI / 4;
-  targetScene.add(house);
+  const hut3 = createHut();
+  hut3.position.set(-10, 1, 3);
+  targetScene.add(hut3);
+
+  const farm1 = createFarmRow();
+  farm1.position.set(-2, 0, -8);
+  targetScene.add(farm1);
+
+  const farm2 = createFarmRow();
+  farm2.position.set(5, 0, -9);
+  targetScene.add(farm2);
+
+  const house1 = createLordHouse();
+  house1.position.set(5, 1.5, -2);
+  house1.rotation.y = Math.PI / 4;
+  targetScene.add(house1);
+
+  const house2 = createLordHouse();
+  house2.position.set(-6, 1.5, 6);
+  house2.rotation.y = -Math.PI / 6;
+  targetScene.add(house2);
 
   const church = createChurch();
   church.position.set(-8, 3, -2);
   church.rotation.y = -Math.PI / 2;
   targetScene.add(church);
+
+  // NPCs
+  const elder = createVillageElder();
+  elder.mesh.position.set(-8, 1, -4);
+  targetScene.add(elder.mesh);
+
+  const fisherman = createFisherman();
+  fisherman.mesh.position.set(2, 1, -6);
+  targetScene.add(fisherman.mesh);
+
+  const sage = createSageOfTheTides();
+  sage.mesh.position.set(0, 1, 4);
+  targetScene.add(sage.mesh);
+
+  registerNPCs([elder, fisherman, sage]);
 }
