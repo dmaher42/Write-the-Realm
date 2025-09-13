@@ -36,7 +36,12 @@ export function initRenderer(container = document.body) {
   // loading error.
   renderer.setClearColor(0x9cc4e4);
   container.appendChild(renderer.domElement);
-  camera.position.z = 5;
+  
+  // Position camera above and behind the village for proper overview
+  // Village center is approximately at (0, 0, 0), spans from X:-10 to X:5, Z:-5 to Z:5
+  camera.position.set(-2, 15, 12);
+  // Look down at the center of the village
+  camera.lookAt(0, 2, 0);
 
   // Add simple lighting so that meshes using standard materials are visible
   // when the scene initializes. Without at least an ambient light the imported
