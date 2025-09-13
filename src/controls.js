@@ -75,7 +75,8 @@ function updateCamera() {
   const rotated = offset.clone();
   rotated.applyAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
   rotated.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  camera.position.copy(player.position).add(rotated);
+  const target = player.position.clone().add(rotated);
+  camera.position.lerp(target, 0.1);
   camera.lookAt(player.position);
 }
 

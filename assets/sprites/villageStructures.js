@@ -1,5 +1,13 @@
 import * as THREE from 'three';
 
+// Simple coloured material for roofs – avoids the need for external texture
+// files which are not supported in this environment.
+const roofMaterial = new THREE.MeshStandardMaterial({
+  color: 0x8b0000,
+  roughness: 1,
+  metalness: 0,
+});
+
 // Simple geometry-based representations of village structures.
 export function createHut() {
   const hut = new THREE.Group();
@@ -16,7 +24,7 @@ export function createHut() {
   const roofHeight = 1.5;
   const roof = new THREE.Mesh(
     new THREE.ConeGeometry(2.2, roofHeight, 6),
-    new THREE.MeshStandardMaterial({ color: 0x8b0000 })
+    roofMaterial
   );
   roof.position.y = baseHeight / 2 + roofHeight / 2;
   roof.castShadow = true;
@@ -82,7 +90,7 @@ export function createLordHouse() {
   const roofHeight = 2.5;
   const roof = new THREE.Mesh(
     new THREE.ConeGeometry(6, roofHeight, 4),
-    new THREE.MeshStandardMaterial({ color: 0x8b0000 })
+    roofMaterial
   );
   roof.position.y = baseHeight / 2 + roofHeight / 2;
   roof.castShadow = true;
@@ -150,7 +158,7 @@ export function createChurch() {
   const roofHeight = 3;
   const roof = new THREE.Mesh(
     new THREE.ConeGeometry(5, roofHeight, 4),
-    new THREE.MeshStandardMaterial({ color: 0x8b0000 })
+    roofMaterial
   );
   roof.position.y = baseHeight / 2 + roofHeight / 2;
   roof.castShadow = true;

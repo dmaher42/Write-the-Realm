@@ -1,9 +1,24 @@
 import * as THREE from 'three';
 
+// Use simple coloured materials in place of external textures so that the
+// project avoids shipping binary assets.
+const pathMaterial = new THREE.MeshStandardMaterial({
+  color: 0x8b7765,
+  roughness: 1,
+  metalness: 0,
+});
+
+const rockMaterial = new THREE.MeshStandardMaterial({
+  color: 0x808080,
+  roughness: 1,
+  metalness: 0,
+});
+
+const rockGeometry = new THREE.DodecahedronGeometry(0.5, 0);
+
 export function createPath(length = 5, width = 2) {
   const geometry = new THREE.PlaneGeometry(length, width, 1, 1);
-  const material = new THREE.MeshStandardMaterial({ color: 0xc2b280 });
-  const path = new THREE.Mesh(geometry, material);
+  const path = new THREE.Mesh(geometry, pathMaterial);
   path.rotation.x = -Math.PI / 2;
   path.receiveShadow = true;
   return path;
@@ -46,9 +61,7 @@ export function createTree() {
 }
 
 export function createRock() {
-  const geometry = new THREE.DodecahedronGeometry(0.5, 0);
-  const material = new THREE.MeshStandardMaterial({ color: 0x808080 });
-  const rock = new THREE.Mesh(geometry, material);
+  const rock = new THREE.Mesh(rockGeometry, rockMaterial);
   rock.castShadow = rock.receiveShadow = true;
   return rock;
 }
