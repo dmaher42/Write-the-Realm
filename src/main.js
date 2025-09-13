@@ -1,14 +1,22 @@
-import { initRenderer, animate } from './render.js';
+import { initRenderer, scene, camera, renderer } from './render.js';
 import { initUI } from './ui.js';
+import { initControls, updateControls } from './controls.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
 
 /**
  * Entry point for the application. Initialises renderer, UI bindings, and
  * kicks off the animation loop.
  */
+function animate() {
+  requestAnimationFrame(animate);
+  updateControls();
+  renderer.render(scene, camera);
+}
+
 export function startGame() {
   initRenderer();
   initUI();
+  initControls(camera);
   animate();
 }
 

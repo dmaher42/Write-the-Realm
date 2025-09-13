@@ -6,9 +6,9 @@ import {
   createChurch,
 } from '../assets/sprites/villageStructures.js';
 
-let scene;
-let camera;
-let renderer;
+export let scene;
+export let camera;
+export let renderer;
 
 function handleResize() {
   const width = window.innerWidth;
@@ -51,14 +51,7 @@ export function initRenderer(container = document.body) {
   window.addEventListener('resize', handleResize);
 
   populateVillage(scene);
-}
-
-/**
- * Basic animation loop that continuously renders the scene.
- */
-export function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
+  return { scene, camera, renderer };
 }
 
 /**
