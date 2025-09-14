@@ -48,8 +48,8 @@ export async function startGame() {
   npcs = init.npcs;
 
   // Create animated GLTF player; use its group as the movable object
-  playerModel = new PlayerModel(scene);
-  player = playerModel.group;
+ playerModel = new PlayerModel(scene, {
+  modelPath: '../assets/models/viking.glb'
   
   initUI('#ui-root');
   setActionHandler(() => {
