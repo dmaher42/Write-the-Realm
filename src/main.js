@@ -47,15 +47,31 @@ export function startGame() {
   npcs = init.npcs;
 
   // Create animated GLTF player; use its group as the movable object
-  playerModel = new PlayerModel(scene, { modelPath: 'assets/models/guardianCharacter.glb' });
+  playerModel = new PlayerModel(scene);
   player = playerModel.group;
 
   initUI();
-  // Hook: flip Idle/Walk based on movement without rewriting controls.js
-  initControls(camera, player, renderer.domElement, (isMoving) => {
-    if (!playerModel || !playerModel.fadeTo) return;
-    playerModel.fadeTo(isMoving ? 'walk' : 'idle', 0.25);
-  });
+  // Hook: flip Idle/Walk and handle interact one-shots
+  initControls(
+    camera,
+    player,
+    renderer.domElement,
+    (isMoving) => {
+      if (!playerModel) return;
+      if (isMoving) {
+        if (playerModel.actions.walk) playerModel.actions.walk.timeScale = 1.0;
+        playerModel.fadeTo('walk', 0.25);
+      } else {
+        if (playerModel.actions.idle) playerModel.actions.idle.timeScale = 1.0;
+        playerModel.fadeTo('idle', 0.25);
+      }
+    },
+    (isMoving) => {
+      if (!playerModel) return;
+      playerModel.playOneShot('interact', 0.15, isMoving ? 'walk' : 'idle');
+    },
+    playerModel
+  );
   window.addEventListener('pointermove', (e) => updatePointerFromEvent(e, renderer.domElement));
   window.addEventListener('click', () => {
     if (gameState.canInteractWith)

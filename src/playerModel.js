@@ -8,6 +8,7 @@ export class PlayerModel {
     this.scene = scene;
     this.group = new THREE.Group();
     this.scene.add(this.group);
+    this.group.setDirection = (dir) => this.setDirection(dir);
 
     this.model = null;
     this.mixer = null;
@@ -16,8 +17,7 @@ export class PlayerModel {
     this.state = { yaw: 0, pitch: 0 };
     this.isMoving = false;
 
-    // Use provided model path or fall back to hosted default. If the model
-    // fails to load, a simple placeholder mesh will be added instead.
+    // Use provided model path or default to hosted asset.
     this.loadModel(
       options.modelPath ||
         'https://dmaher42.github.io/Write-the-Realm/assets/models/guardianCharacter.glb'
@@ -30,75 +30,57 @@ export class PlayerModel {
       path,
       (gltf) => {
         this.model = gltf.scene;
+        this.group.add(this.model);
+
+        this.model.scale.setScalar(1.0); // tweak per asset
+        this.model.rotation.y = Math.PI; // adjust if facing wrong way
+        this.model.position.y = 0; // feet on ground
+
         this.model.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            if (child.material) child.material.shadowSide = THREE.FrontSide;
           }
         });
-        this.group.add(this.model);
 
         // setup animation mixer
         this.mixer = new THREE.AnimationMixer(this.model);
 
-        // find clips by name (adjust names to match your GLB)
-        const idleClip =
-          THREE.AnimationClip.findByName(gltf.animations, 'Idle') ||
-          THREE.AnimationClip.findByName(gltf.animations, 'Survey');
+        const by = (n) => THREE.AnimationClip.findByName(gltf.animations, n);
+        const findLike = (k) =>
+          gltf.animations.find((a) =>
+            a.name.toLowerCase().includes(k.toLowerCase())
+          );
+        const idleClip = by('Idle') || findLike('idle');
         const walkClip =
-          THREE.AnimationClip.findByName(gltf.animations, 'Walk') ||
-          THREE.AnimationClip.findByName(gltf.animations, 'Run');
+          by('Walk') || by('Run') || findLike('walk') || findLike('run');
         const interactClip =
-          THREE.AnimationClip.findByName(gltf.animations, 'Interact') ||
-          THREE.AnimationClip.findByName(gltf.animations, 'Wave');
+          by('Interact') ||
+          findLike('interact') ||
+          findLike('wave') ||
+          findLike('talk');
 
-        if (idleClip) this.actions.idle = this.mixer.clipAction(idleClip);
-        if (walkClip) this.actions.walk = this.mixer.clipAction(walkClip);
-        if (interactClip) {
-          const action = this.mixer.clipAction(interactClip);
-          action.loop = THREE.LoopOnce;
-          action.clampWhenFinished = true;
-          this.actions.interact = action;
-        }
+        this.actions.idle = idleClip ? this.mixer.clipAction(idleClip) : null;
+        this.actions.walk = walkClip ? this.mixer.clipAction(walkClip) : null;
+        this.actions.interact = interactClip
+          ? this.mixer.clipAction(interactClip)
+          : null;
 
-        // Start idle by default
         if (this.actions.idle) {
           this.currentAction = this.actions.idle;
           this.currentAction.play();
-        }
-
-        // revert to idle/walk when interaction finishes
-        if (this.actions.interact) {
-          this.mixer.addEventListener('finished', (e) => {
-            if (e.action === this.actions.interact) {
-              const next = this.isMoving && this.actions.walk
-                ? this.actions.walk
-                : this.actions.idle;
-              next?.reset().fadeIn(0.2).play();
-              this.currentAction = next;
-            }
-          });
         }
       },
       undefined,
       (error) => {
         console.error('Error loading player model:', error);
-        const placeholder = new THREE.Mesh(
-          new THREE.BoxGeometry(1, 2, 1),
-          new THREE.MeshStandardMaterial({ color: 0x808080 })
-        );
-        placeholder.castShadow = true;
-        placeholder.receiveShadow = true;
-        this.group.add(placeholder);
       }
     );
   }
 
   update(delta) {
-    const d = delta !== undefined ? delta : 0;
-    if (this.mixer) {
-      this.mixer.update(d);
-    }
+    if (this.mixer) this.mixer.update(delta);
   }
 
   // rotate the player to face movement direction
@@ -121,5 +103,22 @@ export class PlayerModel {
     }
 
     this.currentAction = next;
+  }
+
+  playOneShot(name, fade = 0.2, then = 'idle') {
+    const act = this.actions[name];
+    if (!act) return;
+    const prev = this.currentAction;
+    act.reset().setLoop(THREE.LoopOnce, 1);
+    act.clampWhenFinished = true;
+    act.play();
+    if (prev) prev.crossFadeTo(act, fade, false);
+    const onFinished = (e) => {
+      if (e.action === act) {
+        this.mixer.removeEventListener('finished', onFinished);
+        this.fadeTo(then, 0.25);
+      }
+    };
+    this.mixer.addEventListener('finished', onFinished);
   }
 }

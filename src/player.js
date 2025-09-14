@@ -4,11 +4,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 export function createPlayer() {
   const group = new THREE.Group();
   const loader = new GLTFLoader();
-  // guardianCharacter.glb should reside in assets/models/. If it is missing, a
-  // placeholder mesh is used so the game can still run without binary assets.
-  loader.load(
-    'assets/models/guardianCharacter.glb',
-    (gltf) => {
+    // guardianCharacter model loaded from hosted asset; required for gameplay.
+    loader.load(
+      'https://dmaher42.github.io/Write-the-Realm/assets/models/guardianCharacter.glb',
+      (gltf) => {
       const model = gltf.scene;
       model.traverse((child) => {
         if (child.isMesh) {
@@ -54,17 +53,9 @@ export function createPlayer() {
           }
         });
       }
-    },
-  undefined,
-  () => {
-    const placeholder = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 2, 1),
-      new THREE.MeshStandardMaterial({ color: 0x808080 })
+      },
+      undefined,
+      (err) => console.error('Error loading player model', err)
     );
-    placeholder.castShadow = true;
-    placeholder.receiveShadow = true;
-    group.add(placeholder);
-  }
-  );
   return group;
 }

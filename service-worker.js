@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const BASE_PATH = self.location.pathname.replace(/service-worker\.js$/, '');
 const ASSETS = [
