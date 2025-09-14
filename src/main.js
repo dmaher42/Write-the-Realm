@@ -4,6 +4,7 @@ import { loadDialogue, getDialogueFor, open as openDialogue } from './dialogue.j
 import { initUI, setActionHandler } from './ui.js';
 import { initControls, updateControls } from './controls.js';
 import { PlayerModel } from './playerModel.js';
+import { npcModels } from './npcs.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
 import { createComposer } from './postfx.js';
 import { updatePointerFromEvent, pick, setPickTargets } from './picking.js';
@@ -36,6 +37,7 @@ function animate() {
   if (interactPrompt) interactPrompt.style.display = target ? 'block' : 'none';
   const delta = clock.getDelta();
   if (playerModel && playerModel.update) playerModel.update(delta);
+  for (const npc of npcModels) npc.update(delta);
   if (fxEnabled && composer) {
     composer.composer.render(delta);
   } else {
@@ -94,6 +96,9 @@ export async function startGame() {
     if (npcObj.position.distanceTo(playerPos) > (hovered.userData?.interactRadius ?? 2)) return;
 
     playerModel?.playOneShot('interact', 0.15, updateControls?._moving ? 'walk' : 'idle');
+
+    const npcModel = npcModels.find((n) => n.group === npcObj);
+    npcModel?.playOneShot('interact');
 
     const { lines, options } = getDialogueFor(target);
     openDialogue({ npcName: target, lines, options });
