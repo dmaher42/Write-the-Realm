@@ -1,1 +1,1 @@
-Placeholder textures can be added here in production builds.
+Placeholder for KTX2 textures (albedo, normal, roughness).

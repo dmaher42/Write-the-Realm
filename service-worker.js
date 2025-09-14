@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const BASE_PATH = self.location.pathname.replace(/service-worker\.js$/, '');
 const ASSETS = [
@@ -6,9 +6,15 @@ const ASSETS = [
   `${BASE_PATH}index.html`,
   `${BASE_PATH}offline.html`,
   `${BASE_PATH}assets/styles/main.css`,
-  `${BASE_PATH}assets/sprites/villageStructures.js`,
   `${BASE_PATH}src/textures.js`,
-  `${BASE_PATH}src/npcs.js`
+  `${BASE_PATH}src/npcs.js`,
+  `${BASE_PATH}src/models.js`,
+  `${BASE_PATH}src/loaders.js`,
+  `${BASE_PATH}assets/models/`,
+  `${BASE_PATH}assets/textures/`,
+  `${BASE_PATH}assets/env/`,
+  `${BASE_PATH}libs/draco/`,
+  `${BASE_PATH}libs/basis/`
 ];
 
 self.addEventListener('install', event => {
@@ -39,7 +45,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  const assetRegex = /\.(?:html|js|css|png|jpg|jpeg|gif|svg)$/;
+  const assetRegex = /\.(?:html|js|css|png|jpg|jpeg|gif|svg|glb|gltf|ktx2|hdr|wasm)$/;
   if (assetRegex.test(url.pathname)) {
     event.respondWith(
       caches.match(event.request).then(res => {
@@ -57,4 +63,3 @@ self.addEventListener('fetch', event => {
     );
   }
 });
-
