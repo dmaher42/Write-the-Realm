@@ -1,186 +1,64 @@
-/**
- * Basic UI helpers. In the original project these functions would manage the
- * large number of panels and in-game menus. Keeping them in a separate module
- * allows the rendering logic to remain focused on Three.js operations.
- */
+import { acceptQuest, completeQuest } from './questState.js';
+import { onOpen, onClose } from './dialogue.js';
 
-import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
+let root;
+let onAction;
 
-export function updateQuestLog() {
-  const head = document.getElementById('slot-head');
-  const chest = document.getElementById('slot-chest');
-  const weapon = document.getElementById('slot-weapon');
-  if (head) head.textContent = gameState.equipment.head || 'Empty';
-  if (chest) chest.textContent = gameState.equipment.chest || 'Empty';
-  if (weapon) weapon.textContent = gameState.equipment.weapon || 'Empty';
-
-  const title = document.getElementById('quest-title');
-  const objective = document.getElementById('quest-objective');
-  if (title && gameState.activeQuest) title.textContent = gameState.activeQuest.title;
-  if (objective && gameState.activeQuest)
-    objective.textContent = gameState.activeQuest.objective;
+export function initUI(rootSelector = '#ui-root') {
+  root = document.querySelector(rootSelector) || document.body;
+  onOpen(renderDialogue);
+  onClose(destroyDialogue);
 }
 
-export function showPanel(panel) {
-  if (!panel) return;
-  panel.style.display = panel.classList.contains('modal-backdrop') ? 'flex' : 'block';
-}
+export function setActionHandler(fn) { onAction = fn; }
 
-export function hidePanel(panel) {
-  if (panel) panel.style.display = 'none';
-}
+function renderDialogue({ npcName, lines, options }) {
+  destroyDialogue();
 
-export function showDialogue(npc) {
-  const box = document.getElementById('dialogue-box');
-  const title = document.getElementById('dialogue-title');
-  const text = document.getElementById('dialogue-text');
-  const button = document.getElementById('dialogue-button');
-  if (!npc || !box || !title || !text || !button) return;
-  const prompt = document.getElementById('interact-prompt');
-  if (prompt) prompt.style.display = 'none';
-  title.textContent = npc.name;
-  text.textContent = npc.dialogue;
-  showPanel(box);
-  button.onclick = () => {
-    gameState.activeQuest = npc.quest;
-    updateQuestLog();
-    hidePanel(box);
-  };
-}
-
-export function openDialoguePanel(name) {
-  const box = document.getElementById('dialogue-box');
-  const title = document.getElementById('dialogue-title');
-  const text = document.getElementById('dialogue-text');
-  const button = document.getElementById('dialogue-button');
-  if (!box || !title || !text || !button) return;
-  const prompt = document.getElementById('interact-prompt');
-  if (prompt) prompt.style.display = 'none';
-  title.textContent = name;
-  text.textContent = `Greetings, I am ${name}.`; // TODO: AI quests hook
-  showPanel(box);
-  button.onclick = () => hidePanel(box);
-}
-
-export function initUI() {
-  const startModal = document.getElementById('start-modal');
-  const characterCreator = document.getElementById('character-creator');
-  const newGameBtn = document.getElementById('new-game-btn');
-  const continueGameBtn = document.getElementById('continue-game-btn');
-  const startGameBtn = document.getElementById('start-game-btn');
-  const saveGameBtn = document.getElementById('save-game-btn');
-  const uiContainer = document.getElementById('ui-container');
-  const guardianTypeOptions = document.querySelectorAll('#guardian-type-options .creator-option');
-  const guardianDomainOptions = document.querySelectorAll('#guardian-domain-options .creator-option');
-  const customGuardianInput = document.getElementById('custom-guardian-input');
-  const openJournalInventoryBtn = document.getElementById('open-journal-inventory-btn');
-  const closeJournalBtn = document.getElementById('close-journal-btn');
-  const journalPanel = document.getElementById('journal-panel');
-  const journalEntries = document.getElementById('journal-entries');
-  const inventoryList = document.getElementById('inventory-list');
-  const minimizeQuestLogBtn = document.getElementById('minimize-quest-log');
-  const questLogContent = document.getElementById('quest-log-content');
-
-  let selectedGuardianType = '';
-  let selectedDomain = '';
-  let activeTrigger = null;
-
-  if (newGameBtn) {
-    newGameBtn.addEventListener('click', () => {
-      hidePanel(startModal);
-      showPanel(characterCreator);
-    });
-  }
-
-  if (continueGameBtn) {
-    if (checkForSavedGame()) continueGameBtn.disabled = false;
-    continueGameBtn.addEventListener('click', () => {
-      const loaded = loadGame();
-      if (loaded) Object.assign(gameState, loaded);
-      hidePanel(startModal);
-      if (uiContainer) uiContainer.style.visibility = 'visible';
-    });
-  }
-
-  guardianTypeOptions.forEach((option) => {
-    option.addEventListener('click', () => {
-      guardianTypeOptions.forEach((o) => o.classList.remove('selected'));
-      option.classList.add('selected');
-      selectedGuardianType = option.dataset.type;
-    });
+  const wrap = document.createElement('div');
+  wrap.id = 'dialogue-panel';
+  Object.assign(wrap.style, {
+    position:'absolute', left:'50%', top:'10%', transform:'translateX(-50%)',
+    background:'rgba(10,20,30,0.9)', color:'#fff', padding:'16px 20px',
+    borderRadius:'12px', width:'min(520px, 90vw)', zIndex: 1000, boxShadow:'0 6px 24px rgba(0,0,0,.4)'
   });
 
-  guardianDomainOptions.forEach((option) => {
-    option.addEventListener('click', () => {
-      guardianDomainOptions.forEach((o) => o.classList.remove('selected'));
-      option.classList.add('selected');
-      selectedDomain = option.dataset.domain;
-    });
+  const title = document.createElement('div');
+  title.textContent = npcName;
+  Object.assign(title.style, { fontWeight:'600', marginBottom:'8px', fontSize:'18px' });
+
+  const text = document.createElement('div');
+  text.innerHTML = lines.map(l => `<p style="margin:6px 0;">${l}</p>`).join('');
+
+  const buttons = document.createElement('div');
+  Object.assign(buttons.style, { display:'grid', gap:'8px', marginTop:'12px' });
+  options.forEach(opt => {
+    const b = document.createElement('button');
+    b.textContent = opt.text;
+    Object.assign(b.style, { padding:'10px 12px', borderRadius:'10px', border:'none', cursor:'pointer' });
+    b.onclick = () => {
+      if (opt.action === 'accept_quest') acceptQuest(opt.questId);
+      if (opt.action === 'complete_quest') completeQuest(opt.questId);
+      if (onAction) onAction(opt);
+      if (opt.action === 'close' || opt.action === 'complete_quest') destroyDialogue();
+    };
+    buttons.appendChild(b);
   });
 
-  if (startGameBtn) {
-    startGameBtn.addEventListener('click', () => {
-      if (selectedGuardianType === 'custom' && customGuardianInput) {
-        const customValue = customGuardianInput.value.trim();
-        if (customValue) selectedGuardianType = customValue;
-      }
-      gameState.selectedGuardian = selectedGuardianType;
-      gameState.selectedDomain = selectedDomain;
-      saveGame();
-      hidePanel(characterCreator);
-      if (uiContainer) uiContainer.style.visibility = 'visible';
-    });
-  }
+  const close = document.createElement('button');
+  close.textContent = 'Close';
+  Object.assign(close.style, { marginTop:'6px', padding:'8px 10px', borderRadius:'10px', border:'none', cursor:'pointer' });
+  close.onclick = destroyDialogue;
 
-  if (openJournalInventoryBtn && journalPanel) {
-    openJournalInventoryBtn.addEventListener('click', () => {
-      activeTrigger = openJournalInventoryBtn;
-      if (journalEntries) {
-        const entries =
-          gameState.journalEntries && gameState.journalEntries.length
-            ? gameState.journalEntries
-                .map((e) => `<div class="journal-entry">${e}</div>`)
-                .join('')
-            : '<p class="text-sm">Your journal is empty.</p>';
-        journalEntries.innerHTML = entries;
-      }
-      if (inventoryList) {
-        const items =
-          gameState.inventory && gameState.inventory.length
-            ? gameState.inventory
-                .map((i) => `<div class="gear-item">${i}</div>`)
-                .join('')
-            : '<p class="text-sm">You have no gear.</p>';
-        inventoryList.innerHTML = items;
-      }
-      showPanel(journalPanel);
-      closeJournalBtn && closeJournalBtn.focus();
-    });
-  }
+  wrap.appendChild(title);
+  wrap.appendChild(text);
+  wrap.appendChild(buttons);
+  wrap.appendChild(close);
 
-  if (closeJournalBtn && journalPanel) {
-    closeJournalBtn.addEventListener('click', () => {
-      hidePanel(journalPanel);
-      activeTrigger && activeTrigger.focus();
-      activeTrigger = null;
-    });
-  }
+  root.appendChild(wrap);
+}
 
-  if (saveGameBtn) {
-    saveGameBtn.addEventListener('click', () => saveGame());
-  }
-
-  if (minimizeQuestLogBtn && questLogContent) {
-    minimizeQuestLogBtn.addEventListener('click', () => {
-      const hidden = questLogContent.style.display === 'none';
-      questLogContent.style.display = hidden ? 'block' : 'none';
-      minimizeQuestLogBtn.textContent = hidden ? '-' : '+';
-    });
-  }
-
-  updateQuestLog();
-
-  if (uiContainer) uiContainer.style.visibility = 'visible';
-
-  window.addEventListener('beforeunload', () => saveGame());
+function destroyDialogue() {
+  const old = document.getElementById('dialogue-panel');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
 }

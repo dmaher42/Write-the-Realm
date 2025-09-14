@@ -20,7 +20,7 @@ export function createNPC(name, position, color = 0x8b4513, interactRadius = 2) 
   group.add(head);
 
   group.position.copy(position);
-  group.userData = { name, interactRadius };
+  group.userData = { npcName: name, interactRadius, root: group };
   return group;
 }
 

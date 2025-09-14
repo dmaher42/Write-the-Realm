@@ -1,0 +1,21 @@
+{
+  "Village Elder": {
+    "intro": [
+      "Welcome, guardian. Our village needs your help.",
+      "Find the Fisherman by the docks and bring news of the tide."
+    ],
+    "options": [
+      { "text": "Accept Quest: Tide’s Errand", "action": "accept_quest", "questId": "tides_errand" },
+      { "text": "Maybe later.", "action": "close" }
+    ]
+  },
+  "Fisherman": {
+    "intro": [
+      "Ah, the Elder sent you? Tell them the currents are strange today."
+    ],
+    "options": [
+      { "text": "Deliver the message", "action": "complete_quest", "questId": "tides_errand" },
+      { "text": "Goodbye.", "action": "close" }
+    ]
+  }
+}
