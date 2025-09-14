@@ -55,6 +55,8 @@
 
     <!-- UI Container -->
     <div id="ui-container" style="visibility: hidden;">
+        <!-- 3D Realm Viewer -->
+        <div id="realm-3d" style="width: 420px; height: 300px; margin: 1rem auto;"></div>
         <!-- Quest Log -->
         <div id="quest-log" class="ui-panel" role="region" aria-labelledby="quest-heading">
             <button id="minimize-quest-log" class="minimize-btn" aria-label="Minimize quest log">-</button>
@@ -244,6 +246,11 @@
         <button id="message-button">OK</button>
     </div>
 
+    <div id="credits" style="text-align:center;font-size:0.75rem;margin-top:1rem;">
+        Kokura Castle by AVATTA — licensed under CC BY 4.0 (via Sketchfab).
+        <!-- TODO: Add model link -->
+    </div>
+
     <script type="importmap">
         {
             "imports": {
@@ -253,6 +260,7 @@
         }
     </script>
     <script type="module" src="./src/main.js"></script>
+    <script type="module" src="js/realmViewer.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
