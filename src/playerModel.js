@@ -54,6 +54,10 @@ export class PlayerModel {
         // setup animation mixer
         this.mixer = new THREE.AnimationMixer(this.model);
 
+        // Log available animation clip names
+        const animationNames = gltf.animations.map((a) => a.name);
+        console.log('Available animations:', animationNames);
+
         const by = (n) => THREE.AnimationClip.findByName(gltf.animations, n);
         const findLike = (k) =>
           gltf.animations.find((a) =>
@@ -69,10 +73,16 @@ export class PlayerModel {
           findLike('talk');
 
         this.actions.idle = idleClip ? this.mixer.clipAction(idleClip) : null;
+        console.log('Idle action', this.actions.idle ? 'created' : 'null');
         this.actions.walk = walkClip ? this.mixer.clipAction(walkClip) : null;
+        console.log('Walk action', this.actions.walk ? 'created' : 'null');
         this.actions.interact = interactClip
           ? this.mixer.clipAction(interactClip)
           : null;
+        console.log(
+          'Interact action',
+          this.actions.interact ? 'created' : 'null'
+        );
 
         if (this.actions.idle) {
           this.currentAction = this.actions.idle;
