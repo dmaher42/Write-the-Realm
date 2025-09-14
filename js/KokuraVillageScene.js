@@ -1,7 +1,10 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import {
+  createHut,
+  createFarmRow,
+  createLordHouse,
+  createChurch,
+} from '../assets/sprites/villageStructures.js';
 
 export function mountKokuraVillage(container, game) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -34,14 +37,6 @@ export function mountKokuraVillage(container, game) {
   });
   resizeObserver.observe(container);
 
-  const loader = new GLTFLoader();
-  loader.setMeshoptDecoder(MeshoptDecoder);
-
-  const ktx2 = new KTX2Loader()
-    .setTranscoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/')
-    .detectSupport(renderer);
-  loader.setKTX2Loader(ktx2);
-
   const hotspots = [];
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -72,46 +67,57 @@ export function mountKokuraVillage(container, game) {
   }
   renderer.domElement.addEventListener('pointerdown', handlePointer);
 
-  loader.load(
-    './assets/models/KokuraVillage_opt.glb',
-    (gltf) => {
-      const root = gltf.scene;
-      scene.add(root);
-      const box = new THREE.Box3().setFromObject(root);
-      const size = box.getSize(new THREE.Vector3()).length();
-      const center = box.getCenter(new THREE.Vector3());
-      root.position.sub(center);
+  const root = new THREE.Group();
+  const keep = createLordHouse();
+  root.add(keep);
 
-      camera.position.set(0, size * 0.35, size * 0.95);
-      camera.lookAt(0, 0, 0);
+  const hutA = createHut();
+  hutA.position.set(-10, 0, 10);
+  root.add(hutA);
 
-      const geo = new THREE.SphereGeometry(size * 0.05, 16, 16);
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
-        transparent: true,
-        opacity: 0,
-      });
+  const hutB = createHut();
+  hutB.position.set(10, 0, 10);
+  root.add(hutB);
 
-      const positions = {
-        Hotspot_Gate: new THREE.Vector3(0, size * 0.05, size * 0.5),
-        Hotspot_KeepDoor: new THREE.Vector3(0, size * 0.05, -size * 0.2),
-        Hotspot_Market: new THREE.Vector3(-size * 0.3, size * 0.05, size * 0.1),
-        Hotspot_Shrine: new THREE.Vector3(size * 0.3, size * 0.05, -size * 0.1),
-      };
+  const farm = createFarmRow();
+  farm.position.set(-10, 0, -10);
+  root.add(farm);
 
-      Object.entries(positions).forEach(([name, pos]) => {
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.name = name;
-        mesh.position.copy(pos);
-        root.add(mesh);
-        hotspots.push(mesh);
-      });
-    },
-    undefined,
-    (err) => {
-      console.error('Failed to load KokuraVillage_opt.glb', err);
-    }
-  );
+  const church = createChurch();
+  church.position.set(10, 0, -10);
+  root.add(church);
+
+  scene.add(root);
+
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3()).length();
+  const center = box.getCenter(new THREE.Vector3());
+  root.position.sub(center);
+
+  camera.position.set(0, size * 0.35, size * 0.95);
+  camera.lookAt(0, 0, 0);
+
+  const geo = new THREE.SphereGeometry(size * 0.05, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    transparent: true,
+    opacity: 0,
+  });
+
+  const positions = {
+    Hotspot_Gate: new THREE.Vector3(0, size * 0.05, size * 0.5),
+    Hotspot_KeepDoor: new THREE.Vector3(0, size * 0.05, -size * 0.2),
+    Hotspot_Market: new THREE.Vector3(-size * 0.3, size * 0.05, size * 0.1),
+    Hotspot_Shrine: new THREE.Vector3(size * 0.3, size * 0.05, -size * 0.1),
+  };
+
+  Object.entries(positions).forEach(([name, pos]) => {
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.name = name;
+    mesh.position.copy(pos);
+    root.add(mesh);
+    hotspots.push(mesh);
+  });
 
   function animate() {
     renderer.render(scene, camera);
