@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { NPCModel } from './npcModel.js';
 
 export function createNPC(name, position, color = 0x8b4513, interactRadius = 2) {
   const group = new THREE.Group();
@@ -17,6 +18,7 @@ export function createNPC(name, position, color = 0x8b4513, interactRadius = 2) 
   );
   head.position.y = 1.25;
   head.castShadow = true;
+  head.receiveShadow = true;
   group.add(head);
 
   group.position.copy(position);
@@ -24,20 +26,37 @@ export function createNPC(name, position, color = 0x8b4513, interactRadius = 2) 
   return group;
 }
 
+export const npcModels = [];
+
 export function spawnNPCs(scene) {
   const list = [];
 
-  const elder = createNPC('Village Elder', new THREE.Vector3(-8, 1, -1), 0x8b4513);
-  scene.add(elder);
-  list.push(elder);
+  const elder = new NPCModel(scene, {
+    name: 'Village Elder',
+    position: new THREE.Vector3(-8, 1, -1),
+    color: 0x8b4513,
+    modelPath: '../assets/models/elder.glb',
+  });
+  npcModels.push(elder);
+  list.push(elder.group);
 
-  const fisherman = createNPC('Fisherman', new THREE.Vector3(4, 1, -6), 0x1e90ff);
-  scene.add(fisherman);
-  list.push(fisherman);
+  const fisherman = new NPCModel(scene, {
+    name: 'Fisherman',
+    position: new THREE.Vector3(4, 1, -6),
+    color: 0x1e90ff,
+    modelPath: '../assets/models/fisherman.glb',
+  });
+  npcModels.push(fisherman);
+  list.push(fisherman.group);
 
-  const sage = createNPC('Sage of the Tides', new THREE.Vector3(1, 1, 4), 0x228b22);
-  scene.add(sage);
-  list.push(sage);
+  const sage = new NPCModel(scene, {
+    name: 'Sage of the Tides',
+    position: new THREE.Vector3(1, 1, 4),
+    color: 0x228b22,
+    modelPath: '../assets/models/sage.glb',
+  });
+  npcModels.push(sage);
+  list.push(sage.group);
 
   return list;
 }
