@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { spawnNPCs } from './npcs.js';
 import { createPath, createFence } from './environment.js';
 import { initModelLoader, spawnHut, spawnTree } from './models.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-import { PMREMGenerator } from 'three/src/extras/PMREMGenerator.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { PMREMGenerator } from 'three';
 
 export let scene;
 export let camera;
