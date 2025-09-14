@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { initRenderer, scene, camera, renderer, setComposer } from './render.js';
-import { initUI, openDialoguePanel } from './ui.js';
+import { loadDialogue, getDialogueFor, open as openDialogue } from './dialogue.js';
+import { initUI, setActionHandler } from './ui.js';
 import { initControls, updateControls } from './controls.js';
 import { PlayerModel } from './playerModel.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
@@ -42,27 +43,49 @@ function animate() {
   }
 }
 
-export function startGame() {
+export async function startGame() {
   const init = initRenderer();
   npcs = init.npcs;
 
   // Create animated GLTF player; use its group as the movable object
   playerModel = new PlayerModel(scene, { modelPath: 'assets/models/guardianCharacter.glb' });
   player = playerModel.group;
+  
+  initUI('#ui-root');
+  setActionHandler(() => {
+    // optional: update HUD/quest log here
+  });
 
-  initUI();
   // Hook: flip Idle/Walk based on movement without rewriting controls.js
   initControls(camera, player, renderer.domElement, (isMoving) => {
     if (!playerModel || !playerModel.fadeTo) return;
     playerModel.fadeTo(isMoving ? 'walk' : 'idle', 0.25);
   });
   window.addEventListener('pointermove', (e) => updatePointerFromEvent(e, renderer.domElement));
-  window.addEventListener('click', () => {
-    if (gameState.canInteractWith)
-      openDialoguePanel(gameState.canInteractWith.userData.name);
-    // TODO: trigger quest or journal updates when interactions occur
+
+  setPickTargets(npcs, { maxDistance: 16 });
+
+  function tryInteract() {
+    const hovered = pick(camera);
+    const target = hovered && (hovered.userData?.npcName || hovered.parent?.userData?.npcName);
+    if (!target) return;
+
+    const npcObj = hovered.userData?.root || hovered.parent;
+    const playerPos = (playerModel?.model ?? player).position;
+    if (npcObj.position.distanceTo(playerPos) > (hovered.userData?.interactRadius ?? 2)) return;
+
+    playerModel?.playOneShot('interact', 0.15, updateControls?._moving ? 'walk' : 'idle');
+
+    const { lines, options } = getDialogueFor(target);
+    openDialogue({ npcName: target, lines, options });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') tryInteract();
   });
-  setPickTargets(npcs, { maxDistance: 18 });
+
+  await loadDialogue();
+
   if (fxEnabled) {
     composer = createComposer(renderer, scene, camera);
     composer.bloomPass.enabled = true;

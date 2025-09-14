@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gameState } from './state.js';
-import { openDialoguePanel } from './ui.js';
 
 const keys = {};
 let camera;
@@ -86,8 +85,4 @@ export function updateControls() {
 
   orbit.update();
 
-  if (gameState.canInteractWith && keys['e']) {
-    openDialoguePanel(gameState.canInteractWith.userData.name);
-    keys['e'] = false;
-  }
 }
