@@ -17,17 +17,24 @@ export class PlayerModel {
     this.state = { yaw: 0, pitch: 0 };
     this.isMoving = false;
 
-    // Use provided model path or default to hosted asset.
-    this.loadModel(
-      options.modelPath ||
-        'https://dmaher42.github.io/Write-the-Realm/assets/models/guardianCharacter.glb'
-    );
+    // Use provided model path or fall back to a simple placeholder mesh.
+    this.loadModel(options.modelPath);
   }
 
-  loadModel(path) {
+  loadModel(modelPath) {
+    if (!modelPath) {
+      // Fallback placeholder: a simple box mesh so the game can run without a GLB.
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+      this.model = new THREE.Mesh(geometry, material);
+      this.group.add(this.model);
+      return;
+    }
+
     const loader = new GLTFLoader();
+    const modelUrl = new URL(modelPath, import.meta.url).toString();
     loader.load(
-      path,
+      modelUrl,
       (gltf) => {
         this.model = gltf.scene;
         this.group.add(this.model);

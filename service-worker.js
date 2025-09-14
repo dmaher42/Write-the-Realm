@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v8';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const BASE_PATH = self.location.pathname.replace(/service-worker\.js$/, '');
 const ASSETS = [
@@ -10,7 +10,6 @@ const ASSETS = [
   `${BASE_PATH}src/npcs.js`,
   `${BASE_PATH}src/models.js`,
   `${BASE_PATH}src/loaders.js`,
-  `${BASE_PATH}assets/models/`,
   `${BASE_PATH}assets/textures/`,
   `${BASE_PATH}assets/env/`,
   `${BASE_PATH}libs/draco/`,
