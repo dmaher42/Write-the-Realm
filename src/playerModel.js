@@ -39,7 +39,7 @@ export class PlayerModel {
         this.model = gltf.scene;
         this.group.add(this.model);
 
-        this.model.scale.setScalar(1.0); // tweak per asset
+        this.model.scale.setScalar(1.5); // tweak per asset
         this.model.rotation.y = Math.PI; // adjust if facing wrong way
         this.model.position.y = 0; // feet on ground
 
