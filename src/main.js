@@ -103,6 +103,12 @@ export async function startGame() {
 
   await loadDialogue();
 
+  // Add event listener for "Forge New Legend" button
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    document.getElementById('character-creator').style.display = 'block';
+    document.getElementById('start-modal').style.display = 'none';
+  });
+
   if (fxEnabled) {
     composer = createComposer(renderer, scene, camera);
     composer.bloomPass.enabled = true;

@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "build": "esbuild src/main.js --bundle --outdir=dist && cp index.html offline.html service-worker.js dist/ && cp -r assets dist/"
+    "build": "esbuild src/main.js --bundle --outdir=dist && cp index.html offline.html service-worker.js dist/ && cp -r assets dist/ && sed -i 's|\\./src/main\\.js|\\./main.js|g' dist/index.html"
   },
   "devDependencies": {
-    "esbuild": "^0.19.2"
+    "esbuild": "^0.19.2",
+    "jsdom": "^27.0.0"
   },
   "dependencies": {
     "three": "^0.180.0"
