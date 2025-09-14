@@ -39,8 +39,8 @@ export class PlayerModel {
         this.model = gltf.scene;
         this.group.add(this.model);
 
-        this.model.scale.setScalar(1.0); // tweak per asset
-        this.model.rotation.y = Math.PI; // adjust if facing wrong way
+        this.model.scale.setScalar(0.5); // scale to roughly human height
+        this.model.rotation.y = 0; // asset already faces forward
         this.model.position.y = 0; // feet on ground
 
         this.model.traverse((child) => {
