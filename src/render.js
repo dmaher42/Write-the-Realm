@@ -1,12 +1,9 @@
 import * as THREE from 'three';
-import {
-  createHut,
-  createFarmRow,
-  createLordHouse,
-  createChurch,
-} from '../assets/sprites/villageStructures.js';
 import { spawnNPCs } from './npcs.js';
-import { createPath, createFence, createTree, createRock } from './environment.js';
+import { createPath, createFence } from './environment.js';
+import { initModelLoader, spawnHut, spawnTree } from './models.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { PMREMGenerator } from 'three/src/extras/PMREMGenerator.js';
 
 export let scene;
 export let camera;
@@ -39,7 +36,11 @@ export function initRenderer(container = document.body) {
   );
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
   // Start the camera farther back and slightly above the scene so that the
   // entire village is visible on load. Looking at the origin keeps the
@@ -50,15 +51,27 @@ export function initRenderer(container = document.body) {
   // Add simple lighting so that meshes using standard materials are visible
   // when the scene initializes. Without at least an ambient light the imported
   // models render completely black, which made characters appear to be missing.
-  const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.35);
   scene.add(ambient);
 
-  const directional = new THREE.DirectionalLight(0xfff0e0, 1.0);
+  const directional = new THREE.DirectionalLight(0xffe3b0, 1.1);
   directional.position.set(10, 15, 10);
   directional.castShadow = true;
   scene.add(directional);
 
+  const pmrem = new PMREMGenerator(renderer);
+  new RGBELoader()
+    .setPath('assets/env/')
+    .load('studio_small_08_1k.hdr', (hdr) => {
+      const env = pmrem.fromEquirectangular(hdr).texture;
+      scene.environment = env; // subtle reflections for wet stone/wood
+      scene.background = new THREE.Color(0x9cc4e4); // keep sky color
+      hdr.dispose(); pmrem.dispose();
+    });
+
   window.addEventListener('resize', handleResize);
+
+  initModelLoader(renderer);
 
   const npcs = populateVillage(scene);
   return { scene, camera, renderer, npcs };
@@ -109,45 +122,21 @@ export function populateVillage(targetScene = scene) {
   fence2.rotation.y = -Math.PI / 4;
   targetScene.add(fence2);
 
-  const hut1 = createHut();
-  hut1.position.set(-6, 1, -4);
-  targetScene.add(hut1);
+  (async () => {
+    const hut1 = await spawnHut(new THREE.Vector3(-4, 0, -2), Math.PI * 0.15);
+    targetScene.add(hut1);
+    const hut2 = await spawnHut(new THREE.Vector3(5, 0, -5), -Math.PI * 0.25);
+    targetScene.add(hut2);
 
-  const hut2 = createHut();
-  hut2.position.set(7, 1, 5);
-  hut2.rotation.y = Math.PI / 8;
-  targetScene.add(hut2);
-
-  const hut3 = createHut();
-  hut3.position.set(-2, 1, 2);
-  hut3.rotation.y = -Math.PI / 5;
-  targetScene.add(hut3);
-
-  const farm1 = createFarmRow();
-  farm1.position.set(-4, 0, -9);
-  targetScene.add(farm1);
-
-  const farm2 = createFarmRow();
-  farm2.position.set(6, 0, -7);
-  targetScene.add(farm2);
-
-  const house1 = createLordHouse();
-  house1.position.set(3, 1.5, -3);
-  house1.rotation.y = Math.PI / 4;
-  targetScene.add(house1);
-
-  const church = createChurch();
-  church.position.set(-9, 3, 1);
-  church.rotation.y = Math.PI / 2;
-  targetScene.add(church);
-
-  const propCount = 8 + Math.floor(Math.random() * 5);
-  for (let i = 0; i < propCount; i++) {
-    const prop = Math.random() > 0.5 ? createTree() : createRock();
-    prop.position.set(Math.random() * 40 - 20, 0, Math.random() * 40 - 20);
-    prop.rotation.y = Math.random() * Math.PI * 2;
-    targetScene.add(prop);
-  }
+    for (let i = 0; i < 6; i++) {
+      const t = await spawnTree(
+        new THREE.Vector3(-8 + Math.random() * 16, 0, -6 + Math.random() * 8),
+        0.9 + Math.random() * 0.4
+      );
+      targetScene.add(t);
+    }
+    // TODO: spawnRock/spawnFenceSection/spawnMarketStall
+  })();
 
   const npcs = spawnNPCs(targetScene);
   return npcs;
