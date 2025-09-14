@@ -16,7 +16,12 @@ export class PlayerModel {
     this.state = { yaw: 0, pitch: 0 };
     this.isMoving = false;
 
-    this.loadModel(options.modelPath || 'assets/models/guardianCharacter.glb');
+    // Use provided model path or fall back to hosted default. If the model
+    // fails to load, a simple placeholder mesh will be added instead.
+    this.loadModel(
+      options.modelPath ||
+        'https://dmaher42.github.io/Write-the-Realm/assets/models/guardianCharacter.glb'
+    );
   }
 
   loadModel(path) {
@@ -37,12 +42,15 @@ export class PlayerModel {
         this.mixer = new THREE.AnimationMixer(this.model);
 
         // find clips by name (adjust names to match your GLB)
-        const idleClip = THREE.AnimationClip.findByName(gltf.animations, 'Idle');
-        const walkClip = THREE.AnimationClip.findByName(gltf.animations, 'Walk');
-        const interactClip = THREE.AnimationClip.findByName(
-          gltf.animations,
-          'Interact'
-        );
+        const idleClip =
+          THREE.AnimationClip.findByName(gltf.animations, 'Idle') ||
+          THREE.AnimationClip.findByName(gltf.animations, 'Survey');
+        const walkClip =
+          THREE.AnimationClip.findByName(gltf.animations, 'Walk') ||
+          THREE.AnimationClip.findByName(gltf.animations, 'Run');
+        const interactClip =
+          THREE.AnimationClip.findByName(gltf.animations, 'Interact') ||
+          THREE.AnimationClip.findByName(gltf.animations, 'Wave');
 
         if (idleClip) this.actions.idle = this.mixer.clipAction(idleClip);
         if (walkClip) this.actions.walk = this.mixer.clipAction(walkClip);
@@ -75,6 +83,13 @@ export class PlayerModel {
       undefined,
       (error) => {
         console.error('Error loading player model:', error);
+        const placeholder = new THREE.Mesh(
+          new THREE.BoxGeometry(1, 2, 1),
+          new THREE.MeshStandardMaterial({ color: 0x808080 })
+        );
+        placeholder.castShadow = true;
+        placeholder.receiveShadow = true;
+        this.group.add(placeholder);
       }
     );
   }
