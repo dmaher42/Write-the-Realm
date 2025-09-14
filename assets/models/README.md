@@ -1,10 +1,9 @@
 # Models
 
-No 3D model assets are included in this repository.
+No binary model assets are bundled with the repository. By default the scene uses
+simple placeholder geometry and makes no network requests for GLB files.
 
-The code attempts to load `hut_stylized.glb` and `tree_stylized.glb` from this
-directory at runtime. If these files are missing, simple primitive placeholders
-are generated instead so the game can continue running.
-
-Add your own GLB files to replace the placeholders when real art assets are
-available.
+To use real assets, add your own `hut_stylized.glb`, `tree_stylized.glb`, and other
+models to this directory and set `window.USE_3D_MODELS = true` before the game
+initialises. The models should be in GLB format and are typically subject to your
+own licensing requirements.
