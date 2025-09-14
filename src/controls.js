@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gameState } from './state.js';
-import { updatePointer, pick } from './picking.js';
 import { openDialoguePanel } from './ui.js';
 
 const keys = {};
@@ -13,9 +12,6 @@ let camera;
 let player;
 let domElement;
 let orbit;
-let npcs = [];
-let hovered = null;
-const interactPrompt = document.getElementById('interact-prompt');
 const SPEED = 0.2;
 const prevPlayer = new THREE.Vector3();
 
@@ -25,15 +21,6 @@ function onKeyDown(event) {
 
 function onKeyUp(event) {
   keys[event.key.toLowerCase()] = false;
-}
-
-function onPointerMove(event) {
-  if (!domElement) return;
-  updatePointer(event, domElement);
-}
-
-function onClick() {
-  if (hovered) openDialoguePanel(hovered.userData.name); // TODO: AI quests hook
 }
 
 export function initControls(targetCamera, targetPlayer, element) {
@@ -52,36 +39,10 @@ export function initControls(targetCamera, targetPlayer, element) {
 
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-  domElement.addEventListener('pointermove', onPointerMove);
-  domElement.addEventListener('click', onClick);
 }
-
-export function registerNPCs(list) {
-  npcs = list;
-}
-
-// No need for updateCamera() from the conflicted branch, as camera follow logic is handled in updateControls
 
 export function updateControls() {
   if (!camera || !player) return;
-
-  // Hover picking
-  const hits = pick(camera, npcs);
-  const hit = hits.length > 0 ? hits[0] : null;
-  let obj = hit ? hit.object : null;
-  while (obj && !npcs.includes(obj)) obj = obj.parent;
-  if (hovered && hovered !== obj) {
-    hovered.traverse((child) => {
-      if (child.isMesh && child.material.emissive) child.material.emissive.set(0x000000);
-    });
-    hovered = null;
-  }
-  if (obj && hovered !== obj) {
-    obj.traverse((child) => {
-      if (child.isMesh && child.material.emissive) child.material.emissive.set(0x333333);
-    });
-    hovered = obj;
-  }
 
   // Player movement relative to camera
   const forward = new THREE.Vector3();
@@ -114,31 +75,8 @@ export function updateControls() {
 
   orbit.update();
 
-  const dialogueBox = document.getElementById('dialogue-box');
-  const dialogueVisible = dialogueBox && dialogueBox.style.display === 'block';
-  if (dialogueVisible) {
-    if (interactPrompt) interactPrompt.style.display = 'none';
-    return;
-  }
-
-  let target = null;
-  for (const npc of npcs) {
-    const radius = npc.userData?.interactRadius || 2;
-    if (player.position.distanceTo(npc.position) < radius) {
-      target = npc;
-      break;
-    }
-  }
-
-  if (target) {
-    gameState.canInteractWith = target;
-    if (interactPrompt) interactPrompt.style.display = 'block';
-    if (keys['e']) {
-      openDialoguePanel(target.userData.name);
-      keys['e'] = false;
-    }
-  } else {
-    gameState.canInteractWith = null;
-    if (interactPrompt) interactPrompt.style.display = 'none';
+  if (gameState.canInteractWith && keys['e']) {
+    openDialoguePanel(gameState.canInteractWith.userData.name);
+    keys['e'] = false;
   }
 }

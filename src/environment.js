@@ -1,94 +1,108 @@
 import * as THREE from 'three';
-import {
-  rockTexture,
-  pathAlbedoTexture,
-  pathRoughTexture,
-} from './textures.js';
+import { pathAlbedo, pathRough, rockAlbedo } from './textures.js';
 
-// Use simple coloured materials in place of external textures so that the
-// project avoids shipping binary assets.
-const pathMaterial = new THREE.MeshStandardMaterial({
-  color: 0x8b7765,
-  roughness: 1,
-  metalness: 0,
-});
+const shared = {};
 
-const rockMaterial = new THREE.MeshStandardMaterial({
-  color: 0x808080,
-  roughness: 1,
-  metalness: 0,
-});
-
-const rockGeometry = new THREE.DodecahedronGeometry(0.5, 0);
-
-export function createPath(length = 5, width = 2) {
-  const geometry = new THREE.PlaneGeometry(length, width, 1, 1);
-  // Use external textures if available (codex branch), otherwise use simple color (main branch)
-  // We'll prefer the codex logic for demonstration, but fallback to pathMaterial if textures are not available.
-  if (pathAlbedoTexture && pathRoughTexture) {
-    const albedo = pathAlbedoTexture.clone();
-    const rough = pathRoughTexture.clone();
-    albedo.wrapS = albedo.wrapT = THREE.RepeatWrapping;
-    rough.wrapS = rough.wrapT = THREE.RepeatWrapping;
-    albedo.repeat.set(length, width);
-    rough.repeat.set(length, width);
-    const material = new THREE.MeshStandardMaterial({
-      map: albedo,
-      roughnessMap: rough,
+function init() {
+  if (shared.initialized) return;
+  shared.geometries = {
+    path: new THREE.PlaneGeometry(1, 2),
+    box: new THREE.BoxGeometry(1, 1, 1),
+    cylinder: new THREE.CylinderGeometry(1, 1, 1, 8),
+    sphere: new THREE.SphereGeometry(1, 8, 8),
+    icosa: new THREE.IcosahedronGeometry(1, 0),
+  };
+  shared.materials = {
+    path: new THREE.MeshStandardMaterial({
+      map: pathAlbedo,
+      roughnessMap: pathRough,
       roughness: 1,
       metalness: 0,
-    });
-    const path = new THREE.Mesh(geometry, material);
-    path.rotation.x = -Math.PI / 2;
-    path.receiveShadow = true;
-    return path;
-  } else {
-    const path = new THREE.Mesh(geometry, pathMaterial);
-    path.rotation.x = -Math.PI / 2;
-    path.receiveShadow = true;
-    return path;
-  }
+    }),
+    fence: new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.8, metalness: 0 }),
+    trunk: new THREE.MeshStandardMaterial({ color: 0x8b4513 }),
+    leaf: new THREE.MeshStandardMaterial({ color: 0x228b22 }),
+    rock: new THREE.MeshStandardMaterial({ map: rockAlbedo, roughness: 1, metalness: 0 }),
+  };
+  shared.initialized = true;
 }
 
-export function createFence(planks = 5) {
+function getShared() {
+  if (!shared.initialized) init();
+  return shared;
+}
+
+export function createPath(points) {
+  const { geometries, materials } = getShared();
   const group = new THREE.Group();
-  const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-  for (let i = 0; i < planks; i++) {
-    const plank = new THREE.Mesh(
-      new THREE.BoxGeometry(0.2, 1, 0.5),
-      material
-    );
-    plank.position.set(i * 0.5, 0.5, 0);
-    plank.castShadow = true;
-    group.add(plank);
+  const curve = new THREE.CatmullRomCurve3(points);
+  const len = Math.max(1, Math.floor(curve.getLength()));
+  const pts = curve.getPoints(len);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const start = pts[i];
+    const end = pts[i + 1];
+    const dir = end.clone().sub(start);
+    const angle = Math.atan2(dir.x, dir.z);
+    const tile = new THREE.Mesh(geometries.path, materials.path);
+    tile.rotation.x = -Math.PI / 2;
+    tile.position.copy(start).add(end).multiplyScalar(0.5);
+    tile.rotation.y = angle;
+    tile.receiveShadow = true;
+    group.add(tile);
+  }
+  return group;
+}
+
+export function createFence(length = 8) {
+  const { geometries, materials } = getShared();
+  const group = new THREE.Group();
+  const postGeom = geometries.box;
+  const railGeom = geometries.box;
+  for (let x = 0; x <= length; x += 2) {
+    const post = new THREE.Mesh(postGeom, materials.fence);
+    post.scale.set(0.2, 1, 0.2);
+    post.position.set(x - length / 2, 0.5, 0);
+    post.castShadow = true;
+    group.add(post);
+  }
+  for (let i = 0; i < 2; i++) {
+    const rail = new THREE.Mesh(railGeom, materials.fence);
+    rail.scale.set(length, 0.1, 0.2);
+    rail.position.set(0, 0.4 + i * 0.3, 0);
+    rail.castShadow = true;
+    group.add(rail);
   }
   return group;
 }
 
 export function createTree() {
+  const { geometries, materials } = getShared();
   const group = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.3, 2, 8),
-    new THREE.MeshStandardMaterial({ color: 0x8b4513 })
-  );
+  const trunk = new THREE.Mesh(geometries.cylinder, materials.trunk);
+  trunk.scale.set(0.2, 2, 0.2);
   trunk.position.y = 1;
   trunk.castShadow = trunk.receiveShadow = true;
   group.add(trunk);
-
-  const canopy = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 8, 8),
-    new THREE.MeshStandardMaterial({ color: 0x228b22 })
-  );
+  const canopy = new THREE.Mesh(geometries.sphere, materials.leaf);
+  canopy.scale.set(1.5, 1.5, 1.5);
   canopy.position.y = 2.5;
-  canopy.castShadow = true;
+  canopy.castShadow = canopy.receiveShadow = true;
   group.add(canopy);
-
   return group;
 }
 
 export function createRock() {
-  // Prefer main branch geometry/material to avoid confusion
-  const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+  const { geometries, materials } = getShared();
+  const group = new THREE.Group();
+  const rock = new THREE.Mesh(geometries.icosa, materials.rock);
+  const s = 0.6 + Math.random() * 0.4;
+  rock.scale.set(s, s, s);
+  rock.rotation.set(
+    Math.random() * Math.PI,
+    Math.random() * Math.PI,
+    Math.random() * Math.PI
+  );
   rock.castShadow = rock.receiveShadow = true;
-  return rock;
+  group.add(rock);
+  return group;
 }

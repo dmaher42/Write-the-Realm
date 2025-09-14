@@ -5,7 +5,6 @@ import {
   createLordHouse,
   createChurch,
 } from '../assets/sprites/villageStructures.js';
-import { registerNPCs } from './controls.js';
 import { spawnNPCs } from './npcs.js';
 import { createPath, createFence, createTree, createRock } from './environment.js';
 
@@ -42,8 +41,6 @@ export function initRenderer(container = document.body) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   container.appendChild(renderer.domElement);
-  scene.fog = new THREE.Fog(0x9cc4e4, 30, 120);
-  scene.background = new THREE.Color(0x9cc4e4);
   // Start the camera farther back and slightly above the scene so that the
   // entire village is visible on load. Looking at the origin keeps the
   // village centred in view.
@@ -63,8 +60,8 @@ export function initRenderer(container = document.body) {
 
   window.addEventListener('resize', handleResize);
 
-  populateVillage(scene);
-  return { scene, camera, renderer };
+  const npcs = populateVillage(scene);
+  return { scene, camera, renderer, npcs };
 }
 
 export function setComposer(instance) {
@@ -76,30 +73,42 @@ export function setComposer(instance) {
  * Add basic terrain and a handful of structures to the scene.
  */
 export function populateVillage(targetScene = scene) {
-  if (!targetScene) return;
+  if (!targetScene) return [];
 
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(50, 50),
+    new THREE.PlaneGeometry(60, 60),
     new THREE.MeshStandardMaterial({ color: 0x228b22 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   targetScene.add(ground);
 
-  // Winding path
-  const path1 = createPath(12, 3);
-  path1.position.set(-8, 0.01, -2);
-  targetScene.add(path1);
-  const path2 = createPath(8, 3);
-  path2.rotation.y = Math.PI / 4;
-  path2.position.set(0, 0.01, 0);
-  targetScene.add(path2);
-  const path3 = createPath(6, 3);
-  path3.rotation.y = -Math.PI / 6;
-  path3.position.set(6, 0.01, 3);
-  targetScene.add(path3);
+  const pathA = createPath([
+    new THREE.Vector3(-15, 0, -5),
+    new THREE.Vector3(-5, 0, 0),
+    new THREE.Vector3(5, 0, 0),
+    new THREE.Vector3(15, 0, -5),
+  ]);
+  pathA.position.y = 0.01;
+  targetScene.add(pathA);
 
-  // Structures along the path
+  const pathB = createPath([
+    new THREE.Vector3(-10, 0, 6),
+    new THREE.Vector3(-3, 0, 4),
+    new THREE.Vector3(4, 0, 8),
+  ]);
+  pathB.position.y = 0.01;
+  targetScene.add(pathB);
+
+  const fence1 = createFence(12);
+  fence1.position.set(-15, 0, -6);
+  fence1.rotation.y = Math.PI / 2;
+  targetScene.add(fence1);
+  const fence2 = createFence(10);
+  fence2.position.set(5, 0, 5);
+  fence2.rotation.y = -Math.PI / 4;
+  targetScene.add(fence2);
+
   const hut1 = createHut();
   hut1.position.set(-6, 1, -4);
   targetScene.add(hut1);
@@ -132,27 +141,14 @@ export function populateVillage(targetScene = scene) {
   church.rotation.y = Math.PI / 2;
   targetScene.add(church);
 
-  // Fences
-  const fence1 = createFence(8);
-  fence1.position.set(-10, 0, -2);
-  fence1.rotation.y = Math.PI / 2;
-  targetScene.add(fence1);
-  const fence2 = createFence(10);
-  fence2.position.set(2, 0, -10);
-  targetScene.add(fence2);
-
-  // Trees and rocks
   const propCount = 8 + Math.floor(Math.random() * 5);
   for (let i = 0; i < propCount; i++) {
-    const isTree = Math.random() > 0.3;
-    const prop = isTree ? createTree() : createRock();
-    prop.position.set(Math.random() * 30 - 15, 0, Math.random() * 30 - 15);
+    const prop = Math.random() > 0.5 ? createTree() : createRock();
+    prop.position.set(Math.random() * 40 - 20, 0, Math.random() * 40 - 20);
     prop.rotation.y = Math.random() * Math.PI * 2;
-    const s = 0.8 + Math.random() * 0.4;
-    prop.scale.set(s, s, s);
     targetScene.add(prop);
   }
 
   const npcs = spawnNPCs(targetScene);
-  registerNPCs(npcs);
+  return npcs;
 }

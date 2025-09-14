@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { initRenderer, scene, camera, renderer, setComposer } from './render.js';
-import { initUI } from './ui.js';
+import { initUI, openDialoguePanel } from './ui.js';
 import { initControls, updateControls } from './controls.js';
 import { createPlayer } from './player.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
 import { createComposer } from './postfx.js';
+import { updatePointerFromEvent, pick, setPickTargets } from './picking.js';
 
 /**
  * Entry point for the application. Initialises renderer, UI bindings, and
@@ -13,41 +14,49 @@ import { createComposer } from './postfx.js';
 const params = new URLSearchParams(window.location.search);
 const fxEnabled = params.get('fx') === '1';
 let composer = null;
+let player;
+let npcs = [];
+let interactPrompt = null;
 const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
   updateControls();
+  const hovered = pick(camera);
+  let target = null;
+  if (hovered && npcs.includes(hovered)) {
+    const radius = hovered.userData?.interactRadius || 2;
+    if (player.position.distanceTo(hovered.position) < radius) target = hovered;
+  }
+  gameState.canInteractWith = target;
+  if (!interactPrompt) interactPrompt = document.getElementById('interact-prompt');
+  if (interactPrompt) interactPrompt.style.display = target ? 'block' : 'none';
   const delta = clock.getDelta();
   if (fxEnabled && composer) {
-    composer.render(delta);
+    composer.composer.render(delta);
   } else {
     renderer.render(scene, camera);
   }
 }
 
 export function startGame() {
-  initRenderer();
-  const player = createPlayer();
+  const init = initRenderer();
+  npcs = init.npcs;
+  player = createPlayer();
   scene.add(player);
-  
-  // Add test cube and light for debugging visibility and rendering issues
-  const test = new THREE.Mesh(
-    new THREE.BoxGeometry(),
-    new THREE.MeshStandardMaterial({ color: 0xff0000 })
-  );
-  test.position.set(0, 1, 0); // Position above ground for visibility
-  scene.add(test);
 
-  const light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(10, 10, 10);
-  scene.add(light);
-  
   initUI();
   initControls(camera, player, renderer.domElement);
+  window.addEventListener('pointermove', (e) => updatePointerFromEvent(e, renderer.domElement));
+  window.addEventListener('click', () => {
+    if (gameState.canInteractWith)
+      openDialoguePanel(gameState.canInteractWith.userData.name);
+    // TODO: trigger quest or journal updates when interactions occur
+  });
+  setPickTargets(npcs, { maxDistance: 18 });
   if (fxEnabled) {
-    const result = createComposer(renderer, scene, camera);
-    composer = result.composer;
+    composer = createComposer(renderer, scene, camera);
+    composer.bloomPass.enabled = true;
     setComposer(composer);
   }
   animate();
