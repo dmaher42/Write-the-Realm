@@ -73,7 +73,7 @@ export function mountKokuraVillage(container, game) {
   renderer.domElement.addEventListener('pointerdown', handlePointer);
 
   loader.load(
-    './assets/models/KokuraVillage_opt.glb',
+    './assets/models/viking.glb',
     (gltf) => {
       const root = gltf.scene;
       scene.add(root);
@@ -109,7 +109,7 @@ export function mountKokuraVillage(container, game) {
     },
     undefined,
     (err) => {
-      console.error('Failed to load KokuraVillage_opt.glb', err);
+      console.error('Failed to load viking.glb', err);
     }
   );
 
