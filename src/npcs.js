@@ -30,12 +30,13 @@ export const npcModels = [];
 
 export function spawnNPCs(scene) {
   const list = [];
+  const useModels = typeof window !== 'undefined' && window.USE_3D_MODELS;
 
   const elder = new NPCModel(scene, {
     name: 'Village Elder',
     position: new THREE.Vector3(-8, 1, -1),
     color: 0x8b4513,
-    modelPath: '../assets/models/elder.glb',
+    modelPath: useModels ? '../assets/models/elder.glb' : null,
   });
   npcModels.push(elder);
   list.push(elder.group);
@@ -44,7 +45,7 @@ export function spawnNPCs(scene) {
     name: 'Fisherman',
     position: new THREE.Vector3(4, 1, -6),
     color: 0x1e90ff,
-    modelPath: '../assets/models/fisherman.glb',
+    modelPath: useModels ? '../assets/models/fisherman.glb' : null,
   });
   npcModels.push(fisherman);
   list.push(fisherman.group);
@@ -53,7 +54,7 @@ export function spawnNPCs(scene) {
     name: 'Sage of the Tides',
     position: new THREE.Vector3(1, 1, 4),
     color: 0x228b22,
-    modelPath: '../assets/models/sage.glb',
+    modelPath: useModels ? '../assets/models/sage.glb' : null,
   });
   npcModels.push(sage);
   list.push(sage.group);

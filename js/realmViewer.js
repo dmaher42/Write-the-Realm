@@ -1,7 +1,7 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-import { KTX2Loader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/KTX2Loader.js';
-import { MeshoptDecoder } from 'https://unpkg.com/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const container = document.getElementById('realm-3d');
 
@@ -36,26 +36,35 @@ if (container) {
     .detectSupport(renderer);
   loader.setKTX2Loader(ktx2);
 
-  loader.load(
-    'assets/models/KokuraCastle_opt.glb',
-    (gltf) => {
-      const model = gltf.scene;
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3()).length();
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
-      scene.add(model);
+  const useModels =
+    typeof window !== 'undefined' && window.USE_3D_MODELS;
 
-      const dist = size * 0.9;
-      const height = size * 0.35;
-      camera.position.set(dist, height, dist);
-      camera.lookAt(0, 0, 0);
-    },
-    undefined,
-    (err) => {
-      console.error('Failed to load GLB:', 'assets/models/KokuraCastle_opt.glb', err);
-    }
-  );
+  if (useModels) {
+    loader.load(
+      'assets/models/KokuraCastle_opt.glb',
+      (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3()).length();
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+        scene.add(model);
+
+        const dist = size * 0.9;
+        const height = size * 0.35;
+        camera.position.set(dist, height, dist);
+        camera.lookAt(0, 0, 0);
+      },
+      undefined,
+      (err) => {
+        console.error(
+          'Failed to load GLB:',
+          'assets/models/KokuraCastle_opt.glb',
+          err
+        );
+      }
+    );
+  }
 
   const resizeObserver = new ResizeObserver(() => {
     const width = container.clientWidth;
