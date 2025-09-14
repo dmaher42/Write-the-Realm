@@ -45,6 +45,10 @@ export function initControls(
   orbit.maxPolarAngle = Math.PI * 0.75;
   orbit.enableDamping = true;
   orbit.dampingFactor = 0.05;
+  if (!orbit.rotateLeft && orbit._rotateLeft)
+    orbit.rotateLeft = orbit._rotateLeft.bind(orbit);
+  if (!orbit.rotateUp && orbit._rotateUp)
+    orbit.rotateUp = orbit._rotateUp.bind(orbit);
   const targetObj = initControls.playerModel?.model ?? player;
   orbit.target.copy(targetObj.position);
   prevPlayer.copy(player.position);
