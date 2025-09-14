@@ -1,9 +1,8 @@
 import * as THREE from 'three';
+import { roofAlbedo } from '../../src/textures.js';
 
-// Simple coloured material for roofs – avoids the need for external texture
-// files which are not supported in this environment.
 const roofMaterial = new THREE.MeshStandardMaterial({
-  color: 0x8b0000,
+  map: roofAlbedo,
   roughness: 1,
   metalness: 0,
 });
