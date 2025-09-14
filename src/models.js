@@ -12,12 +12,30 @@ export async function loadGLB(path) {
   });
 }
 
+// Attempt to load a model only when the page sets `window.USE_3D_MODELS`.
+// This prevents unnecessary network requests for absent assets.
+async function maybeLoadModel(path) {
+  if (typeof window === 'undefined' || !window.USE_3D_MODELS) return null;
+  try {
+    const gltf = await loadGLB(path);
+    return gltf.scene;
+  } catch (err) {
+    console.warn(`${path} missing, using placeholder`, err);
+    return null;
+  }
+}
+
 // Prefabs return THREE.Group ready to add + cast/receive shadow flags set
 export async function spawnHut(position, rotationY = 0) {
-  let root;
-  try {
-    const gltf = await loadGLB('assets/models/hut_stylized.glb');
-    root = gltf.scene;
+  let root = await maybeLoadModel('assets/models/hut_stylized.glb');
+  if (!root) {
+    const geom = new THREE.BoxGeometry(1, 1, 1);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x808080 });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.castShadow = mesh.receiveShadow = true;
+    root = new THREE.Group();
+    root.add(mesh);
+  } else {
     root.traverse((m) => {
       if (m.isMesh) {
         m.castShadow = true;
@@ -32,14 +50,6 @@ export async function spawnHut(position, rotationY = 0) {
         }
       }
     });
-  } catch (err) {
-    console.warn('hut model missing, using placeholder', err);
-    const geom = new THREE.BoxGeometry(1, 1, 1);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x808080 });
-    const mesh = new THREE.Mesh(geom, mat);
-    mesh.castShadow = mesh.receiveShadow = true;
-    root = new THREE.Group();
-    root.add(mesh);
   }
   root.scale.setScalar(1.0);
   root.position.copy(position);
@@ -48,26 +58,8 @@ export async function spawnHut(position, rotationY = 0) {
 }
 
 export async function spawnTree(position, scale = 1.0) {
-  let root;
-  try {
-    const gltf = await loadGLB('assets/models/tree_stylized.glb');
-    root = gltf.scene;
-    root.traverse((m) => {
-      if (m.isMesh) {
-        m.castShadow = true;
-        m.receiveShadow = true;
-        if (m.material) {
-          if (m.material.map) m.material.map.colorSpace = THREE.SRGBColorSpace;
-          m.material.roughness = Math.min(1, m.material.roughness ?? 1);
-          m.material.metalness = Math.min(0.05, m.material.metalness ?? 0);
-          if (m.material.normalMap) {
-            m.material.normalScale.set(0.5, 0.5);
-          }
-        }
-      }
-    });
-  } catch (err) {
-    console.warn('tree model missing, using placeholder', err);
+  let root = await maybeLoadModel('assets/models/tree_stylized.glb');
+  if (!root) {
     const trunkGeom = new THREE.CylinderGeometry(0.2, 0.3, 1, 8);
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
     const trunk = new THREE.Mesh(trunkGeom, trunkMat);
@@ -83,6 +75,21 @@ export async function spawnTree(position, scale = 1.0) {
     root = new THREE.Group();
     root.add(trunk);
     root.add(leaves);
+  } else {
+    root.traverse((m) => {
+      if (m.isMesh) {
+        m.castShadow = true;
+        m.receiveShadow = true;
+        if (m.material) {
+          if (m.material.map) m.material.map.colorSpace = THREE.SRGBColorSpace;
+          m.material.roughness = Math.min(1, m.material.roughness ?? 1);
+          m.material.metalness = Math.min(0.05, m.material.metalness ?? 0);
+          if (m.material.normalMap) {
+            m.material.normalScale.set(0.5, 0.5);
+          }
+        }
+      }
+    });
   }
   root.scale.setScalar(scale);
   root.position.copy(position);
