@@ -84,3 +84,19 @@ if (container) {
   console.error('Container #realm-3d not found');
 }
 
+export const openQuest = (title) => {
+  console.log('openQuest:', title);
+};
+
+export const grantLoot = (item) => {
+  console.log('grantLoot:', item);
+};
+
+export const setFlag = (flag, value) => {
+  console.log('setFlag:', flag, value);
+};
+
+export const refreshUI = () => {
+  console.log('refreshUI');
+};
+

@@ -262,8 +262,8 @@
         }
     </script>
     <script type="module" src="./src/main.js"></script>
-    <script type="module" src="js/realmViewer.js"></script>
     <script type="module">
+        import { openQuest, grantLoot, setFlag, refreshUI } from './js/realmViewer.js';
         import { mountKokuraVillage } from './js/KokuraVillageScene.js';
         const gameAPI = { openQuest, grantLoot, setFlag, refreshUI, ...(window.gameAPI || {}) };
         const root = document.getElementById('kokura-root');
