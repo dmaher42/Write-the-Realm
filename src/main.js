@@ -32,6 +32,7 @@ function animate() {
   if (!interactPrompt) interactPrompt = document.getElementById('interact-prompt');
   if (interactPrompt) interactPrompt.style.display = target ? 'block' : 'none';
   const delta = clock.getDelta();
+  if (player && player.mixer) player.mixer.update(delta);
   if (fxEnabled && composer) {
     composer.composer.render(delta);
   } else {
