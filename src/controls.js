@@ -22,12 +22,21 @@ function onKeyUp(event) {
   keys[event.key.toLowerCase()] = false;
 }
 
-export function initControls(targetCamera, targetPlayer, element, onMoveStateChange) {
+export function initControls(
+  targetCamera,
+  targetPlayer,
+  element,
+  onMoveStateChange,
+  onInteract,
+  playerModel
+) {
   camera = targetCamera;
   player = targetPlayer;
   domElement = element || window;
-  // optional external hook to react to move/idle
+  // optional external hooks
   initControls.onMoveStateChange = typeof onMoveStateChange === 'function' ? onMoveStateChange : null;
+  initControls.onInteract = typeof onInteract === 'function' ? onInteract : null;
+  initControls.playerModel = playerModel || null;
   updateControls._moving = false;
 
   orbit = new OrbitControls(camera, domElement);
@@ -36,7 +45,8 @@ export function initControls(targetCamera, targetPlayer, element, onMoveStateCha
   orbit.maxPolarAngle = Math.PI * 0.75;
   orbit.enableDamping = true;
   orbit.dampingFactor = 0.05;
-  orbit.target.copy(player.position);
+  const targetObj = initControls.playerModel?.model ?? player;
+  orbit.target.copy(targetObj.position);
   prevPlayer.copy(player.position);
 
   window.addEventListener('keydown', onKeyDown);
@@ -65,6 +75,7 @@ export function updateControls() {
   if (isMoving) {
     move.normalize().multiplyScalar(SPEED);
     player.position.add(move);
+    if (typeof player.setDirection === 'function') player.setDirection(move);
   }
   if (isMoving !== wasMoving) {
     updateControls._moving = isMoving;
@@ -80,9 +91,19 @@ export function updateControls() {
   // Camera follow
   const delta = new THREE.Vector3().subVectors(player.position, prevPlayer);
   camera.position.add(delta);
-  orbit.target.copy(player.position);
+  const targetObj = initControls.playerModel?.model ?? player;
+  orbit.target.copy(targetObj.position);
   prevPlayer.copy(player.position);
 
   orbit.update();
 
+  // Interact key handling (GLTF finalization)
+  if (gameState.canInteractWith && keys['e']) {
+    // Assuming openDialoguePanel is available in the current scope or imported
+    if (typeof openDialoguePanel === 'function') {
+      openDialoguePanel(gameState.canInteractWith.userData.name);
+    }
+    keys['e'] = false;
+    if (initControls.onInteract) initControls.onInteract(updateControls._moving);
+  }
 }
