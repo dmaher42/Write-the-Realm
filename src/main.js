@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { initRenderer, scene, camera, renderer, setComposer } from './render.js';
 import { initUI, openDialoguePanel } from './ui.js';
-import { initControls, updateControls } from './controls.js';
-import { createPlayer } from './player.js';
+import { initControls, updateControls, player } from './controls.js';
 import { gameState, saveGame, loadGame, checkForSavedGame } from './state.js';
 import { createComposer } from './postfx.js';
 import { updatePointerFromEvent, pick, setPickTargets } from './picking.js';
@@ -14,7 +13,6 @@ import { updatePointerFromEvent, pick, setPickTargets } from './picking.js';
 const params = new URLSearchParams(window.location.search);
 const fxEnabled = params.get('fx') === '1';
 let composer = null;
-let player;
 let npcs = [];
 let interactPrompt = null;
 const clock = new THREE.Clock();
@@ -26,13 +24,14 @@ function animate() {
   let target = null;
   if (hovered && npcs.includes(hovered)) {
     const radius = hovered.userData?.interactRadius || 2;
-    if (player.position.distanceTo(hovered.position) < radius) target = hovered;
+    if (player && player.group.position.distanceTo(hovered.position) < radius)
+      target = hovered;
   }
   gameState.canInteractWith = target;
   if (!interactPrompt) interactPrompt = document.getElementById('interact-prompt');
   if (interactPrompt) interactPrompt.style.display = target ? 'block' : 'none';
   const delta = clock.getDelta();
-  if (player && player.mixer) player.mixer.update(delta);
+  if (player) player.update(delta);
   if (fxEnabled && composer) {
     composer.composer.render(delta);
   } else {
@@ -43,11 +42,9 @@ function animate() {
 export function startGame() {
   const init = initRenderer();
   npcs = init.npcs;
-  player = createPlayer();
-  scene.add(player);
 
   initUI();
-  initControls(camera, player, renderer.domElement);
+  initControls(camera, scene, renderer.domElement);
   window.addEventListener('pointermove', (e) => updatePointerFromEvent(e, renderer.domElement));
   window.addEventListener('click', () => {
     if (gameState.canInteractWith)
