@@ -6,7 +6,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gameState } from './state.js';
 import { openDialoguePanel } from './ui.js';
-import { PlayerModel } from './playerModel.js';
 
 const keys = {};
 let camera;
@@ -24,14 +23,13 @@ function onKeyUp(event) {
   keys[event.key.toLowerCase()] = false;
 }
 
-export function initControls(targetCamera, scene, element) {
+export function initControls(targetCamera, targetPlayer, element, onMoveStateChange) {
   camera = targetCamera;
+  player = targetPlayer;
   domElement = element || window;
-
-  player = new PlayerModel(scene, {
-    modelPath: 'assets/models/guardianCharacter.glb',
-  });
-  player.group.position.set(0, 0, 0);
+  // optional external hook to react to move/idle
+  initControls.onMoveStateChange = typeof onMoveStateChange === 'function' ? onMoveStateChange : null;
+  updateControls._moving = false;
 
   orbit = new OrbitControls(camera, domElement);
   orbit.enablePan = false;
@@ -39,8 +37,8 @@ export function initControls(targetCamera, scene, element) {
   orbit.maxPolarAngle = Math.PI * 0.75;
   orbit.enableDamping = true;
   orbit.dampingFactor = 0.05;
-  orbit.target.copy(player.group.position);
-  prevPlayer.copy(player.group.position);
+  orbit.target.copy(player.position);
+  prevPlayer.copy(player.position);
 
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
@@ -61,18 +59,17 @@ export function updateControls() {
   if (keys['s']) move.sub(forward);
   if (keys['a']) move.add(left);
   if (keys['d']) move.sub(left);
+
+  const wasMoving = updateControls._moving === true;
   const isMoving = move.lengthSq() > 0;
   player.isMoving = isMoving;
   if (isMoving) {
-    move.normalize();
-    player.setDirection(move);
-    move.multiplyScalar(SPEED);
-    player.group.position.add(move);
+    move.normalize().multiplyScalar(SPEED);
+    player.position.add(move);
   }
-
-  if (player.currentAction !== player.actions.interact) {
-    if (isMoving) player.fadeTo('walk');
-    else player.fadeTo('idle');
+  if (isMoving !== wasMoving) {
+    updateControls._moving = isMoving;
+    if (initControls.onMoveStateChange) initControls.onMoveStateChange(isMoving);
   }
 
   // Camera rotation via arrow keys
@@ -82,20 +79,15 @@ export function updateControls() {
   if (keys['arrowdown']) orbit.rotateUp(-0.03);
 
   // Camera follow
-  const delta = new THREE.Vector3().subVectors(player.group.position, prevPlayer);
+  const delta = new THREE.Vector3().subVectors(player.position, prevPlayer);
   camera.position.add(delta);
-  orbit.target.copy(player.group.position);
-  prevPlayer.copy(player.group.position);
+  orbit.target.copy(player.position);
+  prevPlayer.copy(player.position);
 
   orbit.update();
 
   if (gameState.canInteractWith && keys['e']) {
-    if (player.actions && player.actions.interact) {
-      player.fadeTo('interact');
-    }
     openDialoguePanel(gameState.canInteractWith.userData.name);
     keys['e'] = false;
   }
 }
-
-export { player };
