@@ -67,6 +67,7 @@ export function mountKokuraVillage(container, game) {
   }
   renderer.domElement.addEventListener('pointerdown', handlePointer);
 
+  // Procedural geometry approach (resolved version)
   const root = new THREE.Group();
   const keep = createLordHouse();
   root.add(keep);
