@@ -15,6 +15,13 @@ let orbit;
 const SPEED = 0.2;
 const prevPlayer = new THREE.Vector3();
 
+function fadeTo(action) {
+  if (!player || !action || player.currentAction === action) return;
+  if (player.currentAction) player.currentAction.fadeOut(0.2);
+  action.reset().fadeIn(0.2).play();
+  player.currentAction = action;
+}
+
 function onKeyDown(event) {
   keys[event.key.toLowerCase()] = true;
 }
@@ -56,9 +63,16 @@ export function updateControls() {
   if (keys['s']) move.sub(forward);
   if (keys['a']) move.add(left);
   if (keys['d']) move.sub(left);
-  if (move.lengthSq() > 0) {
+  const isMoving = move.lengthSq() > 0;
+  player.isMoving = isMoving;
+  if (isMoving) {
     move.normalize().multiplyScalar(SPEED);
     player.position.add(move);
+  }
+
+  if (player.actions && player.currentAction !== player.actions.interact) {
+    if (isMoving) fadeTo(player.actions.walk || player.actions.idle);
+    else fadeTo(player.actions.idle);
   }
 
   // Camera rotation via arrow keys
@@ -76,6 +90,9 @@ export function updateControls() {
   orbit.update();
 
   if (gameState.canInteractWith && keys['e']) {
+    if (player.actions && player.actions.interact) {
+      fadeTo(player.actions.interact);
+    }
     openDialoguePanel(gameState.canInteractWith.userData.name);
     keys['e'] = false;
   }
