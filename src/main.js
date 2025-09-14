@@ -48,9 +48,11 @@ export async function startGame() {
   npcs = init.npcs;
 
   // Create animated GLTF player; use its group as the movable object
- playerModel = new PlayerModel(scene, {
-  modelPath: '../assets/models/viking.glb'
-  
+  playerModel = new PlayerModel(scene, {
+    modelPath: '../assets/models/viking.glb'
+  });
+  player = playerModel.group;
+
   initUI('#ui-root');
   setActionHandler(() => {
     // optional: update HUD/quest log here
