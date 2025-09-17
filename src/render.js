@@ -27,21 +27,24 @@ export function initRenderer(container = document.body) {
   scene = new THREE.Scene();
   const FOG_COLOR = 0x9cc4e4;
   scene.fog = new THREE.Fog(FOG_COLOR, 35, 140);
-  scene.background = new THREE.Color(FOG_COLOR);
+  scene.background = null;
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
+  renderer.domElement.style.position = 'absolute';
+  renderer.domElement.style.zIndex = '0';
   // Start the camera farther back and slightly above the scene so that the
   // entire village is visible on load. Looking at the origin keeps the
   // village centred in view.
@@ -65,7 +68,7 @@ export function initRenderer(container = document.body) {
     .load('studio_small_08_1k.hdr', (hdr) => {
       const env = pmrem.fromEquirectangular(hdr).texture;
       scene.environment = env; // subtle reflections for wet stone/wood
-      scene.background = new THREE.Color(0x9cc4e4); // keep sky color
+      scene.background = null; // keep transparent so CSS gradient shows through
       hdr.dispose(); pmrem.dispose();
     });
 
