@@ -6,14 +6,9 @@ const ASSETS = [
   `${BASE_PATH}index.html`,
   `${BASE_PATH}offline.html`,
   `${BASE_PATH}assets/styles/main.css`,
-  `${BASE_PATH}src/textures.js`,
-  `${BASE_PATH}src/npcs.js`,
-  `${BASE_PATH}src/models.js`,
-  `${BASE_PATH}src/loaders.js`,
-  `${BASE_PATH}assets/textures/`,
-  `${BASE_PATH}assets/env/`,
-  `${BASE_PATH}libs/draco/`,
-  `${BASE_PATH}libs/basis/`
+  `${BASE_PATH}src/main.js`,
+  `${BASE_PATH}js/realmViewer.js`,
+  `${BASE_PATH}js/KokuraVillageScene.js`
 ];
 
 self.addEventListener('install', event => {
