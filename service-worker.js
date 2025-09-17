@@ -1,59 +1,89 @@
-const CACHE_VERSION = 'v8';
-const STATIC_CACHE = `static-${CACHE_VERSION}`;
-const BASE_PATH = self.location.pathname.replace(/service-worker\.js$/, '');
+const CACHE_NAME = 'wtr-v2';
+const BASE_PATH = (() => {
+  try {
+    return new URL('./', self.registration.scope).pathname;
+  } catch (err) {
+    return self.location.pathname.replace(/service-worker\.js$/, '');
+  }
+})();
+const OFFLINE_URL = `${BASE_PATH}offline.html`;
+
 const ASSETS = [
-  BASE_PATH,
+  `${BASE_PATH}`,
   `${BASE_PATH}index.html`,
-  `${BASE_PATH}offline.html`,
+  OFFLINE_URL,
   `${BASE_PATH}assets/styles/main.css`,
   `${BASE_PATH}src/main.js`,
   `${BASE_PATH}js/realmViewer.js`,
-  `${BASE_PATH}js/KokuraVillageScene.js`
+  `${BASE_PATH}js/KokuraVillageScene.js`,
+  `${BASE_PATH}assets/sprites/villageStructures.js`,
 ];
 
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => cache.addAll(ASSETS))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await Promise.all(
+        ASSETS.map(async (asset) => {
+          try {
+            await cache.add(asset);
+          } catch (err) {
+            console.warn('Service worker failed to cache asset', asset, err);
+          }
+        })
+      );
+    })()
   );
 });
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then(keys =>
-        Promise.all(
-          keys.filter(key => key !== STATIC_CACHE).map(key => caches.delete(key))
-        )
-      )
-      .then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      );
+      await self.clients.claim();
+    })()
   );
 });
 
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(`${BASE_PATH}offline.html`))
-    );
-    return;
-  }
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    (async () => {
+      try {
+        const req = event.request;
+        if (req.method !== 'GET') {
+          return fetch(req);
+        }
 
-  const assetRegex = /\.(?:html|js|css|png|jpg|jpeg|gif|svg|glb|gltf|ktx2|hdr|wasm)$/;
-  if (assetRegex.test(url.pathname)) {
-    event.respondWith(
-      caches.match(event.request).then(res => {
-        return (
-          res ||
-          fetch(event.request)
-            .then(response => {
-              const copy = response.clone();
-              caches.open(STATIC_CACHE).then(cache => cache.put(event.request, copy));
-              return response;
-            })
-            .catch(() => caches.match(`${BASE_PATH}offline.html`))
-        );
-      })
-    );
-  }
+        const cache = await caches.open(CACHE_NAME);
+        const cached = await cache.match(req);
+        if (cached) {
+          return cached;
+        }
+
+        const resp = await fetch(req);
+        if (resp && resp.ok) {
+          cache.put(req, resp.clone());
+        }
+        return resp;
+      } catch (err) {
+        if (event.request.mode === 'navigate') {
+          const cache = await caches.open(CACHE_NAME);
+          const offline = await cache.match(OFFLINE_URL);
+          if (offline) {
+            return offline;
+          }
+        }
+        return new Response('Offline or fetch failed', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain' },
+        });
+      }
+    })()
+  );
 });
