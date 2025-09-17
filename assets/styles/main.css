@@ -53,6 +53,50 @@
         #start-modal button:hover {
             background-color: var(--button-hover-bg);
         }
+        .start-modal-content {
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .castle-illustration {
+            width: min(420px, 80%);
+            margin: 0 auto;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.25));
+        }
+        .castle-illustration svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .start-modal-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+        }
+        .start-modal-copy h1 {
+            margin-bottom: 0.5rem;
+        }
+        .start-modal-copy p {
+            margin: 0;
+        }
+        @media (min-width: 768px) {
+            .start-modal-content {
+                flex-direction: row;
+                justify-content: center;
+                text-align: left;
+            }
+            .start-modal-copy {
+                align-items: flex-start;
+                text-align: left;
+                max-width: 320px;
+            }
+            .start-modal-content .castle-illustration {
+                width: 45%;
+                margin: 0;
+            }
+        }
         .modal-content {
             background-color: var(--panel-bg); color: #3a2d21;
             padding: 1.5rem; border-radius: 10px; border: 2px solid var(--panel-border);
