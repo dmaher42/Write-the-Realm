@@ -52,27 +52,32 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  if (request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     (async () => {
       try {
-        const req = event.request;
-        if (req.method !== 'GET') {
-          return fetch(req);
-        }
-
         const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match(req);
+        const cached = await cache.match(request);
         if (cached) {
           return cached;
         }
 
-        const resp = await fetch(req);
-        if (resp && resp.ok) {
-          cache.put(req, resp.clone());
+        const response = await fetch(request);
+        if (
+          response &&
+          response.ok &&
+          new URL(request.url).origin === self.location.origin
+        ) {
+          cache.put(request, response.clone());
         }
-        return resp;
+        return response;
       } catch (err) {
-        if (event.request.mode === 'navigate') {
+        if (request.mode === 'navigate') {
           const cache = await caches.open(CACHE_NAME);
           const offline = await cache.match(OFFLINE_URL);
           if (offline) {
