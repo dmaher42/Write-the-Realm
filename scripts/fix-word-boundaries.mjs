@@ -3,23 +3,32 @@ import fs from 'node:fs';
 const fixes = [
   {
     path: 'src/gameController.js',
-    before: "new RegExp(`\\b${escapeRegExp(actionWord)}\\b`, 'i')",
-    after: "new RegExp(`\\\\b${escapeRegExp(actionWord)}\\\\b`, 'i')",
+    matches: (line) => line.includes('new RegExp')
+      && line.includes('escapeRegExp(actionWord)')
+      && line.includes('.test(sentence)'),
+    replacement:
+      "    } else if (!new RegExp(`\\\\b${escapeRegExp(actionWord)}\\\\b`, 'i').test(sentence)) {",
   },
   {
     path: 'src/chapterOneCombat.js',
-    before: "new RegExp(`\\b(?:${pattern})\\b`, 'i').test(text)",
-    after: "new RegExp(`\\\\b(?:${pattern})\\\\b`, 'i').test(text)",
+    matches: (line) => line.includes('new RegExp')
+      && line.includes('${pattern}')
+      && line.includes('.test(text)'),
+    replacement:
+      "  return new RegExp(`\\\\b(?:${pattern})\\\\b`, 'i').test(text);",
   },
 ];
 
 for (const fix of fixes) {
   const source = fs.readFileSync(fix.path, 'utf8');
-  if (!source.includes(fix.before)) {
+  const lines = source.split('\n');
+  const index = lines.findIndex(fix.matches);
+
+  if (index < 0) {
     throw new Error(`Expected word-boundary expression was not found in ${fix.path}`);
   }
 
-  const updated = source.replace(fix.before, fix.after);
-  fs.writeFileSync(fix.path, updated);
+  lines[index] = fix.replacement;
+  fs.writeFileSync(fix.path, lines.join('\n'));
   console.log(`Patched ${fix.path}`);
 }
