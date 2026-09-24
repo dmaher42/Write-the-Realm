@@ -38,7 +38,11 @@ test('the village fills a Chromebook-sized screen and the gate reopens the quest
   await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
   await expect(page.locator('#prewrite-battle')).toBeVisible();
 
-  // Revisit the gate after a panel is dismissed, as a student can do while exploring.
+  // Revisit the 3D gate after a panel is dismissed, as a student can do while exploring.
+  await page.locator('#prewrite-battle').evaluate((panel) => { panel.style.display = 'none'; });
+  await page.locator('#kokura-root canvas').click({ position: { x: 480, y: 490 } });
+  await expect(page.locator('#prewrite-battle')).toBeVisible();
+
   await page.locator('#prewrite-battle').evaluate((panel) => { panel.style.display = 'none'; });
   await gateButton.click();
   await expect(page.locator('#prewrite-battle')).toBeVisible();
