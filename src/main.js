@@ -12,7 +12,21 @@ import {
 // is established. Optional GLB assets can be restored after gameplay is stable.
 window.USE_3D_MODELS = false;
 
+function preserveRequiredControls() {
+  const actionChoice = document.getElementById('pre-action-bank')?.parentElement;
+  if (!actionChoice) return;
+
+  actionChoice.dataset.teacherRequiredControl = 'true';
+  const style = document.createElement('style');
+  style.id = 'required-writing-controls-style';
+  style.textContent =
+    '[data-teacher-required-control="true"] { display: block !important; }';
+  document.head.appendChild(style);
+}
+
 function boot() {
+  preserveRequiredControls();
+
   // Teacher validation uses capture listeners, so it must initialise before
   // the controller and combat modules register their submission handlers.
   const teacher = initTeacherSettings({ gameState });
