@@ -1,4 +1,5 @@
 import { initGameController } from './gameController.js';
+import { initChapterOneCombat } from './chapterOneCombat.js';
 import {
   gameState,
   saveGame,
@@ -6,8 +7,8 @@ import {
   checkForSavedGame,
 } from './state.js';
 
-// The first upgrade keeps the lightweight procedural village and disables
-// optional model requests until the core Chapter 1 loop is stable.
+// Keep the lightweight procedural village while the complete Chapter 1 loop
+// is established. Optional GLB assets can be restored after gameplay is stable.
 window.USE_3D_MODELS = false;
 
 function boot() {
@@ -18,11 +19,17 @@ function boot() {
     checkForSavedGame,
   });
 
+  const combat = initChapterOneCombat({
+    gameState,
+    saveGame,
+    controller,
+  });
+
   // KokuraVillageScene reads this API after the main module has initialised.
-  // Exposing one controller prevents the scene and UI from maintaining
-  // separate quest and inventory state.
+  // The combat upgrade extends the same controller rather than creating a
+  // separate quest or inventory state.
   window.gameAPI = controller.gameApi;
-  window.writeTheRealm = controller;
+  window.writeTheRealm = { ...controller, combat };
 }
 
 if (document.readyState === 'loading') {
