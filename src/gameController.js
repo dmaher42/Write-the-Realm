@@ -12,6 +12,17 @@ const ACTION_WORDS = [
   'struggle',
 ];
 
+const ACTION_WORD_FORMS = {
+  charge: ['charge', 'charges', 'charged', 'charging'],
+  climb: ['climb', 'climbs', 'climbed', 'climbing'],
+  dodge: ['dodge', 'dodges', 'dodged', 'dodging'],
+  race: ['race', 'races', 'raced', 'racing'],
+  search: ['search', 'searches', 'searched', 'searching'],
+  shield: ['shield', 'shields', 'shielded', 'shielding'],
+  sprint: ['sprint', 'sprints', 'sprinted', 'sprinting'],
+  struggle: ['struggle', 'struggles', 'struggled', 'struggling'],
+};
+
 const GOALS = [
   'reach the broken beacon',
   'warn the village before nightfall',
@@ -120,6 +131,12 @@ function randomItem(items) {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function containsActionWord(sentence, actionWord) {
+  const forms = ACTION_WORD_FORMS[actionWord] || [actionWord];
+  const pattern = forms.map(escapeRegExp).join('|');
+  return new RegExp(`\\b(?:${pattern})\\b`, 'i').test(sentence);
 }
 
 function createTextElement(tagName, text, className = '') {
@@ -518,7 +535,7 @@ export function initGameController({
       message = 'Choose an action word first.';
     } else if (sentence.split(/\s+/).filter(Boolean).length < 6) {
       message = 'Write one clear sentence of at least six words.';
-    } else if (!new RegExp(`\\b${escapeRegExp(actionWord)}\\b`, 'i').test(sentence)) {
+    } else if (!containsActionWord(sentence, actionWord)) {
       message = `Use the action word “${actionWord}” in your sentence.`;
     }
 
@@ -935,6 +952,7 @@ export function initGameController({
   return {
     gameApi,
     refreshUI: renderHud,
+    resumeCurrentPhase: resumePhase,
     startNewGame: openCreator,
     continueGame: continueJourney,
   };
