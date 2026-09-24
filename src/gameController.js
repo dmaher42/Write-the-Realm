@@ -518,7 +518,7 @@ export function initGameController({
       message = 'Choose an action word first.';
     } else if (sentence.split(/\s+/).filter(Boolean).length < 6) {
       message = 'Write one clear sentence of at least six words.';
-    } else if (!new RegExp(`\b${escapeRegExp(actionWord)}\b`, 'i').test(sentence)) {
+    } else if (!new RegExp(`\\b${escapeRegExp(actionWord)}\\b`, 'i').test(sentence)) {
       message = `Use the action word “${actionWord}” in your sentence.`;
     }
 
