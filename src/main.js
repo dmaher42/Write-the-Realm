@@ -1,5 +1,6 @@
 import { initGameController } from './gameController.js';
 import { initChapterOneCombat } from './chapterOneCombat.js';
+import { initTeacherSettings } from './teacherSettings.js';
 import {
   gameState,
   saveGame,
@@ -11,7 +12,25 @@ import {
 // is established. Optional GLB assets can be restored after gameplay is stable.
 window.USE_3D_MODELS = false;
 
+function preserveRequiredControls() {
+  const actionChoice = document.getElementById('pre-action-bank')?.parentElement;
+  if (!actionChoice) return;
+
+  actionChoice.dataset.teacherRequiredControl = 'true';
+  const style = document.createElement('style');
+  style.id = 'required-writing-controls-style';
+  style.textContent =
+    '[data-teacher-required-control="true"] { display: block !important; }';
+  document.head.appendChild(style);
+}
+
 function boot() {
+  preserveRequiredControls();
+
+  // Teacher validation uses capture listeners, so it must initialise before
+  // the controller and combat modules register their submission handlers.
+  const teacher = initTeacherSettings({ gameState });
+
   const controller = initGameController({
     gameState,
     saveGame,
@@ -26,10 +45,9 @@ function boot() {
   });
 
   // KokuraVillageScene reads this API after the main module has initialised.
-  // The combat upgrade extends the same controller rather than creating a
-  // separate quest or inventory state.
+  // All modules extend the same controller and shared state.
   window.gameAPI = controller.gameApi;
-  window.writeTheRealm = { ...controller, combat };
+  window.writeTheRealm = { ...controller, combat, teacher };
 }
 
 if (document.readyState === 'loading') {
