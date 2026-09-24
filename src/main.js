@@ -1,43 +1,32 @@
-// src/main.js
-// Minimal bootstrap for the game UI.
-// Expose a flag used by viewers/scene code if present.
-window.USE_3D_MODELS = true;
+import { initGameController } from './gameController.js';
+import {
+  gameState,
+  saveGame,
+  loadGame,
+  checkForSavedGame,
+} from './state.js';
 
-const startBtn = document.getElementById('start-game-btn');
-const newGameBtn = document.getElementById('new-game-btn');
-const startModal = document.getElementById('start-modal');
-const characterCreator = document.getElementById('character-creator');
-const uiContainer = document.getElementById('ui-container');
+// The first upgrade keeps the lightweight procedural village and disables
+// optional model requests until the core Chapter 1 loop is stable.
+window.USE_3D_MODELS = false;
 
-function showUI() {
-  if (startModal) startModal.style.display = 'none';
-  if (characterCreator) characterCreator.style.display = 'none';
-  if (uiContainer) uiContainer.style.visibility = 'visible';
+function boot() {
+  const controller = initGameController({
+    gameState,
+    saveGame,
+    loadGame,
+    checkForSavedGame,
+  });
+
+  // KokuraVillageScene reads this API after the main module has initialised.
+  // Exposing one controller prevents the scene and UI from maintaining
+  // separate quest and inventory state.
+  window.gameAPI = controller.gameApi;
+  window.writeTheRealm = controller;
 }
 
-function openCharacterCreator() {
-  if (startModal) startModal.style.display = 'none';
-  if (!characterCreator) return;
-
-  characterCreator.style.display = 'flex';
-
-  const focusTarget = characterCreator.querySelector('.creator-option')
-    || characterCreator.querySelector('button');
-  if (focusTarget) focusTarget.focus();
-}
-
-if (startBtn) {
-  startBtn.addEventListener('click', showUI);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot, { once: true });
 } else {
-  // Fallback: if there’s no start button, show UI immediately
-  showUI();
+  boot();
 }
-
-if (newGameBtn) {
-  newGameBtn.addEventListener('click', openCharacterCreator);
-}
-
-// Optional: simple DOM ready guard for safety
-document.addEventListener('DOMContentLoaded', () => {
-  // no-op; keep for future init hooks
-});
