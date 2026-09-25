@@ -724,9 +724,9 @@ export function initChapterOneCombat({
     refreshHud();
     hideCombatPanels();
 
-    // Reload through the existing controller so its tested loot and reward
-    // panels remain the single source of truth for inventory resolution.
-    controller.continueGame?.();
+    // Show the controller's loot panel from the live state. A storage write
+    // failure must not discard a victory or hide its reward.
+    controller.resumeCurrentPhase();
   }
 
   function resumeCombatPhase() {

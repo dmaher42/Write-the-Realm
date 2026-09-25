@@ -35,11 +35,7 @@ async function completePlan(page, sentence = 'I charge through the poisonous fog
   await expect(page.locator('#writing-challenge')).toBeVisible();
 }
 
-test.beforeEach(async ({ page }) => {
-  await resetApplication(page);
-});
-
-test('a student can finish Chapter 1, save, refresh and continue', async ({ page }) => {
+async function reachVictory(page) {
   await beginJourney(page);
   await completePlan(page);
 
@@ -72,6 +68,14 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
 
   await expect(page.locator('#combat-title')).toContainText('Victory over');
   await expect(page.locator('#combat-submit-btn')).toHaveText('Claim Victory Reward');
+}
+
+test.beforeEach(async ({ page }) => {
+  await resetApplication(page);
+});
+
+test('a student can finish Chapter 1, save, refresh and continue', async ({ page }) => {
+  await reachVictory(page);
   await page.locator('#combat-submit-btn').click();
 
   await expect(page.locator('#loot-panel')).toBeVisible();
@@ -103,6 +107,37 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await expect(page.locator('#slot-weapon')).toHaveText('Tidal Blade');
   await page.locator('#open-journal-inventory-btn').click();
   await expect(page.locator('#journal-entries')).toContainText('Battle at the Beacon');
+});
+
+test('the reward stays available when browser storage stops working at victory', async ({ page }) => {
+  await reachVictory(page);
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => { throw new Error('Storage unavailable'); };
+    Storage.prototype.getItem = () => { throw new Error('Storage unavailable'); };
+  });
+
+  await page.locator('#combat-submit-btn').click();
+  await expect(page.locator('#loot-panel')).toBeVisible();
+  await expect(page.locator('#loot-card')).toContainText('Tidal Blade');
+  await page.locator('#loot-equip-btn').click();
+  await expect(page.locator('#slot-weapon')).toHaveText('Tidal Blade');
+  await expect(page.locator('#quest-complete')).toBeVisible();
+});
+
+test('Guided mode accepts the selected verb in its sentence starter', async ({ page }) => {
+  await beginJourney(page);
+  await page.locator('#teacher-settings-btn').click({ force: true });
+  await page.locator('input[name="teacher-preset"][value="guided"]').check();
+  await page.locator('#save-teacher-settings-btn').click();
+
+  await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
+  await page.locator('#pre-action-bank .chip', { hasText: 'charge' }).click();
+  await page.locator('#teacher-prewrite-starters button', { hasText: 'I charged towards' }).click();
+  await page.locator('#prewrite-sentence').fill(
+    'I charged towards the beacon because the storm threatened our village.'
+  );
+  await page.locator('#prewrite-submit-btn').click();
+  await expect(page.locator('#writing-challenge')).toBeVisible();
 });
 
 test('Challenge mode keeps required choices but removes optional scaffolds', async ({ page }) => {
