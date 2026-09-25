@@ -9,14 +9,23 @@
             margin: 0;
             overflow: hidden;
             font-family: 'Lora', serif;
-            background: linear-gradient(to top, #c7d4c2 0%, #9cc4e4 100%);
+            min-height: 100vh;
+            background: #b9dce7;
             color: #3a2d21;
         }
         canvas { display: block; }
+        #kokura-root {
+            position: fixed; inset: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        #kokura-root canvas { width: 100%; height: 100%; }
         #ui-container {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none; color: #3a2d21;
+            z-index: 10;
         }
         .ui-panel {
             position: absolute;
@@ -270,6 +279,18 @@
             background-color: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; color: white;
             font-size: 0.9rem;
         }
+        #village-gate-action {
+            position: absolute; left: 50%; bottom: 1.2rem;
+            transform: translateX(-50%);
+            z-index: 11; pointer-events: auto;
+            background: #f5e4bc; border: 2px solid #5d4732;
+            border-radius: 999px; padding: 0.7rem 1.4rem;
+            color: #3a2d21; font-weight: 700;
+            box-shadow: 0 6px 18px rgba(24, 52, 50, 0.25);
+        }
+        #village-gate-action:hover, #village-gate-action:focus-visible {
+            background: #fff1d0;
+        }
         #feedback-area { margin-top: 10px; padding: 10px; border-radius: 5px; min-height: 24px; }
         .feedback-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .feedback-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
@@ -279,19 +300,6 @@
         }
         .health-bar { background: linear-gradient(90deg, #d9534f, #f7d58b); height: 10px; border-radius: 9999px; transition: width 0.5s ease-in-out; }
         .health-bar.player { background: linear-gradient(90deg, #5cb85c, #90ee90); }
-        .npc-name {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            text-align: center;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            white-space: nowrap;
-            display: block;
-        }
         #message-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background-color: var(--panel-bg); color: #3a2d21; padding: 20px; border: 2px solid var(--panel-border); border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200; display: none; text-align: center; pointer-events: all;
@@ -326,4 +334,3 @@
             #controls-info, #autosave-notification { display: none; }
             .card-grid { grid-template-columns: 1fr; }
         }
-

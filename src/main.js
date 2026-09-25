@@ -1,6 +1,7 @@
 import { initGameController } from './gameController.js';
 import { initChapterOneCombat } from './chapterOneCombat.js';
 import { initTeacherSettings } from './teacherSettings.js';
+import { mountKokuraVillage } from '../js/KokuraVillageScene.js';
 import {
   gameState,
   saveGame,
@@ -48,6 +49,9 @@ function boot() {
   // All modules extend the same controller and shared state.
   window.gameAPI = controller.gameApi;
   window.writeTheRealm = { ...controller, combat, teacher };
+
+  const villageRoot = document.getElementById('kokura-root');
+  if (villageRoot) mountKokuraVillage(villageRoot, controller.gameApi);
 }
 
 if (document.readyState === 'loading') {

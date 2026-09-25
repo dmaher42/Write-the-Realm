@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wtr-v2';
+const CACHE_NAME = 'wtr-v3';
 const BASE_PATH = (() => {
   try {
     return new URL('./', self.registration.scope).pathname;
@@ -14,7 +14,6 @@ const ASSETS = [
   OFFLINE_URL,
   `${BASE_PATH}assets/styles/main.css`,
   `${BASE_PATH}src/main.js`,
-  `${BASE_PATH}js/realmViewer.js`,
   `${BASE_PATH}js/KokuraVillageScene.js`,
   `${BASE_PATH}assets/sprites/villageStructures.js`,
 ];
