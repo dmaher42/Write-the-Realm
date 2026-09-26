@@ -243,6 +243,7 @@ export function initGameController({
     dialogueTitle: document.getElementById('dialogue-title'),
     dialogueText: document.getElementById('dialogue-text'),
     dialogueButton: document.getElementById('dialogue-button'),
+    dialogueClose: document.getElementById('dialogue-close'),
     villageHub: document.getElementById('village-hub'),
     villageHubHeading: document.getElementById('village-hub-heading'),
     villageHubIntro: document.getElementById('village-elder-thanks'),
@@ -539,6 +540,12 @@ export function initGameController({
       elements.dialogueButton.onclick = acceptChapterOne;
     }
     setVisible(elements.dialogueBox, true);
+    elements.dialogueButton?.focus();
+  }
+
+  function closeElderDialogue() {
+    setVisible(elements.dialogueBox, false);
+    elements.villageGateAction?.focus();
   }
 
   function selectVillagePlace(place) {
@@ -649,6 +656,8 @@ export function initGameController({
     renderPrewrite();
     if (elements.prewriteFeedback) elements.prewriteFeedback.replaceChildren();
     setVisible(elements.prewritePanel, true);
+    (elements.preActionBank?.querySelector('.selected') ||
+      elements.preActionBank?.querySelector('button'))?.focus();
   }
 
   function shufflePrewrite() {
@@ -1100,6 +1109,13 @@ export function initGameController({
     elements.closeJournalBtn?.focus();
   });
   elements.villageClose?.addEventListener('click', closeVillageHub);
+  elements.dialogueClose?.addEventListener('click', closeElderDialogue);
+  elements.dialogueBox?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeElderDialogue();
+    }
+  });
   elements.villageHub?.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       event.preventDefault();
