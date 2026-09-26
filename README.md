@@ -21,6 +21,8 @@ Open **Teacher Settings** from the in-game quest log. The selected mode is store
 
 The required action-word choice remains available in every mode.
 
+During the three-turn writing battle, students receive a short note about the feature the game detected and one concrete idea for improving their next line. Extra craft can strengthen a move, while meeting each turn’s writing goal still completes the battle in three turns. These offline word and pattern checks are writing prompts, not a teacher assessment of meaning or quality. The chapter reward uses the saved battle notes so feedback remains available after a refresh.
+
 ## Tests
 
 Run the Node test suite:

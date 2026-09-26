@@ -48,6 +48,7 @@ async function reachVictory(page) {
   await page.locator('#start-combat-btn').click();
 
   await expect(page.locator('#combat-panel')).toBeVisible();
+  await expect(page.locator('#village-gate-action')).toBeHidden();
   await expect(page.locator('#combat-prompt')).toContainText('Turn 1 of 3');
   await page.locator('#combat-writing-input').fill(
     'I charge forward and strike the creature with my shining blade.'
@@ -55,6 +56,7 @@ async function reachVictory(page) {
   await page.locator('#combat-submit-btn').click();
 
   await expect(page.locator('#combat-prompt')).toContainText('Turn 2 of 3');
+  await expect(page.locator('#combat-feedback')).toContainText('Next step:');
   await page.locator('#combat-writing-input').fill(
     'Thunder cracks loudly as icy rain stings my face and hands.'
   );
@@ -67,6 +69,7 @@ async function reachVictory(page) {
   await page.locator('#combat-submit-btn').click();
 
   await expect(page.locator('#combat-title')).toContainText('Victory over');
+  await expect(page.locator('#combat-log')).toContainText('extra writing craft');
   await expect(page.locator('#combat-submit-btn')).toHaveText('Claim Victory Reward');
 }
 
@@ -79,15 +82,34 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await page.locator('#combat-submit-btn').click();
 
   await expect(page.locator('#loot-panel')).toBeVisible();
+  await expect(page.locator('#village-gate-action')).toBeVisible();
+  await expect(page.locator('#loot-equip-btn')).toBeFocused();
   await expect(page.locator('#loot-card')).toContainText('Tidal Blade');
   await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
   await expect(page.locator('#loot-panel')).toBeVisible();
   await page.locator('#loot-equip-btn').click();
 
   await expect(page.locator('#quest-complete')).toBeVisible();
+  await expect(page.locator('#continue-questing-btn')).toBeFocused();
   await expect(page.locator('#reward-text')).toContainText('100 XP');
+  await expect(page.locator('#improvement-suggestion')).toContainText('Strength:');
+  await expect(page.locator('#improvement-suggestion')).toContainText('Next step:');
+  const advice = await page.locator('#improvement-suggestion').textContent();
+  await page.reload();
+  await page.locator('#continue-game-btn').click();
+  await expect(page.locator('#quest-complete')).toBeVisible();
+  await expect(page.locator('#improvement-suggestion')).toHaveText(advice);
+  await expect(page.locator('#continue-questing-btn')).toBeFocused();
   await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
   await expect(page.locator('#quest-complete')).toBeVisible();
+
+  await page.locator('#try-again-btn').click();
+  await expect(page.locator('#writing-challenge')).toBeVisible();
+  await expect(page.locator('#writing-input')).not.toHaveValue(/Battle at the Beacon/);
+  await page.locator('#writing-input').fill(`${opening} The beacon flashed across the water.`);
+  await page.locator('#writing-submit').click();
+  await expect(page.locator('#quest-complete')).toBeVisible();
+  await expect(page.locator('#player-level-info')).toContainText('Level 2');
   await page.locator('#continue-questing-btn').click();
   await expect(page.locator('#message-box')).toBeVisible();
   await page.locator('#message-button').click();
@@ -103,7 +125,9 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await page.locator('#village-read-journal').click();
   await expect(page.locator('#journal-panel')).toBeVisible();
   await expect(page.locator('#journal-entries')).toContainText('Battle at the Beacon');
+  await expect(page.locator('#journal-entries')).toContainText('The beacon flashed across the water.');
   await expect(page.locator('#journal-entries')).toContainText('I leap like a hawk');
+  expect((await page.locator('#journal-entries').textContent()).match(/Battle at the Beacon/g)).toHaveLength(1);
   await page.locator('#close-journal-btn').click();
   await expect(page.locator('#village-hub')).toBeVisible();
   await expect(page.locator('#village-place-keep')).toHaveAttribute('aria-pressed', 'true');
@@ -130,6 +154,34 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await page.locator('#village-read-journal').click();
   await expect(page.locator('#journal-panel')).toBeVisible();
   await expect(page.locator('#journal-entries')).toContainText('Battle at the Beacon');
+  await expect(page.locator('#journal-entries')).toContainText('The beacon flashed across the water.');
+});
+
+test('a rejected battle line keeps the student draft and gives a specific next action', async ({ page }) => {
+  await beginJourney(page);
+  await completePlan(page);
+  await page.locator('#writing-input').fill(opening);
+  await page.locator('#writing-submit').click();
+  await page.locator('#start-combat-btn').click();
+
+  const draft = 'The hero at the top of the tower with a sword.';
+  await page.locator('#combat-writing-input').fill(draft);
+  await page.locator('#combat-submit-btn').click();
+  await expect(page.locator('#combat-feedback')).toContainText(/action verb/i);
+  await expect(page.locator('#combat-prompt')).toContainText('Turn 1 of 3');
+  await expect(page.locator('#combat-writing-input')).toHaveValue(draft);
+
+  await page.reload();
+  await page.locator('#continue-game-btn').click();
+  await expect(page.locator('#combat-writing-input')).toHaveValue(draft);
+  await expect(page.locator('#combat-feedback')).toContainText(/action verb/i);
+  await expect(page.locator('#interact-prompt')).toBeHidden();
+  await page.locator('#combat-writing-input').fill(
+    'The guardian charged across the stones and struck the creature with the glowing blade.'
+  );
+  await page.locator('#combat-submit-btn').click();
+  await expect(page.locator('#combat-prompt')).toContainText('Turn 2 of 3');
+  await expect(page.locator('#combat-feedback')).toContainText('Next step:');
 });
 
 test('the reward stays available when browser storage stops working at victory', async ({ page }) => {
@@ -197,4 +249,45 @@ test('Challenge mode keeps required choices but removes optional scaffolds', asy
   await page.locator('#writing-input').fill(opening);
   await page.locator('#writing-submit').click();
   await expect(page.locator('#monster-created-panel')).toBeVisible();
+  await page.locator('#start-combat-btn').click();
+  await page.locator('#combat-writing-input').fill('The guardian charged across the stones and struck the monster.');
+  await page.locator('#combat-submit-btn').click();
+  await expect(page.locator('#message-text')).toContainText('13 words');
+  await expect(page.locator('#message-button')).toBeFocused();
+  await page.locator('#message-button').click();
+  await expect(page.locator('#combat-writing-input')).toHaveValue('The guardian charged across the stones and struck the monster.');
+  await expect(page.locator('#combat-writing-input')).toBeFocused();
+  await expect(page.locator('#combat-feedback')).toContainText('13 words');
+  await page.reload();
+  await page.locator('#continue-game-btn').click();
+  await expect(page.locator('#combat-writing-input')).toHaveValue('The guardian charged across the stones and struck the monster.');
+  await expect(page.locator('#combat-feedback')).toContainText('13 words');
+  await page.locator('#combat-writing-input').fill(
+    'The guardian charged across the stones and struck the monster with a glowing sword in both hands.'
+  );
+  await page.locator('#combat-submit-btn').click();
+  await expect(page.locator('#combat-prompt')).toContainText('Turn 2 of 3');
+  await expect(page.locator('#combat-feedback')).toContainText('Next step:');
+});
+
+test('switching to Challenge disarms a hidden Simile Power move', async ({ page }) => {
+  await beginJourney(page);
+  await completePlan(page);
+  await page.locator('#writing-input').fill(opening);
+  await page.locator('#writing-submit').click();
+  await page.locator('#start-combat-btn').click();
+
+  await page.locator('#special-move-btn').click();
+  await expect(page.locator('#special-move-btn')).toContainText('Armed');
+  await page.locator('#teacher-settings-btn').click({ force: true });
+  await page.locator('input[name="teacher-preset"][value="challenge"]').check();
+  await page.locator('#save-teacher-settings-btn').click();
+  await expect(page.locator('#special-move-btn')).toBeHidden();
+
+  await page.locator('#combat-writing-input').fill(
+    'The guardian charged across the stones and struck the monster with a glowing sword in both hands.'
+  );
+  await page.locator('#combat-submit-btn').click();
+  await expect(page.locator('#combat-prompt')).toContainText('Turn 2 of 3');
+  await expect(page.locator('#combat-feedback')).toContainText('Next step:');
 });

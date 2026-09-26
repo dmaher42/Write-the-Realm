@@ -30,7 +30,7 @@ function boot() {
 
   // Teacher validation uses capture listeners, so it must initialise before
   // the controller and combat modules register their submission handlers.
-  const teacher = initTeacherSettings({ gameState });
+  const teacher = initTeacherSettings({ gameState, saveGame });
 
   const controller = initGameController({
     gameState,

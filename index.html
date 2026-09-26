@@ -268,6 +268,7 @@
         <!-- Combat Panel -->
         <div id="combat-panel" class="ui-panel" role="dialog" aria-modal="true" aria-labelledby="combat-title">
             <h2 id="combat-title"></h2>
+            <p class="mt-2 text-sm">Meet each turn’s writing goal. Extra detail can strengthen your move.</p>
             <p class="mt-4">Your Health:</p>
             <div class="health-bar-container" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Player health">
                 <div id="player-health-bar" class="health-bar player"></div>
@@ -278,10 +279,12 @@
             </div>
             <div id="combat-log" class="mt-4"></div>
             <p id="combat-prompt" class="mt-4 font-bold"></p>
+            <label for="combat-writing-input" class="font-bold">Your battle line</label>
             <div class="flex gap-2 mt-2">
-                <input type="text" id="combat-writing-input" class="flex-grow" placeholder="Describe your action...">
+                <input type="text" id="combat-writing-input" class="flex-grow" aria-describedby="combat-prompt combat-feedback" placeholder="Describe your action...">
                 <button id="combat-submit-btn" class="p-2 text-base">Attack!</button>
             </div>
+            <p id="combat-feedback" class="combat-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
             <button id="special-move-btn" class="mt-2 text-sm p-1 bg-purple-600 hover:bg-purple-800">Use Simile Power (Lvl 2)</button>
         </div>
 
