@@ -59,11 +59,13 @@ test('the Chromebook-sized 3D village lets a student walk to the Elder and press
 
   await page.keyboard.down('w');
   try {
-    await expect.poll(async () => (await playerPosition(page)).z).toBeLessThan(start.z - 1);
-    await expect(page.locator('#world-interaction-prompt')).toBeVisible();
+    await expect.poll(async () => (await playerPosition(page)).z, { intervals: [100] })
+      .toBeLessThan(21.2);
   } finally {
     await page.keyboard.up('w');
   }
+  await expect(page.locator('#world-interaction-prompt')).toBeVisible();
+  await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
   const nearElder = await playerPosition(page);
   const cameraZ = await page.evaluate(() => window.writeTheRealm.world.camera.position.z);
   expect(cameraZ).toBeLessThan(startingCameraZ - 0.5);
@@ -128,7 +130,7 @@ test('a completed Chapter 1 save can walk to the Keep and interact in 3D', async
       phase: 'exploring',
       selectedGuardian: 'Shark Guardian',
       selectedDomain: 'Coral Reef',
-      worldPosition: { x: 0, z: 8 },
+      worldPosition: { x: 0, z: 1.5 },
       player: { level: 2, xp: 0, attack: 10, health: 110, speed: 5 },
       completedQuests: ['chapter-one-broken-beacon'],
       activeQuest: null,
@@ -138,7 +140,8 @@ test('a completed Chapter 1 save can walk to the Keep and interact in 3D', async
   await page.reload();
   await page.waitForFunction(() => Boolean(window.writeTheRealm?.world));
   await page.getByRole('button', { name: 'Continue Journey' }).click();
-  await expect.poll(async () => (await playerPosition(page)).z).toBeCloseTo(8, 1);
+  await expect.poll(async () => (await playerPosition(page)).z).toBeCloseTo(1.5, 1);
+  await expect(page.locator('#world-interaction-prompt')).toBeHidden();
 
   await page.keyboard.down('w');
   try {
@@ -147,7 +150,7 @@ test('a completed Chapter 1 save can walk to the Keep and interact in 3D', async
     await page.keyboard.up('w');
   }
   const atKeep = await playerPosition(page);
-  expect(atKeep.z).toBeLessThan(8);
+  expect(atKeep.z).toBeLessThan(1);
   await page.keyboard.press('e');
   await expect(page.locator('#village-hub')).toBeVisible();
   await expect(page.locator('#village-hub-heading')).toHaveText('Kokura Keep');

@@ -560,6 +560,7 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
     const target = canMove ? nearestTarget() : null;
     const display = target ? 'block' : 'none';
     if (interactionPrompt.style.display !== display) interactionPrompt.style.display = display;
+    if (!target && interactionPrompt.textContent) interactionPrompt.textContent = '';
     if (target && interactionPrompt.textContent !== target.label) {
       interactionPrompt.textContent = target.label;
     }
@@ -660,7 +661,9 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
 
   function tick(time) {
     if (showingFallback) return;
-    const delta = previousFrame ? Math.min((time - previousFrame) / 1000, 0.05) : 0;
+    // Keep walking close to real time when a Chromebook draws fewer frames.
+    // Short collision steps still prevent crossing a thin obstacle in one frame.
+    const delta = previousFrame ? Math.min((time - previousFrame) / 1000, 0.25) : 0;
     previousFrame = time;
     const positionChanged = syncSavedPosition();
     let changed = updateGuardianAppearance() || positionChanged;
@@ -679,10 +682,13 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
       if (length) {
         const previousX = player.position.x;
         const previousZ = player.position.z;
-        const stepX = xDirection / length * WALK_SPEED * delta;
-        const stepZ = zDirection / length * WALK_SPEED * delta;
-        if (walkable(player.position.x + stepX, player.position.z)) player.position.x += stepX;
-        if (walkable(player.position.x, player.position.z + stepZ)) player.position.z += stepZ;
+        const steps = Math.ceil(delta / 0.05);
+        const stepX = xDirection / length * WALK_SPEED * delta / steps;
+        const stepZ = zDirection / length * WALK_SPEED * delta / steps;
+        for (let index = 0; index < steps; index += 1) {
+          if (walkable(player.position.x + stepX, player.position.z)) player.position.x += stepX;
+          if (walkable(player.position.x, player.position.z + stepZ)) player.position.z += stepZ;
+        }
         if (player.position.x !== previousX || player.position.z !== previousZ) {
           player.rotation.y = Math.atan2(-stepX, -stepZ);
           changed = true;
