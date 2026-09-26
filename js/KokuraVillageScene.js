@@ -108,8 +108,147 @@ function addGate(scene) {
   return gate;
 }
 
+// Keep the village playable on devices where WebGL is blocked or unavailable.
+// Everything in this illustration is static, so it works without a GPU context.
+function mountFallbackVillage(container, visitElder) {
+  const tree = (x, y, scale = 1) => `
+    <g transform="translate(${x} ${y}) scale(${scale})">
+      <ellipse cy="10" rx="24" ry="8" fill="#426f67" opacity=".25"/>
+      <path d="M-4 1V-29H4V1Z" fill="#75533c"/>
+      <path d="M-19-19 0-72 19-19Z" fill="#3f7967"/>
+      <path d="M-24-5 0-55 24-5Z" fill="#518b70"/>
+      <path d="M-19-28 0-72 4-62Z" fill="#82ac7c" opacity=".65"/>
+    </g>`;
+
+  const cottage = (x, y, scale = 1, roof = '#794d46') => `
+    <g transform="translate(${x} ${y}) scale(${scale})">
+      <ellipse cy="10" rx="78" ry="22" fill="#4c745a" opacity=".28"/>
+      <path d="M-65-47 2-71 67-45 67 3 2 27-65 2Z" fill="#e5cc96" stroke="#806b53" stroke-width="3"/>
+      <path d="M2-71 67-45 67 3 2 27Z" fill="#bd9c75"/>
+      <path d="M-76-50-10-104 77-60 67-45 2-71-65-47Z" fill="${roof}" stroke="#4d4543" stroke-width="3"/>
+      <path d="M-10-104 77-60 67-45 2-71Z" fill="#a56b58"/>
+      <path d="M-57-45-8-88M-42-40 8-81M-25-34 27-73" stroke="#dba67d" stroke-width="4" opacity=".48"/>
+      <path d="M-35-32h20v25h-20z" fill="#608b8b" stroke="#705943" stroke-width="5"/>
+      <path d="M20-42h20v26H20z" fill="#4b6d72" stroke="#715941" stroke-width="5"/>
+      <path d="M-4-17h23v38L2 27-4 25Z" fill="#77523b" stroke="#543d35" stroke-width="3"/>
+      <circle cx="13" cy="2" r="2.5" fill="#eac77f"/>
+      <path d="M-65 2 2 27 67 3" fill="none" stroke="#6a6151" stroke-width="3"/>
+    </g>`;
+
+  container.innerHTML = `<svg data-village-fallback xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice"
+      width="100%" height="100%" style="display:block" aria-hidden="true">
+    <defs>
+      <linearGradient id="village-sky" x2="0" y2="1">
+        <stop stop-color="#88bbcf"/><stop offset="1" stop-color="#d3e7d6"/>
+      </linearGradient>
+      <linearGradient id="village-sea" x2="0" y2="1">
+        <stop stop-color="#78bac3"/><stop offset="1" stop-color="#428b9b"/>
+      </linearGradient>
+      <linearGradient id="village-grass" x2="0" y2="1">
+        <stop stop-color="#a4bf80"/><stop offset="1" stop-color="#76a46d"/>
+      </linearGradient>
+      <clipPath id="village-land-clip"><ellipse cx="600" cy="460" rx="485" ry="243"/></clipPath>
+    </defs>
+    <rect width="1200" height="760" fill="url(#village-sky)"/>
+    <path d="M0 242 Q124 183 231 233T472 227Q591 179 706 230T948 223Q1088 177 1200 217V353H0Z" fill="#87b5aa" opacity=".35"/>
+    <path d="M0 277 Q194 226 379 278T758 265Q973 224 1200 273V760H0Z" fill="url(#village-sea)"/>
+    <g fill="none" stroke="#c2e1d6" stroke-width="3" opacity=".36">
+      <path d="M25 361q65-12 133 0m30 35q72-10 133 1m665-73q68-9 136 2m-87 80q55-10 112 1"/>
+      <path d="M53 598q64-9 124 1m-163 85q69-10 124 0m913-92q62-9 125 1m-82 91q49-9 103 0"/>
+    </g>
+    <ellipse cx="600" cy="474" rx="515" ry="257" fill="#397e84" opacity=".3"/>
+    <ellipse cx="600" cy="466" rx="510" ry="249" fill="#dfc99d"/>
+    <ellipse cx="600" cy="460" rx="485" ry="243" fill="url(#village-grass)"/>
+    <g clip-path="url(#village-land-clip)">
+      <path d="M571 716 551 491 556 319H643L644 491 631 716Z" fill="#d7c395"/>
+      <path d="M560 467 304 469 250 500 567 511ZM633 465 903 451 960 476 635 513Z" fill="#d7c395"/>
+      <ellipse cx="600" cy="468" rx="93" ry="51" fill="#e2ceaa"/>
+      <g opacity=".34" fill="#4b805d">
+        <circle cx="198" cy="456" r="17"/><circle cx="248" cy="628" r="12"/>
+        <circle cx="982" cy="605" r="18"/><circle cx="925" cy="292" r="11"/>
+        <circle cx="353" cy="272" r="14"/><circle cx="778" cy="659" r="10"/>
+      </g>
+      <g fill="#e8dab5" opacity=".7">
+        <circle cx="469" cy="564" r="3"/><circle cx="717" cy="575" r="3"/>
+        <circle cx="513" cy="366" r="3"/><circle cx="691" cy="354" r="3"/>
+        <circle cx="371" cy="520" r="3"/><circle cx="889" cy="518" r="3"/>
+      </g>
+    </g>
+    <g>
+      ${tree(188, 450, 1.08)}${tree(241, 369, .77)}${tree(300, 320, .83)}
+      ${tree(423, 282, .78)}${tree(785, 274, .78)}${tree(982, 336, .91)}
+      ${tree(1024, 461, 1.1)}${tree(963, 577, .79)}${tree(862, 644, .82)}
+      ${tree(343, 631, .82)}${tree(250, 551, .74)}
+    </g>
+    <g transform="translate(600 356)">
+      <ellipse cy="35" rx="114" ry="27" fill="#52775b" opacity=".28"/>
+      <path d="M-85-51 0-79 86-51V21L0 48-85 21Z" fill="#d8c29a" stroke="#766954" stroke-width="4"/>
+      <path d="M0-79 86-51V21L0 48Z" fill="#aa927c"/>
+      <path d="M-101-56-77-115 0-144 91-112 103-55 0-88Z" fill="#5b6262" stroke="#465458" stroke-width="4"/>
+      <path d="M0-144 91-112 103-55 0-88Z" fill="#77777a"/>
+      <path d="M-90-122v-53h27v43m124 0v-43h27v53" fill="#a79e8d" stroke="#6b6a5f" stroke-width="4"/>
+      <path d="M-95-177h37m115 0h37" stroke="#ddd1ae" stroke-width="7"/>
+      <path d="M-26 0v39l26 9 26-9V0q-26-22-52 0Z" fill="#634b3b" stroke="#504339" stroke-width="4"/>
+      <path d="M-69-32h24v26h-24zm113 0h24v26H44z" fill="#527e8b" stroke="#735f4b" stroke-width="5"/>
+    </g>
+    <g transform="translate(318 425)">
+      <ellipse cy="19" rx="112" ry="21" fill="#4e7455" opacity=".28"/>
+      <path d="M-88-30 14-68 91-36V13L14 42-88 11Z" fill="#dbbe84" stroke="#806e4e" stroke-width="4"/>
+      <path d="M14-68 91-36V13L14 42Z" fill="#b89b6b"/>
+      <path d="M-99-32-72-75 18-110 100-69 99-33 14-68-88-30Z" fill="#8a5d45" stroke="#664a3d" stroke-width="4"/>
+      <path d="M18-110 100-69 99-33 14-68Z" fill="#aa7853"/>
+      <path d="M-50-15h24v25h-24zm85-8h21v26H35z" fill="#5b817c" stroke="#765b43" stroke-width="5"/>
+      <path d="M-7 4h22v37L-7 34Z" fill="#76553c"/>
+      <path d="M-119 44q75-24 140 8m0 0q60-37 111-13" fill="none" stroke="#bbaa75" stroke-width="8"/>
+    </g>
+    <g transform="translate(864 426)">
+      <ellipse cy="26" rx="99" ry="23" fill="#4e7455" opacity=".28"/>
+      <path d="M-65-61 20-86 73-58V32L20 53-65 24Z" fill="#ece2c2" stroke="#7c7969" stroke-width="4"/>
+      <path d="M20-86 73-58V32L20 53Z" fill="#c1b9a4"/>
+      <path d="M-75-63 22-117 83-66 73-58 20-86-65-61Z" fill="#596e69" stroke="#485c5b" stroke-width="4"/>
+      <path d="M22-117 83-66 73-58 20-86Z" fill="#788782"/>
+      <path d="M9-117v-49h28v50" fill="#d9d4bb" stroke="#777b70" stroke-width="4"/>
+      <path d="M15-166h17m-8-12v23" stroke="#f4deaa" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-30-28h24v30h-24Z" fill="#7ba6aa" stroke="#88796a" stroke-width="5"/>
+      <path d="M10 13h20v35l-20 5Z" fill="#7b5b47"/>
+      <path d="M48-43h18v30H48Z" fill="#6e969a" stroke="#807b70" stroke-width="4"/>
+    </g>
+    ${cottage(411, 560, .83)}${cottage(805, 551, .88, '#6c4e52')}
+    <g transform="translate(600 475)" fill="#f0ddad" stroke="#ab8e6a" stroke-width="3">
+      <circle r="19"/><path d="M-12-13 12 13m0-26-24 26"/>
+    </g>
+    <g fill="#735c43" stroke="#614c38" stroke-width="3">
+      <path d="M518 531v-40m163 36v-40"/><path d="M517 491h9m154-4h9" stroke="#e7bd77" stroke-width="9"/>
+    </g>
+    <g data-village-gate style="cursor:pointer" tabindex="-1">
+      <ellipse cx="600" cy="628" rx="76" ry="19" fill="#567459" opacity=".32"/>
+      <path d="M535 642V555h18v86m94 0v-86h18v87" fill="#a79b82" stroke="#726e62" stroke-width="4"/>
+      <path d="M529 548h142v20H529Z" fill="#8f816d" stroke="#666054" stroke-width="4"/>
+      <path d="M545 540h111v31H545Z" fill="#604938" stroke="#d5ba83" stroke-width="4"/>
+      <text x="600" y="561" fill="#fff3d2" font-family="Georgia,serif" font-size="15" font-weight="bold" text-anchor="middle">ELDER'S GATE</text>
+      <path d="M549 638h102" stroke="#655e4d" stroke-width="5"/>
+      <rect x="528" y="527" width="144" height="126" fill="#fff" opacity="0"/>
+    </g>
+  </svg>`;
+
+  container.querySelector('[data-village-gate]')?.addEventListener('click', visitElder);
+  return { fallback: true };
+}
+
 export function mountKokuraVillage(container, game) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
+  function visitElder() {
+    game?.openQuest?.('The Broken Beacon');
+  }
+  document.getElementById('village-gate-action')?.addEventListener('click', visitElder);
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
+  } catch (error) {
+    console.warn('WebGL village unavailable; showing the illustrated village.', error);
+    return mountFallbackVillage(container, visitElder);
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
@@ -200,9 +339,6 @@ export function mountKokuraVillage(container, game) {
 
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
-  function visitElder() {
-    game?.openQuest?.('The Broken Beacon');
-  }
 
   renderer.domElement.addEventListener('pointerdown', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
@@ -213,18 +349,38 @@ export function mountKokuraVillage(container, game) {
     raycaster.setFromCamera(pointer, camera);
     if (raycaster.intersectObject(gateTarget).length) visitElder();
   });
-  document.getElementById('village-gate-action')?.addEventListener('click', visitElder);
+
+  let resizeObserver;
+  let showingFallback = false;
+  function showFallback() {
+    if (showingFallback) return;
+    showingFallback = true;
+    resizeObserver?.disconnect();
+    renderer.domElement.remove();
+    renderer.dispose();
+    mountFallbackVillage(container, visitElder);
+  }
+  renderer.domElement.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault();
+    showFallback();
+  }, { once: true });
 
   function render() {
+    if (showingFallback) return;
     const width = container.clientWidth;
     const height = container.clientHeight;
     if (!width || !height) return;
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.render(scene, camera);
+    try {
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.render(scene, camera);
+    } catch (error) {
+      console.warn('WebGL village render failed; showing the illustrated village.', error);
+      showFallback();
+    }
   }
-  const resizeObserver = new ResizeObserver(render);
+  resizeObserver = new ResizeObserver(render);
   resizeObserver.observe(container);
   render();
 
