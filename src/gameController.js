@@ -51,6 +51,7 @@ export function createInitialState() {
     phase: 'start',
     selectedGuardian: '',
     selectedDomain: '',
+    worldPosition: { x: 0, z: 24 },
     player: {
       level: 1,
       xp: 0,
@@ -92,6 +93,10 @@ export function normaliseState(saved) {
       ...(source.equipment && typeof source.equipment === 'object'
         ? source.equipment
         : {}),
+    },
+    worldPosition: {
+      x: Number.isFinite(source.worldPosition?.x) ? source.worldPosition.x : defaults.worldPosition.x,
+      z: Number.isFinite(source.worldPosition?.z) ? source.worldPosition.z : defaults.worldPosition.z,
     },
     prewrite: {
       ...defaults.prewrite,
@@ -239,6 +244,10 @@ export function initGameController({
     dialogueText: document.getElementById('dialogue-text'),
     dialogueButton: document.getElementById('dialogue-button'),
     villageHub: document.getElementById('village-hub'),
+    villageHubHeading: document.getElementById('village-hub-heading'),
+    villageHubIntro: document.getElementById('village-elder-thanks'),
+    villageHubQuestion: document.getElementById('village-hub-question'),
+    villagePlaceChoices: document.getElementById('village-place-choices'),
     villagePlaceText: document.getElementById('village-place-text'),
     villagePlaceMarket: document.getElementById('village-place-market'),
     villagePlaceChapel: document.getElementById('village-place-chapel'),
@@ -300,18 +309,25 @@ export function initGameController({
 
   let draftSaveTimer = null;
   let journalOpenedFromVillage = false;
+  let villagePanelPlace = null;
 
   const villagePlaces = [
     {
+      id: 'market',
       button: elements.villagePlaceMarket,
+      beforeText: 'Market Garden: Villagers tend the raised beds and trade food beside the path. Supply boats wait for the beacon to shine again.',
       text: 'Market Garden: The fields are growing again, and neighbours trade fresh food beside the path. The beacon guides supply boats safely into the harbour.',
     },
     {
+      id: 'chapel',
       button: elements.villagePlaceChapel,
+      beforeText: 'Harbour Chapel: Lanterns are lit for travellers lost in the fog. The villagers hope the beacon can guide them home.',
       text: 'Harbour Chapel: Lanterns shine in the windows. The villagers gather here to remember the storm and thank you for bringing light back to Kokura.',
     },
     {
+      id: 'keep',
       button: elements.villagePlaceKeep,
+      beforeText: 'Kokura Keep: From the high windows, you can see the dark beacon across the water. The village waits for someone to relight it.',
       text: 'Kokura Keep: From the high windows, you can see the restored beacon across the water. Its steady light tells every traveller that the village is safe.',
     },
   ];
@@ -391,10 +407,10 @@ export function initGameController({
         elements.questObjective.textContent = gameState.activeQuest.objective;
       } else if (gameState.completedQuests.includes(CHAPTER_ONE_ID)) {
         elements.questTitle.textContent = 'Chapter 1 complete';
-        elements.questObjective.textContent = 'Visit the Elder’s Gate to explore Kokura and read your story.';
+        elements.questObjective.textContent = 'Explore Kokura. Press E near the Elder or a village place.';
       } else {
         elements.questTitle.textContent = 'Find the Village Elder';
-        elements.questObjective.textContent = 'The Elder is waiting near the village gate.';
+        elements.questObjective.textContent = 'Walk to the Elder by the village gate and press E.';
       }
     }
   }
@@ -495,12 +511,6 @@ export function initGameController({
     gameState.prewrite.focus.who = guardian;
     showGameShell();
     persist();
-
-    window.setTimeout(() => {
-      if (!gameState.activeQuest && !gameState.completedQuests.includes(CHAPTER_ONE_ID)) {
-        presentElderDialogue();
-      }
-    }, 350);
   }
 
   function continueJourney() {
@@ -535,26 +545,45 @@ export function initGameController({
     for (const choice of villagePlaces) {
       choice.button?.setAttribute('aria-pressed', choice === place ? 'true' : 'false');
     }
-    if (elements.villagePlaceText) elements.villagePlaceText.textContent = place.text;
+    if (elements.villagePlaceText) {
+      elements.villagePlaceText.textContent = gameState.completedQuests.includes(CHAPTER_ONE_ID)
+        ? place.text
+        : place.beforeText;
+    }
   }
 
-  function openVillageHub({ resetSelection = true } = {}) {
+  function openVillageHub({ resetSelection = true, place = null } = {}) {
     closeMessage();
     if (elements.interactPrompt) elements.interactPrompt.style.display = 'none';
     hideFlowPanels(elements.villageHub);
+    villagePanelPlace = place;
+    const completed = gameState.completedQuests.includes(CHAPTER_ONE_ID);
+    if (elements.villageHubHeading) {
+      elements.villageHubHeading.textContent = place ? place.button?.textContent || 'Kokura Village' : 'Kokura Village';
+    }
+    if (elements.villageHubIntro) {
+      elements.villageHubIntro.textContent = completed
+        ? 'The Village Elder thanks you for restoring the beacon. Its light has brought Kokura together again.'
+        : 'The beacon is dark, but life in Kokura carries on while the Elder waits by the gate.';
+      setVisible(elements.villageHubIntro, !place);
+    }
+    setVisible(elements.villageHubQuestion, !place);
+    setVisible(elements.villagePlaceChoices, !place, 'flex');
     if (resetSelection) {
       journalOpenedFromVillage = false;
       for (const place of villagePlaces) place.button?.setAttribute('aria-pressed', 'false');
       if (elements.villagePlaceText) {
-        elements.villagePlaceText.textContent = 'Choose a place to hear what has changed in the village.';
+        elements.villagePlaceText.textContent = 'Choose a place to learn about Kokura.';
       }
     }
+    if (place) selectVillagePlace(place);
     setVisible(elements.villageHub, true);
-    elements.villagePlaceMarket?.focus();
+    (place ? elements.villageClose : elements.villagePlaceMarket)?.focus();
   }
 
   function closeVillageHub() {
     setVisible(elements.villageHub, false);
+    villagePanelPlace = null;
     elements.villageGateAction?.focus();
   }
 
@@ -951,9 +980,7 @@ export function initGameController({
         break;
       default:
         hideFlowPanels();
-        showInteractionHint(gameState.completedQuests.includes(CHAPTER_ONE_ID)
-          ? 'Click the Elder’s Gate to explore Kokura.'
-          : 'Click the village gate to revisit the Elder.');
+        showInteractionHint('Move with WASD or arrow keys. Press E near a place to interact.');
         break;
     }
   }
@@ -984,6 +1011,12 @@ export function initGameController({
       }
       if (title) console.info('Opening quest:', title);
       presentElderDialogue();
+    },
+
+    visitVillagePlace(placeId) {
+      if (gameState.phase !== 'exploring') return;
+      const place = villagePlaces.find((candidate) => candidate.id === placeId);
+      if (place) openVillageHub({ place });
     },
 
     grantLoot(itemName) {
@@ -1055,7 +1088,7 @@ export function initGameController({
     setVisible(elements.journalPanel, false);
     if (journalOpenedFromVillage) {
       journalOpenedFromVillage = false;
-      openVillageHub({ resetSelection: false });
+      openVillageHub({ resetSelection: false, place: villagePanelPlace });
     }
   });
   for (const place of villagePlaces) {
