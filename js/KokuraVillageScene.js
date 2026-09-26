@@ -7,6 +7,27 @@ import {
 } from '../assets/sprites/villageStructures.js';
 
 const LAND_HEIGHT = 0.55;
+const WALK_SPEED = 5.5;
+const SHORE_RADIUS = 26.4;
+const PLAYER_RADIUS = 0.58;
+const CAMERA_OFFSET = new THREE.Vector3(0, 21, 23);
+const CAMERA_LOOK_AHEAD = new THREE.Vector3(0, 1.2, -3.5);
+const TREE_POSITIONS = [
+  [-20, 16, 1.1, 0], [-21, 4, 0.95, 1], [-19, -15, 1.1, 2],
+  [19, 15, 1.15, 1], [21, 1, 0.9, 0], [19, -18, 1.05, 2],
+  [-5, -23, 1, 0], [6, -23, 1.15, 1], [-13, 20, 0.75, 2],
+  [14, 21, 0.8, 0],
+];
+const LANTERN_POSITIONS = [[-4.2, 17], [4.2, 17], [-4.1, -2], [4.1, -2]];
+const BUILDING_FOOTPRINTS = [
+  { x: 0, z: -8, halfWidth: 4.4, halfDepth: 3.5 },
+  { x: -11, z: 9, halfWidth: 2.4, halfDepth: 2.2 },
+  { x: 11, z: 9, halfWidth: 2.4, halfDepth: 2.2 },
+  { x: -12, z: -12, halfWidth: 3.7, halfDepth: 2.8 },
+  { x: 12, z: -12, halfWidth: 3.1, halfDepth: 4.4 },
+  { x: -2.7, z: 20, halfWidth: 0.55, halfDepth: 0.6 },
+  { x: 2.7, z: 20, halfWidth: 0.55, halfDepth: 0.6 },
+];
 const colours = {
   sky: 0xb9dce7,
   water: 0x65afbd,
@@ -106,6 +127,90 @@ function addGate(scene) {
   gate.position.set(0, LAND_HEIGHT, 20);
   scene.add(gate);
   return gate;
+}
+
+function createGuardian() {
+  const group = new THREE.Group();
+  group.name = 'Guardian';
+  const armour = new THREE.MeshStandardMaterial({ color: 0x4a8292, roughness: 0.8 });
+  const cloak = new THREE.MeshStandardMaterial({ color: 0x315b69, roughness: 0.95 });
+
+  function piece(geometry, material, x, y, z) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    group.add(mesh);
+    return mesh;
+  }
+
+  const leather = new THREE.MeshStandardMaterial({ color: 0x493b38, roughness: 1 });
+  const skin = new THREE.MeshStandardMaterial({ color: 0xd9ae80, roughness: 0.95 });
+  const brass = new THREE.MeshStandardMaterial({ color: 0xe4c071, metalness: 0.25, roughness: 0.55 });
+  piece(new THREE.ConeGeometry(0.82, 1.55, 8), cloak, 0, 0.98, 0.22);
+  piece(new THREE.CylinderGeometry(0.54, 0.63, 1.35, 10), armour, 0, 1.35, 0);
+  piece(new THREE.CylinderGeometry(0.43, 0.44, 0.22, 10), brass, 0, 1.06, 0);
+  for (const x of [-0.33, 0.33]) {
+    piece(new THREE.CylinderGeometry(0.18, 0.2, 0.65, 7), leather, x, 0.42, 0);
+    piece(new THREE.SphereGeometry(0.24, 7, 6), armour, x * 1.7, 1.78, 0);
+    piece(new THREE.CylinderGeometry(0.16, 0.16, 0.8, 7), skin, x * 1.8, 1.35, 0);
+  }
+  piece(new THREE.SphereGeometry(0.43, 10, 8), skin, 0, 2.22, 0);
+  piece(new THREE.ConeGeometry(0.53, 0.53, 8), armour, 0, 2.62, 0);
+  const eyes = new THREE.MeshBasicMaterial({ color: 0x2c3339 });
+  for (const x of [-0.17, 0.17]) {
+    piece(new THREE.SphereGeometry(0.055, 6, 5), eyes, x, 2.27, -0.39);
+  }
+  return { group, armour, cloak };
+}
+
+function createVillageElder(scene) {
+  const elder = new THREE.Group();
+  elder.name = 'Village Elder';
+  elder.position.set(4.15, LAND_HEIGHT, 19.2);
+  const robe = makeMesh(new THREE.ConeGeometry(0.72, 1.75, 8), 0x5d607c);
+  robe.position.y = 0.95;
+  elder.add(robe);
+  const face = makeMesh(new THREE.SphereGeometry(0.38, 9, 7), 0xcfa87e);
+  face.position.y = 2.03;
+  elder.add(face);
+  const hair = makeMesh(new THREE.SphereGeometry(0.42, 9, 7), 0xdbd8c6);
+  hair.scale.set(1, 0.46, 1);
+  hair.position.y = 2.34;
+  elder.add(hair);
+  const beard = makeMesh(new THREE.ConeGeometry(0.27, 0.72, 7), 0xdbd8c6);
+  beard.rotation.x = Math.PI;
+  beard.position.set(0, 1.69, 0.28);
+  elder.add(beard);
+  const staff = makeMesh(new THREE.CylinderGeometry(0.06, 0.09, 2.45, 6), 0x72563e);
+  staff.position.set(0.73, 1.28, 0.05);
+  elder.add(staff);
+  scene.add(elder);
+  return elder;
+}
+
+function addVisitMarker(scene, x, z) {
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.85, 0.1, 6, 20),
+    new THREE.MeshBasicMaterial({ color: 0xffdf91 })
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(x, LAND_HEIGHT + 0.15, z);
+  scene.add(ring);
+}
+
+function walkable(x, z) {
+  if (Math.hypot(x, z) > SHORE_RADIUS) return false;
+  if (BUILDING_FOOTPRINTS.some((building) =>
+    Math.abs(x - building.x) < building.halfWidth + PLAYER_RADIUS &&
+    Math.abs(z - building.z) < building.halfDepth + PLAYER_RADIUS
+  )) return false;
+  if (TREE_POSITIONS.some(([treeX, treeZ, scale]) =>
+    Math.hypot(x - treeX, z - treeZ) < PLAYER_RADIUS + 0.55 * scale
+  )) return false;
+  if (LANTERN_POSITIONS.some(([postX, postZ]) =>
+    Math.hypot(x - postX, z - postZ) < PLAYER_RADIUS + 0.2
+  )) return false;
+  return Math.hypot(x - 4.15, z - 19.2) >= PLAYER_RADIUS + 0.55;
 }
 
 // Keep the village playable on devices where WebGL is blocked or unavailable.
@@ -236,32 +341,38 @@ function mountFallbackVillage(container, visitElder) {
   return { fallback: true };
 }
 
-export function mountKokuraVillage(container, game) {
+export function mountKokuraVillage(container, game, { gameState, saveGame } = {}) {
+  const controlsInfo = document.getElementById('controls-info');
+  const interactionPrompt = document.getElementById('world-interaction-prompt');
+  const gateButton = document.getElementById('village-gate-action');
+  const fallbackControls = 'Click the Elder’s Gate or use the Visit the Village Elder button.';
   function visitElder() {
     game?.openQuest?.('The Broken Beacon');
   }
-  document.getElementById('village-gate-action')?.addEventListener('click', visitElder);
+  gateButton?.addEventListener('click', visitElder);
 
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
   } catch (error) {
     console.warn('WebGL village unavailable; showing the illustrated village.', error);
+    if (controlsInfo) controlsInfo.textContent = fallbackControls;
     return mountFallbackVillage(container, visitElder);
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
+  if (controlsInfo) {
+    controlsInfo.textContent = 'WASD or arrow keys to walk · E to talk or visit · Click the Elder’s Gate';
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(colours.sky);
   scene.fog = new THREE.Fog(colours.sky, 100, 165);
 
-  const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 200);
-  camera.position.set(38, 39, 51);
-  camera.lookAt(0, 1.4, 0);
+  const camera = new THREE.PerspectiveCamera(47, 1, 0.1, 200);
 
   scene.add(new THREE.HemisphereLight(0xf4f9f5, 0x6e7861, 2.1));
   const sunlight = new THREE.DirectionalLight(0xffe5bd, 2.5);
@@ -317,18 +428,36 @@ export function mountKokuraVillage(container, game) {
   church.position.set(12, LAND_HEIGHT, -12);
   scene.add(church);
 
-  [
-    [-20, 16, 1.1, 0], [-21, 4, 0.95, 1], [-19, -15, 1.1, 2],
-    [19, 15, 1.15, 1], [21, 1, 0.9, 0], [19, -18, 1.05, 2],
-    [-5, -23, 1, 0], [6, -23, 1.15, 1], [-13, 20, 0.75, 2],
-    [14, 21, 0.8, 0],
-  ].forEach(([x, z, scale, shade]) => addTree(scene, x, z, scale, shade));
+  TREE_POSITIONS.forEach(([x, z, scale, shade]) => addTree(scene, x, z, scale, shade));
 
-  for (const [x, z] of [[-4.2, 17], [4.2, 17], [-4.1, -2], [4.1, -2]]) {
+  for (const [x, z] of LANTERN_POSITIONS) {
     addLantern(scene, x, z);
   }
 
   const gate = addGate(scene);
+  createVillageElder(scene);
+  const guardian = createGuardian();
+  const player = guardian.group;
+  const initialPosition = gameState?.worldPosition;
+  const spawnX = Number(initialPosition?.x);
+  const spawnZ = Number(initialPosition?.z);
+  player.position.set(
+    Number.isFinite(spawnX) && Number.isFinite(spawnZ) && walkable(spawnX, spawnZ) ? spawnX : 0,
+    LAND_HEIGHT,
+    Number.isFinite(spawnX) && Number.isFinite(spawnZ) && walkable(spawnX, spawnZ) ? spawnZ : 24
+  );
+  scene.add(player);
+  const cameraTarget = player.position.clone().add(CAMERA_LOOK_AHEAD);
+  camera.position.copy(player.position).add(CAMERA_OFFSET);
+  camera.lookAt(cameraTarget);
+
+  const targets = [
+    { x: 4.15, z: 19.2, radius: 4.8, label: 'Press E to talk to the Village Elder', interact: visitElder },
+    { x: -12, z: -7.8, radius: 3.4, label: 'Press E to visit the Market Garden', interact: () => game?.visitVillagePlace?.('market') },
+    { x: 12, z: -6.2, radius: 3.4, label: 'Press E to visit the Harbour Chapel', interact: () => game?.visitVillagePlace?.('chapel') },
+    { x: 0, z: -2.7, radius: 3.4, label: 'Press E to visit Kokura Keep', interact: () => game?.visitVillagePlace?.('keep') },
+  ];
+  targets.slice(1).forEach(({ x, z }) => addVisitMarker(scene, x, z));
   const gateTarget = new THREE.Mesh(
     new THREE.BoxGeometry(7, 6, 2.5),
     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
@@ -340,6 +469,138 @@ export function mountKokuraVillage(container, game) {
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
+  const movementCodes = new Set([
+    'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight',
+  ]);
+  const heldKeys = new Set();
+  const panels = [...document.querySelectorAll('[role="dialog"], [role="alertdialog"]')];
+  let showingFallback = false;
+  let resizeObserver;
+  let frameId = 0;
+  let previousFrame = 0;
+  let lastSavedAt = 0;
+  let lastSavedX = player.position.x;
+  let lastSavedZ = player.position.z;
+  let statePositionRef = gameState?.worldPosition;
+  let guardianType = '';
+  let wasExploring = false;
+  let renderedWidth = 0;
+  let renderedHeight = 0;
+
+  function getPlayerPosition() {
+    return { x: player.position.x, z: player.position.z };
+  }
+
+  function savePosition(force = false) {
+    if (!gameState || typeof saveGame !== 'function' || gameState.phase === 'start') return;
+    const { x, z } = getPlayerPosition();
+    if (Math.hypot(x - lastSavedX, z - lastSavedZ) < 0.15) return;
+    const now = performance.now();
+    if (!force && now - lastSavedAt < 1500) return;
+    gameState.worldPosition = { x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100 };
+    statePositionRef = gameState.worldPosition;
+    saveGame(gameState);
+    lastSavedAt = now;
+    lastSavedX = x;
+    lastSavedZ = z;
+  }
+
+  function syncSavedPosition() {
+    if (!gameState || gameState.worldPosition === statePositionRef) return false;
+    statePositionRef = gameState.worldPosition;
+    const x = Number(statePositionRef?.x);
+    const z = Number(statePositionRef?.z);
+    if (!Number.isFinite(x) || !Number.isFinite(z) || !walkable(x, z)) return false;
+    player.position.set(x, LAND_HEIGHT, z);
+    camera.position.copy(player.position).add(CAMERA_OFFSET);
+    cameraTarget.copy(player.position).add(CAMERA_LOOK_AHEAD);
+    camera.lookAt(cameraTarget);
+    lastSavedX = x;
+    lastSavedZ = z;
+    heldKeys.clear();
+    return true;
+  }
+
+  function updateGuardianAppearance() {
+    const selection = gameState?.selectedGuardian || '';
+    if (selection === guardianType) return false;
+    guardianType = selection;
+    const primary = /jellyfish/i.test(selection) ? 0xb994d5
+      : /manta/i.test(selection) ? 0x365d75
+      : /shark/i.test(selection) ? 0x4a8292 : 0x987a61;
+    guardian.armour.color.setHex(primary);
+    guardian.cloak.color.setHex(primary).multiplyScalar(0.72);
+    return true;
+  }
+
+  function canExplore() {
+    if (document.hidden || gameState?.phase !== 'exploring') return false;
+    if (document.getElementById('ui-container')?.style.visibility !== 'visible') return false;
+    return !panels.some((panel) => {
+      const style = window.getComputedStyle(panel);
+      return style.display !== 'none' && style.visibility !== 'hidden';
+    });
+  }
+
+  function nearestTarget() {
+    let nearest = null;
+    let shortest = Infinity;
+    for (const target of targets) {
+      const distance = Math.hypot(player.position.x - target.x, player.position.z - target.z);
+      if (distance <= target.radius && distance < shortest) {
+        nearest = target;
+        shortest = distance;
+      }
+    }
+    return nearest;
+  }
+
+  function updatePrompt(canMove) {
+    if (!interactionPrompt) return;
+    const target = canMove ? nearestTarget() : null;
+    const display = target ? 'block' : 'none';
+    if (interactionPrompt.style.display !== display) interactionPrompt.style.display = display;
+    if (target && interactionPrompt.textContent !== target.label) {
+      interactionPrompt.textContent = target.label;
+    }
+  }
+
+  function isEditingText(element) {
+    return element instanceof Element && Boolean(
+      element.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')
+    );
+  }
+
+  function onKeyDown(event) {
+    if (!movementCodes.has(event.code) && event.code !== 'KeyE') return;
+    if (!canExplore() || isEditingText(event.target) || isEditingText(document.activeElement)) return;
+    event.preventDefault();
+    if (event.code === 'KeyE') {
+      if (!event.repeat) nearestTarget()?.interact();
+    } else {
+      heldKeys.add(event.code);
+    }
+  }
+
+  function onKeyUp(event) {
+    heldKeys.delete(event.code);
+  }
+
+  function onBlur() {
+    heldKeys.clear();
+    savePosition(true);
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) onBlur();
+  }
+
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  window.addEventListener('blur', onBlur);
+  window.addEventListener('pagehide', onBlur);
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
   renderer.domElement.addEventListener('pointerdown', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.set(
@@ -350,14 +611,26 @@ export function mountKokuraVillage(container, game) {
     if (raycaster.intersectObject(gateTarget).length) visitElder();
   });
 
-  let resizeObserver;
-  let showingFallback = false;
+  function stopControls() {
+    cancelAnimationFrame(frameId);
+    heldKeys.clear();
+    window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keyup', onKeyUp);
+    window.removeEventListener('blur', onBlur);
+    window.removeEventListener('pagehide', onBlur);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    if (interactionPrompt) interactionPrompt.style.display = 'none';
+  }
+
   function showFallback() {
     if (showingFallback) return;
     showingFallback = true;
+    savePosition(true);
+    stopControls();
     resizeObserver?.disconnect();
     renderer.domElement.remove();
     renderer.dispose();
+    if (controlsInfo) controlsInfo.textContent = fallbackControls;
     mountFallbackVillage(container, visitElder);
   }
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
@@ -371,18 +644,71 @@ export function mountKokuraVillage(container, game) {
     const height = container.clientHeight;
     if (!width || !height) return;
     try {
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+      if (width !== renderedWidth || height !== renderedHeight) {
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderedWidth = width;
+        renderedHeight = height;
+      }
       renderer.render(scene, camera);
     } catch (error) {
       console.warn('WebGL village render failed; showing the illustrated village.', error);
       showFallback();
     }
   }
+
+  function tick(time) {
+    if (showingFallback) return;
+    const delta = previousFrame ? Math.min((time - previousFrame) / 1000, 0.05) : 0;
+    previousFrame = time;
+    const positionChanged = syncSavedPosition();
+    let changed = updateGuardianAppearance() || positionChanged;
+    const exploring = canExplore();
+    if (!exploring) {
+      heldKeys.clear();
+      if (wasExploring) savePosition(true);
+    }
+    wasExploring = exploring;
+    if (exploring && heldKeys.size && delta > 0) {
+      const xDirection = Number(heldKeys.has('KeyD') || heldKeys.has('ArrowRight')) -
+        Number(heldKeys.has('KeyA') || heldKeys.has('ArrowLeft'));
+      const zDirection = Number(heldKeys.has('KeyS') || heldKeys.has('ArrowDown')) -
+        Number(heldKeys.has('KeyW') || heldKeys.has('ArrowUp'));
+      const length = Math.hypot(xDirection, zDirection);
+      if (length) {
+        const previousX = player.position.x;
+        const previousZ = player.position.z;
+        const stepX = xDirection / length * WALK_SPEED * delta;
+        const stepZ = zDirection / length * WALK_SPEED * delta;
+        if (walkable(player.position.x + stepX, player.position.z)) player.position.x += stepX;
+        if (walkable(player.position.x, player.position.z + stepZ)) player.position.z += stepZ;
+        if (player.position.x !== previousX || player.position.z !== previousZ) {
+          player.rotation.y = Math.atan2(-stepX, -stepZ);
+          changed = true;
+          savePosition();
+        }
+      }
+    }
+    const desiredCamera = player.position.clone().add(CAMERA_OFFSET);
+    const desiredTarget = player.position.clone().add(CAMERA_LOOK_AHEAD);
+    if (changed || camera.position.distanceToSquared(desiredCamera) > 0.0001 ||
+      cameraTarget.distanceToSquared(desiredTarget) > 0.0001) {
+      const smoothing = 1 - Math.exp(-8 * delta);
+      camera.position.lerp(desiredCamera, smoothing);
+      cameraTarget.lerp(desiredTarget, smoothing);
+      camera.lookAt(cameraTarget);
+      render();
+    }
+    updatePrompt(exploring);
+    frameId = requestAnimationFrame(tick);
+  }
+
   resizeObserver = new ResizeObserver(render);
   resizeObserver.observe(container);
+  updateGuardianAppearance();
   render();
+  if (!showingFallback) frameId = requestAnimationFrame(tick);
 
-  return { scene, camera, renderer, gate };
+  return { scene, camera, renderer, gate, player, getPlayerPosition };
 }

@@ -15,9 +15,11 @@ test('createInitialState returns isolated mutable collections', () => {
 
   first.inventory.push({ name: 'Test Item', slot: 'weapon' });
   first.prewrite.focus.goal = 'changed';
+  first.worldPosition.z = 9;
 
   assert.equal(second.inventory.length, 0);
   assert.equal(second.prewrite.focus.goal, '');
+  assert.deepEqual(second.worldPosition, { x: 0, z: 24 });
 });
 
 test('normaliseState upgrades legacy state while preserving progress', () => {
@@ -37,6 +39,14 @@ test('normaliseState upgrades legacy state while preserving progress', () => {
   assert.equal(state.inventory.length, 1);
   assert.equal(state.equipment.weapon, 'Shrine Key');
   assert.equal(state.equipment.head, '');
+  assert.deepEqual(state.worldPosition, { x: 0, z: 24 });
+});
+
+test('normaliseState preserves a valid village position and replaces corrupt coordinates', () => {
+  assert.deepEqual(normaliseState({ worldPosition: { x: 5, z: -7 } }).worldPosition,
+    { x: 5, z: -7 });
+  assert.deepEqual(normaliseState({ worldPosition: { x: Infinity, z: 'far away' } }).worldPosition,
+    { x: 0, z: 24 });
 });
 
 test('editing a completed chapter isolates the opening and preserves battle lines', () => {

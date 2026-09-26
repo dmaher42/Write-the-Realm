@@ -45,13 +45,13 @@ function boot() {
     controller,
   });
 
-  // KokuraVillageScene reads this API after the main module has initialised.
   // All modules extend the same controller and shared state.
   window.gameAPI = controller.gameApi;
-  window.writeTheRealm = { ...controller, combat, teacher };
-
   const villageRoot = document.getElementById('kokura-root');
-  if (villageRoot) mountKokuraVillage(villageRoot, controller.gameApi);
+  const world = villageRoot
+    ? mountKokuraVillage(villageRoot, controller.gameApi, { gameState, saveGame })
+    : null;
+  window.writeTheRealm = { ...controller, combat, teacher, world };
 }
 
 if (document.readyState === 'loading') {

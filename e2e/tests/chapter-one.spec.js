@@ -18,11 +18,23 @@ async function resetApplication(page) {
   await page.waitForFunction(() => Boolean(window.writeTheRealm));
 }
 
-async function beginJourney(page) {
+async function beginJourney(page, { walkToElder = false } = {}) {
   await page.getByRole('button', { name: 'Forge New Legend' }).click();
   await page.locator('[data-type="Shark Guardian"]').click();
   await page.locator('[data-domain="Coral Reef"]').click();
   await page.getByRole('button', { name: 'Begin Your Legend' }).click();
+  await expect(page.locator('#dialogue-box')).toBeHidden();
+  if (walkToElder) {
+    await page.keyboard.down('w');
+    try {
+      await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
+    } finally {
+      await page.keyboard.up('w');
+    }
+    await page.keyboard.press('e');
+  } else {
+    await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  }
   await expect(page.locator('#dialogue-box')).toBeVisible();
 }
 
@@ -36,7 +48,7 @@ async function completePlan(page, sentence = 'I charge through the poisonous fog
 }
 
 async function reachVictory(page) {
-  await beginJourney(page);
+  await beginJourney(page, { walkToElder: true });
   await completePlan(page);
 
   await page.locator('#writing-input').fill(opening);
@@ -78,6 +90,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a student can finish Chapter 1, save, refresh and continue', async ({ page }) => {
+  await page.setViewportSize({ width: 1096, height: 627 });
   await reachVictory(page);
   await page.locator('#combat-submit-btn').click();
 
@@ -133,10 +146,12 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await expect(page.locator('#village-place-keep')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#village-place-text')).toContainText(/keep/i);
 
+  await expect(page.getByRole('button', { name: 'Visit the Village Elder' })).toBeHidden();
+  await page.locator('#village-close').click();
+  await expect(page.locator('#village-hub')).toBeHidden();
   await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
   await expect(page.locator('#village-hub')).toBeVisible();
   await page.locator('#village-close').click();
-  await expect(page.locator('#village-hub')).toBeHidden();
 
   await page.locator('#save-game-btn').click();
   await expect(page.locator('#message-box')).toBeVisible();
