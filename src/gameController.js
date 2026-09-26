@@ -256,6 +256,7 @@ export function initGameController({
     villageReadJournal: document.getElementById('village-read-journal'),
     villageClose: document.getElementById('village-close'),
     villageGateAction: document.getElementById('village-gate-action'),
+    beaconTravelAction: document.getElementById('beacon-travel-action'),
     prewritePanel: document.getElementById('prewrite-battle'),
     preActionBank: document.getElementById('pre-action-bank'),
     focusWho: document.getElementById('focus-who'),
@@ -385,6 +386,12 @@ export function initGameController({
 
   function renderHud() {
     const guardianName = gameState.selectedGuardian || 'Guardian';
+    const beaconLit = gameState.completedQuests.includes(CHAPTER_ONE_ID);
+    document.body.classList.toggle('beacon-lit', beaconLit);
+    if (elements.beaconTravelAction) {
+      elements.beaconTravelAction.hidden =
+        gameState.phase !== 'exploring' || gameState.activeQuest?.status !== 'travel';
+    }
     if (elements.playerLevelInfo) {
       elements.playerLevelInfo.textContent = `Level ${gameState.player.level} ${guardianName}`;
     }
@@ -533,7 +540,7 @@ export function initGameController({
     if (elements.dialogueText) {
       elements.dialogueText.textContent =
         `${gameState.selectedGuardian}, the signal above Kokura has gone dark. ` +
-        'Plan your route to the broken beacon, then write the opening of your legend.';
+        'Follow the path past the Keep to the broken beacon. Your writing will restore its light.';
     }
     if (elements.dialogueButton) {
       elements.dialogueButton.textContent = 'Accept Chapter 1';
@@ -607,13 +614,31 @@ export function initGameController({
       gameState.activeQuest = {
         id: CHAPTER_ONE_ID,
         title: 'Chapter 1: The Broken Beacon',
-        objective: 'Plan a strong action sentence before writing the opening scene.',
-        status: 'prewrite',
+        objective: 'Walk past Kokura Keep to the broken beacon and press E.',
+        status: 'travel',
         rewardClaimed: false,
         journalEntryId: null,
       };
     }
+    gameState.phase = 'exploring';
+    persist();
+    renderHud();
+    hideFlowPanels();
+    (document.querySelector('#kokura-root canvas') || elements.beaconTravelAction)?.focus();
+  }
+
+  function visitBeacon() {
+    if (gameState.completedQuests.includes(CHAPTER_ONE_ID)) {
+      showMessage('The beacon shines over Kokura. Your story is saved in the journal.');
+      return;
+    }
+    if (gameState.activeQuest?.status !== 'travel') {
+      showMessage('The beacon is dark. Speak to the Village Elder by the gate first.');
+      return;
+    }
     gameState.phase = 'prewrite';
+    gameState.activeQuest.status = 'prewrite';
+    gameState.activeQuest.objective = 'Plan a strong action sentence at the beacon.';
     if (!gameState.prewrite.focus.goal) createFocus();
     persist();
     renderHud();
@@ -989,7 +1014,9 @@ export function initGameController({
         break;
       default:
         hideFlowPanels();
-        showInteractionHint('Move with WASD or arrow keys. Press E near a place to interact.');
+        showInteractionHint(gameState.activeQuest?.status === 'travel'
+          ? 'Follow the path past Kokura Keep to the beacon. Press E when you arrive.'
+          : 'Move with WASD or arrow keys. Press E near a place to interact.');
         break;
     }
   }
@@ -1013,6 +1040,10 @@ export function initGameController({
         showWriting();
         return;
       }
+      if (gameState.activeQuest?.status === 'travel') {
+        showMessage('Follow the path past Kokura Keep to the beacon. Press E when you arrive.');
+        return;
+      }
       if (gameState.activeQuest) {
         gameState.phase = 'prewrite';
         showPrewrite();
@@ -1027,6 +1058,8 @@ export function initGameController({
       const place = villagePlaces.find((candidate) => candidate.id === placeId);
       if (place) openVillageHub({ place });
     },
+
+    visitBeacon,
 
     grantLoot(itemName) {
       const item = {
@@ -1109,6 +1142,7 @@ export function initGameController({
     elements.closeJournalBtn?.focus();
   });
   elements.villageClose?.addEventListener('click', closeVillageHub);
+  elements.beaconTravelAction?.addEventListener('click', visitBeacon);
   elements.dialogueClose?.addEventListener('click', closeElderDialogue);
   elements.dialogueBox?.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {

@@ -12,10 +12,13 @@ const SHORE_RADIUS = 26.4;
 const PLAYER_RADIUS = 0.58;
 const CAMERA_OFFSET = new THREE.Vector3(0, 21, 23);
 const CAMERA_LOOK_AHEAD = new THREE.Vector3(0, 1.2, -3.5);
+const BEACON_X = 6;
+const BEACON_Z = -20;
+const CHAPTER_ONE_ID = 'chapter-one-broken-beacon';
 const TREE_POSITIONS = [
   [-20, 16, 1.1, 0], [-21, 4, 0.95, 1], [-19, -15, 1.1, 2],
   [19, 15, 1.15, 1], [21, 1, 0.9, 0], [19, -18, 1.05, 2],
-  [-5, -23, 1, 0], [6, -23, 1.15, 1], [-13, 20, 0.75, 2],
+  [-5, -23, 1, 0], [11, -23, 1.15, 1], [-13, 20, 0.75, 2],
   [14, 21, 0.8, 0],
 ];
 const LANTERN_POSITIONS = [[-4.2, 17], [4.2, 17], [-4.1, -2], [4.1, -2]];
@@ -25,6 +28,7 @@ const BUILDING_FOOTPRINTS = [
   { x: 11, z: 9, halfWidth: 2.4, halfDepth: 2.2 },
   { x: -12, z: -12, halfWidth: 3.7, halfDepth: 2.8 },
   { x: 12, z: -12, halfWidth: 3.1, halfDepth: 4.4 },
+  { x: BEACON_X, z: BEACON_Z, halfWidth: 1.25, halfDepth: 1.25 },
   { x: -2.7, z: 20, halfWidth: 0.55, halfDepth: 0.6 },
   { x: 2.7, z: 20, halfWidth: 0.55, halfDepth: 0.6 },
 ];
@@ -85,6 +89,7 @@ function addLantern(scene, x, z) {
   cap.rotation.y = Math.PI / 4;
   cap.position.set(x, LAND_HEIGHT + 3.36, z);
   scene.add(cap);
+  return lamp;
 }
 
 function addGate(scene) {
@@ -198,6 +203,70 @@ function addVisitMarker(scene, x, z) {
   scene.add(ring);
 }
 
+function addBeacon(scene, villageLamps) {
+  const group = new THREE.Group();
+  group.name = 'Broken Beacon';
+  group.position.set(BEACON_X, LAND_HEIGHT, BEACON_Z);
+  const base = makeMesh(new THREE.CylinderGeometry(1.9, 2.2, 0.55, 8), colours.stone);
+  base.position.y = 0.28;
+  group.add(base);
+  const tower = makeMesh(new THREE.CylinderGeometry(1.08, 1.55, 6.2, 8), 0xd0c2a4);
+  tower.position.y = 3.35;
+  group.add(tower);
+  for (const height of [1.2, 3.5, 6.25]) {
+    const band = makeMesh(new THREE.CylinderGeometry(1.25, 1.25, 0.24, 8), 0x726e63);
+    band.position.y = height;
+    group.add(band);
+  }
+  const lantern = makeMesh(new THREE.CylinderGeometry(0.86, 0.86, 1.45, 8), 0x5b6770, {
+    emissive: 0xffc35f, emissiveIntensity: 0.04,
+  });
+  lantern.name = 'Beacon Lantern';
+  lantern.position.y = 7.1;
+  group.add(lantern);
+  const roof = makeMesh(new THREE.ConeGeometry(1.25, 1.25, 8), 0x40535a);
+  roof.position.y = 8.35;
+  group.add(roof);
+  const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(1.5, 12, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffd475, transparent: true, opacity: 0.28, depthWrite: false })
+  );
+  glow.position.y = 7.1;
+  group.add(glow);
+  const beam = new THREE.Mesh(
+    new THREE.ConeGeometry(2.9, 9, 12, 1, true),
+    new THREE.MeshBasicMaterial({
+      color: 0xffe7aa, transparent: true, opacity: 0.15,
+      depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+    })
+  );
+  beam.rotation.x = Math.PI;
+  beam.position.y = 12.1;
+  group.add(beam);
+  const light = new THREE.PointLight(0xffd27a, 0, 18);
+  light.position.y = 7.1;
+  group.add(light);
+  scene.add(group);
+
+  let lit = false;
+  group.userData.lit = false;
+  function setLit(next) {
+    if (lit === next) return false;
+    lit = next;
+    group.userData.lit = lit;
+    lantern.material.color.setHex(lit ? 0xffe6a5 : 0x5b6770);
+    lantern.material.emissiveIntensity = lit ? 2.8 : 0.04;
+    glow.visible = lit;
+    beam.visible = lit;
+    light.intensity = lit ? 15 : 0;
+    for (const lamp of villageLamps) lamp.material.emissiveIntensity = lit ? 1.4 : 0.35;
+    return true;
+  }
+  glow.visible = false;
+  beam.visible = false;
+  return { group, setLit };
+}
+
 function walkable(x, z) {
   if (Math.hypot(x, z) > SHORE_RADIUS) return false;
   if (BUILDING_FOOTPRINTS.some((building) =>
@@ -286,6 +355,13 @@ function mountFallbackVillage(container, visitElder) {
       ${tree(1024, 461, 1.1)}${tree(963, 577, .79)}${tree(862, 644, .82)}
       ${tree(343, 631, .82)}${tree(250, 551, .74)}
     </g>
+    <g data-fallback-beacon transform="translate(745 295)">
+      <circle data-beacon-glow cy="-91" r="36" fill="#ffe28c"/>
+      <path d="M-27 14V-72l8-12h38l8 12v86Z" fill="#cbbd9d" stroke="#6f6c62" stroke-width="4"/>
+      <path d="M-33-68h66v10h-66zm7 35h52v9h-52Z" fill="#777366"/>
+      <path data-beacon-glass d="M-18-104h36v25h-36Z" fill="#607078" stroke="#4d5e62" stroke-width="3"/>
+      <path d="M-30-105 0-128l30 23Z" fill="#43575e"/>
+    </g>
     <g transform="translate(600 356)">
       <ellipse cy="35" rx="114" ry="27" fill="#52775b" opacity=".28"/>
       <path d="M-85-51 0-79 86-51V21L0 48-85 21Z" fill="#d8c29a" stroke="#766954" stroke-width="4"/>
@@ -345,9 +421,12 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   const controlsInfo = document.getElementById('controls-info');
   const interactionPrompt = document.getElementById('world-interaction-prompt');
   const gateButton = document.getElementById('village-gate-action');
-  const fallbackControls = 'Click the Elder’s Gate or use the Visit the Village Elder button.';
+  const fallbackControls = 'Use the Elder button. After accepting, use Begin at the Broken Beacon.';
   function visitElder() {
     game?.openQuest?.('The Broken Beacon');
+  }
+  function visitBeacon() {
+    game?.visitBeacon?.();
   }
   gateButton?.addEventListener('click', visitElder);
 
@@ -356,16 +435,19 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
   } catch (error) {
     console.warn('WebGL village unavailable; showing the illustrated village.', error);
+    document.body.classList.add('village-fallback');
     if (controlsInfo) controlsInfo.textContent = fallbackControls;
     return mountFallbackVillage(container, visitElder);
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.domElement.tabIndex = 0;
+  renderer.domElement.setAttribute('aria-label', 'Kokura village 3D world');
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
   if (controlsInfo) {
-    controlsInfo.textContent = 'WASD or arrow keys to walk · E to talk or visit · Click the Elder’s Gate';
+    controlsInfo.textContent = 'WASD or arrows to walk · E to interact · Follow the path past the Keep to the beacon';
   }
 
   const scene = new THREE.Scene();
@@ -411,6 +493,12 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   const keepPath = makeMesh(new THREE.BoxGeometry(3.6, 0.07, 13), colours.path);
   keepPath.position.set(0, LAND_HEIGHT + 0.07, -6);
   scene.add(keepPath);
+  const beaconPath = makeMesh(new THREE.BoxGeometry(2.8, 0.07, 21), colours.path);
+  beaconPath.position.set(BEACON_X, LAND_HEIGHT + 0.07, -9);
+  scene.add(beaconPath);
+  const beaconPathLink = makeMesh(new THREE.BoxGeometry(8, 0.07, 2.8), colours.path);
+  beaconPathLink.position.set(3, LAND_HEIGHT + 0.07, 2);
+  scene.add(beaconPathLink);
 
   const keep = createLordHouse();
   keep.position.set(0, LAND_HEIGHT, -8);
@@ -430,11 +518,11 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
 
   TREE_POSITIONS.forEach(([x, z, scale, shade]) => addTree(scene, x, z, scale, shade));
 
-  for (const [x, z] of LANTERN_POSITIONS) {
-    addLantern(scene, x, z);
-  }
+  const villageLamps = LANTERN_POSITIONS.map(([x, z]) => addLantern(scene, x, z));
 
   const gate = addGate(scene);
+  const beacon = addBeacon(scene, villageLamps);
+  beacon.setLit(Boolean(gameState?.completedQuests?.includes(CHAPTER_ONE_ID)));
   createVillageElder(scene);
   const guardian = createGuardian();
   const player = guardian.group;
@@ -456,8 +544,10 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
     { x: -12, z: -7.8, radius: 3.4, label: 'Press E to visit the Market Garden', interact: () => game?.visitVillagePlace?.('market') },
     { x: 12, z: -6.2, radius: 3.4, label: 'Press E to visit the Harbour Chapel', interact: () => game?.visitVillagePlace?.('chapel') },
     { x: 0, z: -2.7, radius: 3.4, label: 'Press E to visit Kokura Keep', interact: () => game?.visitVillagePlace?.('keep') },
+    { x: BEACON_X, z: BEACON_Z, radius: 4, label: 'Press E at the Broken Beacon', interact: visitBeacon },
   ];
-  targets.slice(1).forEach(({ x, z }) => addVisitMarker(scene, x, z));
+  targets.slice(1, -1).forEach(({ x, z }) => addVisitMarker(scene, x, z));
+  addVisitMarker(scene, BEACON_X, BEACON_Z + 3.1);
   const gateTarget = new THREE.Mesh(
     new THREE.BoxGeometry(7, 6, 2.5),
     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
@@ -638,6 +728,7 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   function showFallback() {
     if (showingFallback) return;
     showingFallback = true;
+    document.body.classList.add('village-fallback');
     savePosition(true);
     stopControls();
     resizeObserver?.disconnect();
@@ -678,7 +769,9 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
     const delta = previousFrame ? Math.min((time - previousFrame) / 1000, 0.25) : 0;
     previousFrame = time;
     const positionChanged = syncSavedPosition();
-    let changed = updateGuardianAppearance() || positionChanged;
+    const appearanceChanged = updateGuardianAppearance();
+    const beaconChanged = beacon.setLit(Boolean(gameState?.completedQuests?.includes(CHAPTER_ONE_ID)));
+    let changed = appearanceChanged || positionChanged || beaconChanged;
     const exploring = canExplore();
     if (!exploring) {
       heldKeys.clear();
@@ -728,5 +821,5 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   render();
   if (!showingFallback) frameId = requestAnimationFrame(tick);
 
-  return { scene, camera, renderer, gate, player, getPlayerPosition };
+  return { scene, camera, renderer, gate, beacon: beacon.group, player, getPlayerPosition };
 }
