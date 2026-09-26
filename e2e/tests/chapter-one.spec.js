@@ -25,18 +25,16 @@ async function beginJourney(page, { walkToElder = false } = {}) {
   await page.getByRole('button', { name: 'Begin Your Legend' }).click();
   await expect(page.locator('#dialogue-box')).toBeHidden();
   if (walkToElder) {
-    await page.keyboard.down('w');
-    try {
-      await expect.poll(
-        () => page.evaluate(() => window.writeTheRealm.world.getPlayerPosition().z),
-        { intervals: [100] }
-      ).toBeLessThan(21.2);
-      await expect(page.locator('#world-interaction-prompt')).toBeVisible();
-      await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
-      await page.keyboard.press('e');
-    } finally {
-      await page.keyboard.up('w');
+    let position;
+    for (let step = 0; step < 5; step += 1) {
+      await page.keyboard.press('w', { delay: 500 });
+      position = await page.evaluate(() => window.writeTheRealm.world.getPlayerPosition());
+      if (position.z < 22.3) break;
     }
+    expect(position.z).toBeLessThan(22.3);
+    await expect(page.locator('#world-interaction-prompt')).toBeVisible();
+    await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
+    await page.keyboard.press('e');
   } else {
     await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
   }

@@ -496,7 +496,7 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   function savePosition(force = false) {
     if (!gameState || typeof saveGame !== 'function' || gameState.phase === 'start') return;
     const { x, z } = getPlayerPosition();
-    if (Math.hypot(x - lastSavedX, z - lastSavedZ) < 0.15) return;
+    if (!force && Math.hypot(x - lastSavedX, z - lastSavedZ) < 0.15) return;
     const now = performance.now();
     if (!force && now - lastSavedAt < 1500) return;
     gameState.worldPosition = { x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100 };
