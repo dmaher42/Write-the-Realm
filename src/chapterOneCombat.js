@@ -1,5 +1,8 @@
 const CHAPTER_ONE_ID = 'chapter-one-broken-beacon';
+// The base strikes defeat the creature in three valid turns. Optional craft
+// makes a strike stronger without making a student's progress depend on it.
 const COMBAT_TURN_DAMAGE = [30, 30, 40];
+const CRAFT_BONUS_PER_FEATURE = 2;
 
 export const COMBAT_ROUNDS = [
   {
@@ -139,8 +142,27 @@ function containsWord(text, words) {
 }
 
 function containsSimile(text) {
-  return /\blike\s+(?:a|an|the|my|your|his|her|its|[a-z])/i.test(text)
-    || /\bas\b[^.!?]{1,70}\bas\b/i.test(text);
+  // These are writing cues, not a claim to understand the student's meaning.
+  // In particular, "I like a ..." describes preference, not a comparison.
+  const likePattern = /\blike\s+(?!(?:to|this|that|i|we|you|he|she|they|it)\b)(?:(?:a|an|the|my|your|his|her|its)\s+)?[a-z][a-z'-]*/gi;
+  for (const match of text.matchAll(likePattern)) {
+    const before = text.slice(Math.max(0, match.index - 32), match.index);
+    const expressingPreference = /\b(?:i|we|you|they|he|she)\s+(?:(?:(?:do|does|did|would|will|could|might|should|can)(?:n['’]t)?|cannot|won['’]t|not|never|really|still|just|even)\s+){0,4}$/i.test(before);
+    if (!expressingPreference) {
+      return true;
+    }
+  }
+  return /\bas\s+(?!(?:soon|long|far|well|much|many)\b)(?:[a-z][a-z'-]*\s+){1,4}as\s+(?:(?:a|an|the|my|your|his|her|its)\s+)?[a-z]/i.test(text);
+}
+
+function hasRepeatedWordPadding(text) {
+  const words = String(text || '').toLowerCase().match(/[a-z]+(?:['’][a-z]+)*/g) || [];
+  const counts = new Map();
+  for (const word of words) {
+    if (word.length < 4) continue;
+    counts.set(word, (counts.get(word) || 0) + 1);
+  }
+  return [...counts.values()].some((count) => count >= 4 && count >= Math.ceil(words.length * 0.75));
 }
 
 function hashText(text) {
@@ -240,6 +262,18 @@ export function assessCombatResponse(text, roundIndex, { specialArmed = false } 
     };
   }
 
+  if (hasRepeatedWordPadding(response)) {
+    return {
+      valid: false,
+      message: 'Try adding new details instead of repeating the same word.',
+      quality: 0,
+      wordCount,
+      hasAction,
+      hasSensory,
+      hasSimile,
+    };
+  }
+
   if (round.requirement === 'action' && !hasAction) {
     return {
       valid: false,
@@ -276,23 +310,32 @@ export function assessCombatResponse(text, roundIndex, { specialArmed = false } 
     };
   }
 
-  const quality = [
-    wordCount >= round.minimumWords + 5,
-    hasAction,
-    hasSensory,
-    hasSimile,
-  ].filter(Boolean).length;
-
-  const strengths = [];
-  if (hasAction) strengths.push('strong action');
-  if (hasSensory) strengths.push('sensory detail');
-  if (hasSimile) strengths.push('figurative language');
+  const detected = { action: hasAction, sensory: hasSensory, simile: hasSimile };
+  const optionalFeatures = Object.entries(detected)
+    .filter(([feature, present]) => feature !== round.requirement && present)
+    .map(([feature]) => feature);
+  const craftBonus = optionalFeatures.length * CRAFT_BONUS_PER_FEATURE;
+  const quality = 1 + optionalFeatures.length;
+  const requiredStrength = {
+    action: 'You used an action word to move the hero through the scene.',
+    sensory: 'You included a sensory detail to bring the moment to life.',
+    simile: 'You used a comparison with “like” or “as … as” for the final move.',
+  };
+  const strength = requiredStrength[round.requirement];
+  const nextStep = !hasSensory
+    ? 'In a revision, add a sound, sight or physical sensation from the scene.'
+    : !hasAction
+      ? 'In a revision, give the hero a more precise action word.'
+      : !hasSimile
+        ? 'In a revision, compare a movement with something familiar using “like” or “as … as”.'
+        : 'In a revision, show how the creature reacts to the hero’s move.';
 
   return {
     valid: true,
-    message: strengths.length
-      ? `Successful turn: ${strengths.join(', ')}.`
-      : 'Successful turn: the action is clear.',
+    message: `Successful turn: ${strength} Next step: ${nextStep}`,
+    strength,
+    nextStep,
+    craftBonus,
     quality,
     wordCount,
     hasAction,
@@ -315,10 +358,11 @@ export function resolveCombatTurn(combat, text, { specialArmed = false } = {}) {
   const roundIndex = current.turn;
   const assessment = assessCombatResponse(text, roundIndex, { specialArmed });
   if (!assessment.valid) {
+    current.currentDraft = String(text || '');
     return { combat: current, assessment, completed: false };
   }
 
-  const damage = COMBAT_TURN_DAMAGE[roundIndex] || 0;
+  const damage = (COMBAT_TURN_DAMAGE[roundIndex] || 0) + assessment.craftBonus;
   const retaliation = roundIndex < COMBAT_ROUNDS.length - 1
     ? Math.max(4, 14 - (assessment.quality * 2) - (assessment.usedSpecial ? 4 : 0))
     : 0;
@@ -330,6 +374,9 @@ export function resolveCombatTurn(combat, text, { specialArmed = false } = {}) {
     title: COMBAT_ROUNDS[roundIndex].title,
     text: String(text || '').trim(),
     feedback: assessment.message,
+    strength: assessment.strength,
+    nextStep: assessment.nextStep,
+    craftBonus: assessment.craftBonus,
     damage,
     retaliation,
     usedSpecial: assessment.usedSpecial,
@@ -399,6 +446,8 @@ export function initChapterOneCombat({
     enemyHealthBar: document.getElementById('enemy-health-bar'),
     combatLog: document.getElementById('combat-log'),
     combatPrompt: document.getElementById('combat-prompt'),
+    combatFeedback: document.getElementById('combat-feedback'),
+    interactPrompt: document.getElementById('interact-prompt'),
     combatInput: document.getElementById('combat-writing-input'),
     combatSubmitBtn: document.getElementById('combat-submit-btn'),
     specialMoveBtn: document.getElementById('special-move-btn'),
@@ -518,6 +567,7 @@ export function initChapterOneCombat({
   function showMonsterReveal() {
     const combat = gameState.combat;
     if (!combat?.monster) return;
+    setVisible(elements.interactPrompt, false);
     hideBaseFlowPanels();
     setVisible(elements.combatPanel, false);
     if (elements.monsterName) elements.monsterName.textContent = combat.monster.name;
@@ -563,9 +613,12 @@ export function initChapterOneCombat({
       elements.combatLog.appendChild(
         createLogEntry(`Turn ${response.turn}: ${response.text}`, 'mt-2')
       );
+      const boost = response.craftBonus > 0
+        ? ` (+${response.craftBonus} from extra writing craft)`
+        : '';
       const result = response.retaliation > 0
-        ? `${response.feedback} You dealt ${response.damage} damage; the creature dealt ${response.retaliation}.`
-        : `${response.feedback} Final strike: ${response.damage} damage.`;
+        ? `${response.feedback} Your strike had ${response.damage} power${boost}; the creature dealt ${response.retaliation} damage.`
+        : `${response.feedback} Final strike: ${response.damage} power${boost}.`;
       elements.combatLog.appendChild(createLogEntry(result, 'text-sm'));
       if (response.usedSpecial) {
         elements.combatLog.appendChild(
@@ -574,7 +627,8 @@ export function initChapterOneCombat({
       }
     });
 
-    if (combat.feedback && combat.status === 'active') {
+    if (combat.feedback && combat.status === 'active'
+      && combat.feedback !== combat.responses.at(-1)?.feedback) {
       elements.combatLog.appendChild(
         createLogEntry(combat.feedback, combat.feedback.startsWith('Successful') ? 'feedback-success' : 'feedback-error')
       );
@@ -582,15 +636,28 @@ export function initChapterOneCombat({
     elements.combatLog.scrollTop = elements.combatLog.scrollHeight;
   }
 
+  function renderCombatFeedback(combat) {
+    if (!elements.combatFeedback) return;
+    const message = combat.feedback || '';
+    const isSuccess = combat.status === 'victory' || message.startsWith('Successful turn:');
+    const isError = message && !isSuccess && !message.startsWith('Simile Power');
+    elements.combatFeedback.className = `combat-feedback${isSuccess ? ' feedback-success' : ''}${isError ? ' feedback-error' : ''}`;
+    elements.combatFeedback.textContent = combat.status === 'victory'
+      ? `${message} Victory! Claim your reward.`
+      : message;
+  }
+
   function showCombat() {
     const combat = gameState.combat;
     if (!combat?.monster) return;
+    setVisible(elements.interactPrompt, false);
     hideBaseFlowPanels();
     setVisible(elements.monsterPanel, false);
     setVisible(elements.combatPanel, true);
     updateHealthBar(elements.playerHealthBar, combat.playerHealth);
     updateHealthBar(elements.enemyHealthBar, combat.enemyHealth);
     renderCombatLog(combat);
+    renderCombatFeedback(combat);
 
     const victory = combat.status === 'victory';
     if (elements.combatTitle) {
@@ -660,6 +727,7 @@ export function initChapterOneCombat({
     });
 
     if (!result.assessment.valid) {
+      gameState.combat = result.combat;
       gameState.combat.feedback = result.assessment.message;
       persist();
       showCombat();
@@ -758,6 +826,10 @@ export function initChapterOneCombat({
     if (!gameState.combat || gameState.combat.status !== 'active') return;
     gameState.combat.currentDraft = elements.combatInput.value;
     gameState.combat.feedback = '';
+    if (elements.combatFeedback) {
+      elements.combatFeedback.textContent = '';
+      elements.combatFeedback.className = 'combat-feedback';
+    }
     window.clearTimeout(draftSaveTimer);
     draftSaveTimer = window.setTimeout(() => persist(), 700);
   });

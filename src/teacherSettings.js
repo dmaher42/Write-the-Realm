@@ -192,12 +192,13 @@ function createStarterStrip(id, title, starters, target) {
   return strip;
 }
 
-export function initTeacherSettings({ gameState } = {}) {
+export function initTeacherSettings({ gameState, saveGame } = {}) {
   if (!gameState) throw new TypeError('Teacher settings require the shared game state.');
 
   installStyles();
   let settings = readStoredSettings();
   let applyQueued = false;
+  let inputToRestore = null;
 
   const elements = {
     questLogContent: document.getElementById('quest-log-content'),
@@ -213,6 +214,7 @@ export function initTeacherSettings({ gameState } = {}) {
     actionWordBank: document.getElementById('action-word-bank'),
     combatSubmit: document.getElementById('combat-submit-btn'),
     combatInput: document.getElementById('combat-writing-input'),
+    combatFeedback: document.getElementById('combat-feedback'),
     specialMove: document.getElementById('special-move-btn'),
     messageBox: document.getElementById('message-box'),
     messageText: document.getElementById('message-text'),
@@ -354,6 +356,18 @@ export function initTeacherSettings({ gameState } = {}) {
 
   function applySettings() {
     const preset = currentPreset();
+    if (!preset.allowSpecialMove && gameState.combat?.specialMoveArmed) {
+      gameState.combat.specialMoveArmed = false;
+      if (elements.combatInput) elements.combatInput.placeholder = 'Describe your action…';
+      if (gameState.combat.feedback?.startsWith('Simile Power armed')) {
+        gameState.combat.feedback = '';
+        if (elements.combatFeedback) {
+          elements.combatFeedback.textContent = '';
+          elements.combatFeedback.className = 'combat-feedback';
+        }
+      }
+      if (typeof saveGame === 'function') saveGame(gameState);
+    }
     setInlineDisplay(elements.writingTips, preset.showScaffolds);
     setInlineDisplay(elements.actionWordBank?.parentElement, preset.showScaffolds);
     setInlineDisplay(elements.preActionBank?.parentElement, preset.showScaffolds);
@@ -409,11 +423,27 @@ export function initTeacherSettings({ gameState } = {}) {
   function stopSubmission(event, message, input) {
     event.preventDefault();
     event.stopImmediatePropagation();
+    inputToRestore = input;
     showMessage(message);
-    input?.focus();
+    if (!elements.messageButton) input?.focus();
+  }
+
+  function restoreInputAfterMessage() {
+    const input = inputToRestore;
+    inputToRestore = null;
+    if (!input) return;
+    // The controller's click listener closes the alertdialog after this listener.
+    // Wait for the entire click dispatch before moving focus back to the field.
+    window.setTimeout(() => {
+      if (elements.messageBox?.style.display === 'none'
+        && input.isConnected && !input.disabled && input.getClientRects().length) {
+        input.focus();
+      }
+    }, 0);
   }
 
   teacherButton.addEventListener('click', openPanel);
+  elements.messageButton?.addEventListener('click', restoreInputAfterMessage);
   closeButton.addEventListener('click', closePanel);
   saveButton.addEventListener('click', savePanel);
   panel.addEventListener('change', (event) => {
@@ -461,12 +491,21 @@ export function initTeacherSettings({ gameState } = {}) {
     const combat = gameState.combat;
     if (!combat || combat.status !== 'active') return;
     const requirement = requirementsForPreset(settings, combat.turn);
-    const words = countWords(elements.combatInput?.value);
+    const draft = elements.combatInput?.value || '';
+    const words = countWords(draft);
     if (words >= requirement.combatMinimumWords) return;
 
+    const message = `${requirement.label} mode requires at least ${requirement.combatMinimumWords} words for this battle turn.`;
+    combat.currentDraft = draft;
+    combat.feedback = message;
+    if (elements.combatFeedback) {
+      elements.combatFeedback.textContent = message;
+      elements.combatFeedback.className = 'combat-feedback feedback-error';
+    }
+    if (typeof saveGame === 'function') saveGame(gameState);
     stopSubmission(
       event,
-      `${requirement.label} mode requires at least ${requirement.combatMinimumWords} words for this battle turn.`,
+      message,
       elements.combatInput
     );
   }, { capture: true });

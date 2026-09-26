@@ -164,17 +164,17 @@
             <div class="flex justify-center"><button id="dialogue-button">Accept Quest</button></div>
         </div>
 
-        <!-- A visit to Kokura after Chapter 1 is complete. -->
+        <!-- Village dialogue for the Elder and places reached on foot. -->
         <div id="village-hub" class="ui-panel" role="dialog" aria-labelledby="village-hub-heading">
             <h2 id="village-hub-heading">Kokura Village</h2>
             <p id="village-elder-thanks">The Village Elder thanks you for restoring the beacon. Its light has brought Kokura together again.</p>
-            <p class="mt-3">Where would you like to visit?</p>
-            <div class="village-place-choices" role="group" aria-label="Places in Kokura">
+            <p id="village-hub-question" class="mt-3">Explore on foot, or choose a place here.</p>
+            <div id="village-place-choices" class="village-place-choices" role="group" aria-label="Places in Kokura">
                 <button id="village-place-market" type="button" aria-pressed="false">Market Garden</button>
                 <button id="village-place-chapel" type="button" aria-pressed="false">Harbour Chapel</button>
                 <button id="village-place-keep" type="button" aria-pressed="false">Kokura Keep</button>
             </div>
-            <p id="village-place-text" class="village-place-text" role="status" aria-live="polite">Choose a place to hear what has changed in the village.</p>
+            <p id="village-place-text" class="village-place-text" role="status" aria-live="polite">Choose a place to learn about Kokura.</p>
             <div class="village-hub-actions">
                 <button id="village-read-journal" type="button">Read My Story</button>
                 <button id="village-close" type="button">Return to Village</button>
@@ -268,6 +268,7 @@
         <!-- Combat Panel -->
         <div id="combat-panel" class="ui-panel" role="dialog" aria-modal="true" aria-labelledby="combat-title">
             <h2 id="combat-title"></h2>
+            <p class="mt-2 text-sm">Meet each turn’s writing goal. Extra detail can strengthen your move.</p>
             <p class="mt-4">Your Health:</p>
             <div class="health-bar-container" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Player health">
                 <div id="player-health-bar" class="health-bar player"></div>
@@ -278,10 +279,12 @@
             </div>
             <div id="combat-log" class="mt-4"></div>
             <p id="combat-prompt" class="mt-4 font-bold"></p>
+            <label for="combat-writing-input" class="font-bold">Your battle line</label>
             <div class="flex gap-2 mt-2">
-                <input type="text" id="combat-writing-input" class="flex-grow" placeholder="Describe your action...">
+                <input type="text" id="combat-writing-input" class="flex-grow" aria-describedby="combat-prompt combat-feedback" placeholder="Describe your action...">
                 <button id="combat-submit-btn" class="p-2 text-base">Attack!</button>
             </div>
+            <p id="combat-feedback" class="combat-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
             <button id="special-move-btn" class="mt-2 text-sm p-1 bg-purple-600 hover:bg-purple-800">Use Simile Power (Lvl 2)</button>
         </div>
 
@@ -313,10 +316,11 @@
         </div>
 
         <div id="interact-prompt" aria-hidden="true">Press [E] to Interact</div>
+        <div id="world-interaction-prompt" role="status" aria-live="polite"></div>
         <div id="loading-message" role="status" aria-live="polite">The world holds its breath...</div>
 
-        <div id="controls-info" aria-hidden="true">
-            <b>Explore Kokura:</b><br>Click the Elder’s Gate to visit the Elder.
+        <div id="controls-info">
+            <b>Explore Kokura:</b><br>Move with WASD or arrow keys. Press E near the Elder or a village place.
         </div>
         <button id="village-gate-action" type="button">Visit the Village Elder</button>
         <div id="autosave-notification">Auto-saving...</div>
