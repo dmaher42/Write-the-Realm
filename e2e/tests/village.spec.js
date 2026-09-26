@@ -61,16 +61,16 @@ test('the Chromebook-sized 3D village lets a student walk to the Elder and press
   try {
     await expect.poll(async () => (await playerPosition(page)).z, { intervals: [100] })
       .toBeLessThan(21.2);
+    await expect(page.locator('#world-interaction-prompt')).toBeVisible();
+    await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
+    await page.keyboard.press('e');
   } finally {
     await page.keyboard.up('w');
   }
-  await expect(page.locator('#world-interaction-prompt')).toBeVisible();
-  await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
   const nearElder = await playerPosition(page);
   const cameraZ = await page.evaluate(() => window.writeTheRealm.world.camera.position.z);
   expect(cameraZ).toBeLessThan(startingCameraZ - 0.5);
 
-  await page.keyboard.press('e');
   await expect(page.locator('#dialogue-box')).toBeVisible();
   await expect(page.locator('#dialogue-title')).toContainText('Village Elder');
   await page.keyboard.down('w');

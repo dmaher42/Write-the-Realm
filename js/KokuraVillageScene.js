@@ -452,7 +452,7 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   camera.lookAt(cameraTarget);
 
   const targets = [
-    { x: 4.15, z: 19.2, radius: 4.8, label: 'Press E to talk to the Village Elder', interact: visitElder },
+    { x: 4.15, z: 19.2, radius: 5.5, label: 'Press E to talk to the Village Elder', interact: visitElder },
     { x: -12, z: -7.8, radius: 3.4, label: 'Press E to visit the Market Garden', interact: () => game?.visitVillagePlace?.('market') },
     { x: 12, z: -6.2, radius: 3.4, label: 'Press E to visit the Harbour Chapel', interact: () => game?.visitVillagePlace?.('chapel') },
     { x: 0, z: -2.7, radius: 3.4, label: 'Press E to visit Kokura Keep', interact: () => game?.visitVillagePlace?.('keep') },
@@ -483,6 +483,8 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
   let lastSavedZ = player.position.z;
   let statePositionRef = gameState?.worldPosition;
   let guardianType = '';
+  let recentlyNearby = null;
+  let lastNearbyAt = 0;
   let wasExploring = false;
   let renderedWidth = 0;
   let renderedHeight = 0;
@@ -518,6 +520,7 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
     lastSavedX = x;
     lastSavedZ = z;
     heldKeys.clear();
+    recentlyNearby = null;
     return true;
   }
 
@@ -552,7 +555,16 @@ export function mountKokuraVillage(container, game, { gameState, saveGame } = {}
         shortest = distance;
       }
     }
-    return nearest;
+    if (nearest) {
+      recentlyNearby = nearest;
+      lastNearbyAt = performance.now();
+      return nearest;
+    }
+    // Let a player finish pressing E just after walking past a person or place.
+    if (recentlyNearby && performance.now() - lastNearbyAt < 3000 &&
+      Math.hypot(player.position.x - recentlyNearby.x, player.position.z - recentlyNearby.z) <
+        recentlyNearby.radius + 4) return recentlyNearby;
+    return null;
   }
 
   function updatePrompt(canMove) {

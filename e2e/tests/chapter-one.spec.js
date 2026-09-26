@@ -31,12 +31,12 @@ async function beginJourney(page, { walkToElder = false } = {}) {
         () => page.evaluate(() => window.writeTheRealm.world.getPlayerPosition().z),
         { intervals: [100] }
       ).toBeLessThan(21.2);
+      await expect(page.locator('#world-interaction-prompt')).toBeVisible();
+      await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
+      await page.keyboard.press('e');
     } finally {
       await page.keyboard.up('w');
     }
-    await expect(page.locator('#world-interaction-prompt')).toBeVisible();
-    await expect(page.locator('#world-interaction-prompt')).toContainText('Village Elder');
-    await page.keyboard.press('e');
   } else {
     await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
   }
