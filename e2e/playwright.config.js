@@ -7,6 +7,9 @@ export default defineConfig({
     timeout: 8_000,
   },
   fullyParallel: false,
+  // CI's software WebGL renderer is shared; one village at a time reflects
+  // how a student runs the game on a Chromebook.
+  workers: process.env.CI ? 1 : undefined,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
