@@ -187,6 +187,14 @@ export function initGameController({
     dialogueTitle: document.getElementById('dialogue-title'),
     dialogueText: document.getElementById('dialogue-text'),
     dialogueButton: document.getElementById('dialogue-button'),
+    villageHub: document.getElementById('village-hub'),
+    villagePlaceText: document.getElementById('village-place-text'),
+    villagePlaceMarket: document.getElementById('village-place-market'),
+    villagePlaceChapel: document.getElementById('village-place-chapel'),
+    villagePlaceKeep: document.getElementById('village-place-keep'),
+    villageReadJournal: document.getElementById('village-read-journal'),
+    villageClose: document.getElementById('village-close'),
+    villageGateAction: document.getElementById('village-gate-action'),
     prewritePanel: document.getElementById('prewrite-battle'),
     preActionBank: document.getElementById('pre-action-bank'),
     focusWho: document.getElementById('focus-who'),
@@ -231,6 +239,7 @@ export function initGameController({
 
   const flowPanels = [
     elements.dialogueBox,
+    elements.villageHub,
     elements.prewritePanel,
     elements.writingPanel,
     elements.questCompletePanel,
@@ -239,6 +248,22 @@ export function initGameController({
   ].filter(Boolean);
 
   let draftSaveTimer = null;
+  let journalOpenedFromVillage = false;
+
+  const villagePlaces = [
+    {
+      button: elements.villagePlaceMarket,
+      text: 'Market Garden: The fields are growing again, and neighbours trade fresh food beside the path. The beacon guides supply boats safely into the harbour.',
+    },
+    {
+      button: elements.villagePlaceChapel,
+      text: 'Harbour Chapel: Lanterns shine in the windows. The villagers gather here to remember the storm and thank you for bringing light back to Kokura.',
+    },
+    {
+      button: elements.villagePlaceKeep,
+      text: 'Kokura Keep: From the high windows, you can see the restored beacon across the water. Its steady light tells every traveller that the village is safe.',
+    },
+  ];
 
   function setVisible(element, visible, visibleDisplay = 'block') {
     if (!element) return;
@@ -315,7 +340,7 @@ export function initGameController({
         elements.questObjective.textContent = gameState.activeQuest.objective;
       } else if (gameState.completedQuests.includes(CHAPTER_ONE_ID)) {
         elements.questTitle.textContent = 'Chapter 1 complete';
-        elements.questObjective.textContent = 'Explore Kokura while the next chapter is prepared.';
+        elements.questObjective.textContent = 'Visit the Elder’s Gate to explore Kokura and read your story.';
       } else {
         elements.questTitle.textContent = 'Find the Village Elder';
         elements.questObjective.textContent = 'The Elder is waiting near the village gate.';
@@ -453,6 +478,33 @@ export function initGameController({
       elements.dialogueButton.onclick = acceptChapterOne;
     }
     setVisible(elements.dialogueBox, true);
+  }
+
+  function selectVillagePlace(place) {
+    for (const choice of villagePlaces) {
+      choice.button?.setAttribute('aria-pressed', choice === place ? 'true' : 'false');
+    }
+    if (elements.villagePlaceText) elements.villagePlaceText.textContent = place.text;
+  }
+
+  function openVillageHub({ resetSelection = true } = {}) {
+    closeMessage();
+    if (elements.interactPrompt) elements.interactPrompt.style.display = 'none';
+    hideFlowPanels(elements.villageHub);
+    if (resetSelection) {
+      journalOpenedFromVillage = false;
+      for (const place of villagePlaces) place.button?.setAttribute('aria-pressed', 'false');
+      if (elements.villagePlaceText) {
+        elements.villagePlaceText.textContent = 'Choose a place to hear what has changed in the village.';
+      }
+    }
+    setVisible(elements.villageHub, true);
+    elements.villagePlaceMarket?.focus();
+  }
+
+  function closeVillageHub() {
+    setVisible(elements.villageHub, false);
+    elements.villageGateAction?.focus();
   }
 
   function createFocus() {
@@ -840,15 +892,25 @@ export function initGameController({
         break;
       default:
         hideFlowPanels();
-        showInteractionHint('Click the village gate to revisit the Elder.');
+        showInteractionHint(gameState.completedQuests.includes(CHAPTER_ONE_ID)
+          ? 'Click the Elder’s Gate to explore Kokura.'
+          : 'Click the village gate to revisit the Elder.');
         break;
     }
   }
 
   const gameApi = {
     openQuest(title) {
+      if (gameState.phase === 'loot' || gameState.phase === 'reward') {
+        resumePhase();
+        return;
+      }
       if (gameState.completedQuests.includes(CHAPTER_ONE_ID) && !gameState.activeQuest) {
-        showMessage('The broken beacon is restored. Chapter 1 is complete.');
+        openVillageHub();
+        return;
+      }
+      if (gameState.phase === 'writing' && gameState.activeQuest?.status === 'complete') {
+        showWriting();
         return;
       }
       if (gameState.activeQuest?.status === 'writing') {
@@ -926,8 +988,32 @@ export function initGameController({
   elements.lootCloseBtn?.addEventListener('click', () => resolveLoot(false));
   elements.tryAgainBtn?.addEventListener('click', editCompletedEntry);
   elements.continueQuestingBtn?.addEventListener('click', returnToVillage);
-  elements.openJournalBtn?.addEventListener('click', openJournal);
-  elements.closeJournalBtn?.addEventListener('click', () => setVisible(elements.journalPanel, false));
+  elements.openJournalBtn?.addEventListener('click', () => {
+    journalOpenedFromVillage = false;
+    openJournal();
+  });
+  elements.closeJournalBtn?.addEventListener('click', () => {
+    setVisible(elements.journalPanel, false);
+    if (journalOpenedFromVillage) {
+      journalOpenedFromVillage = false;
+      openVillageHub({ resetSelection: false });
+    }
+  });
+  for (const place of villagePlaces) {
+    place.button?.addEventListener('click', () => selectVillagePlace(place));
+  }
+  elements.villageReadJournal?.addEventListener('click', () => {
+    journalOpenedFromVillage = true;
+    openJournal();
+    elements.closeJournalBtn?.focus();
+  });
+  elements.villageClose?.addEventListener('click', closeVillageHub);
+  elements.villageHub?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeVillageHub();
+    }
+  });
   elements.copyJournalBtn?.addEventListener('click', copyJournal);
   elements.storyTab?.addEventListener('click', () => {
     setVisible(elements.journalEntries, true);

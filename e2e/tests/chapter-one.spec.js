@@ -80,19 +80,39 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
 
   await expect(page.locator('#loot-panel')).toBeVisible();
   await expect(page.locator('#loot-card')).toContainText('Tidal Blade');
+  await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  await expect(page.locator('#loot-panel')).toBeVisible();
   await page.locator('#loot-equip-btn').click();
 
   await expect(page.locator('#quest-complete')).toBeVisible();
   await expect(page.locator('#reward-text')).toContainText('100 XP');
+  await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  await expect(page.locator('#quest-complete')).toBeVisible();
   await page.locator('#continue-questing-btn').click();
   await expect(page.locator('#message-box')).toBeVisible();
   await page.locator('#message-button').click();
 
-  await page.locator('#open-journal-inventory-btn').click();
+  await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  await expect(page.locator('#village-hub')).toBeVisible();
+  await page.locator('#village-place-market').click();
+  await expect(page.locator('#village-place-text')).toContainText(/garden/i);
+  await page.locator('#village-place-chapel').click();
+  await expect(page.locator('#village-place-text')).toContainText(/chapel/i);
+  await page.locator('#village-place-keep').click();
+  await expect(page.locator('#village-place-text')).toContainText(/keep/i);
+  await page.locator('#village-read-journal').click();
   await expect(page.locator('#journal-panel')).toBeVisible();
   await expect(page.locator('#journal-entries')).toContainText('Battle at the Beacon');
   await expect(page.locator('#journal-entries')).toContainText('I leap like a hawk');
   await page.locator('#close-journal-btn').click();
+  await expect(page.locator('#village-hub')).toBeVisible();
+  await expect(page.locator('#village-place-keep')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#village-place-text')).toContainText(/keep/i);
+
+  await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  await expect(page.locator('#village-hub')).toBeVisible();
+  await page.locator('#village-close').click();
+  await expect(page.locator('#village-hub')).toBeHidden();
 
   await page.locator('#save-game-btn').click();
   await expect(page.locator('#message-box')).toBeVisible();
@@ -105,7 +125,10 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
 
   await expect(page.locator('#player-level-info')).toContainText('Level 2');
   await expect(page.locator('#slot-weapon')).toHaveText('Tidal Blade');
-  await page.locator('#open-journal-inventory-btn').click();
+  await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  await expect(page.locator('#village-hub')).toBeVisible();
+  await page.locator('#village-read-journal').click();
+  await expect(page.locator('#journal-panel')).toBeVisible();
   await expect(page.locator('#journal-entries')).toContainText('Battle at the Beacon');
 });
 

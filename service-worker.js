@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wtr-v4';
+const CACHE_NAME = 'wtr-v5';
 const BASE_PATH = (() => {
   try {
     return new URL('./', self.registration.scope).pathname;
