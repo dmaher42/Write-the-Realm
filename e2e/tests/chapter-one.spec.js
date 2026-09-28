@@ -41,9 +41,36 @@ async function beginJourney(page, { walkToElder = false } = {}) {
   await expect(page.locator('#dialogue-box')).toBeVisible();
 }
 
-async function completePlan(page, sentence = 'I charge through the poisonous fog and race toward the broken beacon.') {
+async function reachBeacon(page) {
   await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
+  await expect(page.locator('#prewrite-battle')).toBeHidden();
+  await expect(page.locator('#quest-objective')).toContainText('Walk past Kokura Keep');
+  // Short steps avoid overshooting the narrow path on software WebGL.
+  let pathX = 0;
+  for (let step = 0; step < 32; step += 1) {
+    pathX = (await page.evaluate(() => window.writeTheRealm.world.getPlayerPosition())).x;
+    if (pathX > 6 && pathX < 7.4) break;
+    await page.keyboard.press(pathX <= 6 ? 'd' : 'a', { delay: 180 });
+  }
+  expect(pathX).toBeGreaterThan(6);
+  expect(pathX).toBeLessThan(7.4);
+  await page.keyboard.down('w');
+  try {
+    await expect(page.locator('#world-interaction-prompt')).toContainText('Broken Beacon', {
+      timeout: 20_000,
+    });
+  } finally {
+    await page.keyboard.up('w');
+  }
+  const position = await page.evaluate(() => window.writeTheRealm.world.getPlayerPosition());
+  expect(position.z).toBeLessThan(-16);
+  expect(await page.evaluate(() => window.writeTheRealm.world.beacon.userData.lit)).toBe(false);
+  await page.keyboard.press('e');
   await expect(page.locator('#prewrite-battle')).toBeVisible();
+}
+
+async function completePlan(page, sentence = 'I charge through the poisonous fog and race toward the broken beacon.') {
+  await reachBeacon(page);
   await page.locator('#pre-action-bank .chip', { hasText: 'charge' }).click();
   await page.locator('#prewrite-sentence').fill(sentence);
   await page.locator('#prewrite-submit-btn').click();
@@ -98,6 +125,7 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await page.locator('#combat-submit-btn').click();
 
   await expect(page.locator('#loot-panel')).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => window.writeTheRealm.world.beacon.userData.lit)).toBe(true);
   await expect(page.locator('#village-gate-action')).toBeVisible();
   await expect(page.locator('#loot-equip-btn')).toBeFocused();
   await expect(page.locator('#loot-card')).toContainText('Tidal Blade');
@@ -113,6 +141,7 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   const advice = await page.locator('#improvement-suggestion').textContent();
   await page.reload();
   await page.locator('#continue-game-btn').click();
+  await expect.poll(async () => page.evaluate(() => window.writeTheRealm.world.beacon.userData.lit)).toBe(true);
   await expect(page.locator('#quest-complete')).toBeVisible();
   await expect(page.locator('#improvement-suggestion')).toHaveText(advice);
   await expect(page.locator('#continue-questing-btn')).toBeFocused();
@@ -164,6 +193,7 @@ test('a student can finish Chapter 1, save, refresh and continue', async ({ page
   await page.waitForFunction(() => Boolean(window.writeTheRealm));
   await expect(page.locator('#continue-game-btn')).toBeEnabled();
   await page.locator('#continue-game-btn').click();
+  await expect.poll(async () => page.evaluate(() => window.writeTheRealm.world.beacon.userData.lit)).toBe(true);
 
   await expect(page.locator('#player-level-info')).toContainText('Level 2');
   await expect(page.locator('#slot-weapon')).toHaveText('Tidal Blade');
@@ -223,7 +253,7 @@ test('Guided mode accepts the selected verb in its sentence starter', async ({ p
   await page.locator('input[name="teacher-preset"][value="guided"]').check();
   await page.locator('#save-teacher-settings-btn').click();
 
-  await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
+  await reachBeacon(page);
   await page.locator('#pre-action-bank .chip', { hasText: 'charge' }).click();
   await page.locator('#teacher-prewrite-starters button', { hasText: 'I charged towards' }).click();
   await page.locator('#prewrite-sentence').fill(
@@ -243,7 +273,7 @@ test('Challenge mode keeps required choices but removes optional scaffolds', asy
   await page.locator('#save-teacher-settings-btn').click();
 
   await expect(page.locator('#teacher-mode-indicator')).toHaveText('Challenge mode');
-  await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
+  await reachBeacon(page);
   await expect(page.locator('#prewrite-battle')).toBeVisible();
 
   // The action word remains a required choice even when optional help is hidden.

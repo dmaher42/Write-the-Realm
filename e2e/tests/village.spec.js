@@ -93,14 +93,14 @@ test('the Chromebook-sized 3D village lets a student walk to the Elder and press
   await page.keyboard.press('e');
   await expect(page.locator('#dialogue-box')).toBeVisible();
   await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
-  await expect(page.locator('#prewrite-battle')).toBeVisible();
-  await expect(page.locator('#pre-action-bank .chip').first()).toBeFocused();
+  await expect(page.locator('#prewrite-battle')).toBeHidden();
+  await expect(page.locator('#quest-objective')).toContainText('broken beacon');
+  await expect(page.locator('#kokura-root canvas')).toBeFocused();
   await page.keyboard.down('w');
   await page.waitForTimeout(350);
   await page.keyboard.up('w');
-  expect((await playerPosition(page)).z).toBeCloseTo(resumedPosition.z, 1);
-  await expect(page.getByRole('button', { name: 'Visit the Village Elder' })).toBeHidden();
-  await expect(page.locator('#prewrite-battle')).toBeVisible();
+  expect((await playerPosition(page)).z).toBeLessThan(resumedPosition.z);
+  await expect(page.getByRole('button', { name: 'Visit the Village Elder' })).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
 
@@ -133,6 +133,24 @@ test('movement stays on the island and continues at the saved position after ref
   await expect.poll(async () => (await playerPosition(page)).x).toBeCloseTo(edge.x, 1);
   await expect.poll(async () => (await playerPosition(page)).z).toBeCloseTo(edge.z, 1);
   expect(pageErrors).toEqual([]);
+});
+
+test('the walk to the beacon resumes after refresh before planning starts', async ({ page }) => {
+  await resetApplication(page);
+  await beginJourney(page);
+  await page.getByRole('button', { name: 'Visit the Village Elder' }).click();
+  await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
+  await expect(page.locator('#quest-objective')).toContainText('broken beacon');
+  await expect(page.locator('#prewrite-battle')).toBeHidden();
+  await expect.poll(async () => page.evaluate(() => window.writeTheRealm.world.beacon.userData.lit)).toBe(false);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.writeTheRealm?.world));
+  await page.getByRole('button', { name: 'Continue Journey' }).click();
+  await expect(page.locator('#quest-objective')).toContainText('broken beacon');
+  await expect(page.locator('#prewrite-battle')).toBeHidden();
+  await expect(page.locator('#kokura-root canvas')).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => window.writeTheRealm.world.beacon.userData.lit)).toBe(false);
 });
 
 test('a completed Chapter 1 save can walk to the Keep and interact in 3D', async ({ page }) => {
@@ -205,6 +223,8 @@ test('the Elder remains accessible when WebGL is unavailable', async ({ page }) 
   await gateButton.click();
   await expect(page.locator('#dialogue-box')).toBeVisible();
   await page.getByRole('button', { name: 'Accept Chapter 1' }).click();
+  await expect(page.locator('#beacon-travel-action')).toBeVisible();
+  await page.locator('#beacon-travel-action').click();
   await expect(page.locator('#prewrite-battle')).toBeVisible();
   await expect(gateButton).toBeHidden();
 
